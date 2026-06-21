@@ -12,10 +12,10 @@ const STAGE_LABEL: Record<string, string> = {
 }
 const STAGE_COLOR: Record<string, string> = {
   prospect: 'bg-pink-light text-pink border-pink-border',
-  demo_scheduled: 'bg-amber-50 text-amber-600 border-amber-200',
-  negotiation: 'bg-blue-50 text-blue-600 border-blue-200',
-  closed_won: 'bg-teal-light text-teal border-teal/20',
-  closed_lost: 'bg-gray-100 text-gray-400 border-gray-200',
+  demo_scheduled: 'bg-amber-500/12 text-amber-400 border-amber-500/25',
+  negotiation: 'bg-blue-500/12 text-blue-400 border-blue-500/25',
+  closed_won: 'bg-teal-light text-teal border-teal-border',
+  closed_lost: 'bg-white/6 text-muted-foreground border-white/12',
 }
 
 function LeadCard({ lead, onUpdate, onDelete }: {
@@ -169,7 +169,7 @@ export function CRM() {
             className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-all ${
               stageFilter === s
                 ? 'bg-teal text-white border-teal'
-                : 'bg-white border-pink-border text-charcoal-soft hover:border-teal'
+                : 'bg-white/6 border-border text-muted-foreground hover:border-teal'
             }`}
           >
             {s === 'all' ? 'All leads' : STAGE_LABEL[s]}

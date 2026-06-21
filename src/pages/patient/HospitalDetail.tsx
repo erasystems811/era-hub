@@ -22,7 +22,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
     <label className="flex items-center justify-between gap-4 py-2 cursor-pointer select-none">
       <span className="text-sm text-charcoal">{label}</span>
       <div
-        className={`relative w-10 h-6 rounded-full transition-colors duration-200 ${checked ? 'bg-teal' : 'bg-gray-200'}`}
+        className={`relative w-10 h-6 rounded-full transition-colors duration-200 ${checked ? 'bg-teal' : 'bg-white/12'}`}
         onClick={() => onChange(!checked)}
       >
         <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all duration-200 ${checked ? 'left-5' : 'left-1'}`} />

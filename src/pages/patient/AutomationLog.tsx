@@ -8,8 +8,8 @@ const STATUS_COLORS: Record<string, string> = {
   sent: 'bg-teal/10 text-teal',
   delivered: 'bg-teal/10 text-teal',
   failed: 'bg-rose/10 text-rose',
-  pending: 'bg-amber-50 text-amber-600',
-  retrying: 'bg-amber-50 text-amber-600',
+  pending: 'bg-amber-500/12 text-amber-400',
+  retrying: 'bg-amber-500/12 text-amber-400',
 }
 
 export function AutomationLog() {
@@ -89,7 +89,7 @@ export function AutomationLog() {
                   </td>
                   <td className="px-4 py-3 text-charcoal-soft capitalize">{l.channel}</td>
                   <td className="px-4 py-3">
-                    <span className={`text-[11px] font-semibold px-2 py-1 rounded-full uppercase tracking-wide ${STATUS_COLORS[l.status] ?? 'bg-gray-100 text-gray-500'}`}>
+                    <span className={`text-[11px] font-semibold px-2 py-1 rounded-full uppercase tracking-wide ${STATUS_COLORS[l.status] ?? 'bg-white/6 text-muted-foreground'}`}>
                       {l.status}
                     </span>
                   </td>

@@ -1,143 +1,152 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Building2, MessageSquare, Zap, ArrowRight, CheckCircle, AlertTriangle, Circle } from 'lucide-react'
-import { Glass } from '../components/Glass'
+import { Building2, MessageSquare, Zap, ArrowRight, CheckCircle, AlertTriangle } from 'lucide-react'
 import { patientApi, HealthCheck } from '../lib/patient-api'
 import { commsApi, MonitoringSnapshot } from '../lib/comms-api'
 
-function ProductCard({
-  title, subtitle, icon, color, path, available = true,
-  children,
-}: {
-  title: string; subtitle: string; icon: JSX.Element
-  color: string; path: string; available?: boolean
-  children?: React.ReactNode
-}) {
-  const nav = useNavigate()
-  return (
-    <Glass
-      hover={available}
-      className={!available ? 'opacity-50' : ''}
-      onClick={() => available && nav(path)}
-    >
-      <div className="flex items-start gap-4">
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-white"
-          style={{ background: color }}>
-          {icon}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-foreground">{title}</h3>
-            {!available && (
-              <span className="text-[10px] bg-primary/15 text-primary rounded-full px-2 py-0.5 font-semibold">Soon</span>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
-          {children && <div className="mt-3">{children}</div>}
-        </div>
-        {available && <ArrowRight className="w-4 h-4 text-muted-foreground/40 mt-1 shrink-0" />}
-      </div>
-    </Glass>
-  )
-}
-
-function StatusRow({ label, value, ok }: { label: string; value: string; ok?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="flex items-center gap-1 text-xs font-medium"
-        style={{
-          color: ok === true
-            ? 'hsl(175 40% 55%)'
-            : ok === false
-            ? 'hsl(340 35% 65%)'
-            : 'rgba(237,233,245,0.35)',
-        }}>
-        {ok === true
-          ? <CheckCircle className="w-3 h-3" />
-          : ok === false
-          ? <AlertTriangle className="w-3 h-3" />
-          : <Circle className="w-3 h-3 opacity-40" />}
-        {value}
-      </span>
-    </div>
-  )
-}
-
 export function Home() {
+  const nav = useNavigate()
   const [health, setHealth] = useState<HealthCheck | null>(null)
-  const [comms, setComms] = useState<MonitoringSnapshot | null>(null)
+  const [comms,  setComms]  = useState<MonitoringSnapshot | null>(null)
 
   useEffect(() => {
     void patientApi.getHealth().then(setHealth).catch(() => null)
     void commsApi.monitoring().then(setComms).catch(() => null)
   }, [])
 
-  const allHealthy = health?.ok ?? null
-  const commsActive = comms?.sessions.connected ?? 0
-  const commsTotal = comms?.sessions.total ?? 0
+  const commsActive  = comms?.sessions.connected ?? 0
+  const commsTotal   = comms?.sessions.total ?? 0
+  const commsHealthy = comms ? commsActive === commsTotal && commsTotal > 0 : null
 
   return (
-    <div className="max-w-4xl">
-      <div className="mb-8">
-        <h1 className="page-title">Good day</h1>
-        <p className="caption mt-1">Live status of all ERA Systems products</p>
+    <div className="min-h-[calc(100vh-3rem)] flex flex-col justify-center px-6 md:px-12 py-12 max-w-4xl mx-auto w-full">
+
+      {/* Header */}
+      <div className="mb-12">
+        <p className="text-[10px] font-bold text-muted-foreground/35 uppercase tracking-[0.32em] mb-3">
+          Era Systems · Operator Hub
+        </p>
+        <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight">
+          Good day
+        </h1>
+        <p className="text-muted-foreground mt-3 text-base">
+          Select a product to enter its environment
+        </p>
       </div>
 
-      <div className="grid gap-4">
-        <ProductCard
-          title="ERA Patient"
-          subtitle="Hospital management, patient pipelines, and clinical automation"
-          icon={<Building2 className="w-5 h-5" />}
-          color="linear-gradient(135deg, #5AADA2, #38877C)"
-          path="/patient"
-        >
-          <div className="space-y-1.5">
-            <StatusRow
-              label="System health"
-              value={allHealthy === null ? 'Checking…' : allHealthy ? 'All systems healthy' : 'Issues detected'}
-              ok={allHealthy ?? undefined}
-            />
-            {health && !health.ok && health.checks.filter(c => !c.ok).map(c => (
-              <StatusRow key={c.name} label={c.name} value={c.detail} ok={false} />
-            ))}
-          </div>
-        </ProductCard>
+      {/* Portal cards */}
+      <div className="grid md:grid-cols-2 gap-4 mb-4">
 
-        <ProductCard
-          title="ERA Comms"
-          subtitle="WhatsApp messaging infrastructure, session management, and delivery"
-          icon={<MessageSquare className="w-5 h-5" />}
-          color="linear-gradient(135deg, #BF7C93, #9E6278)"
-          path="/comms"
+        {/* ERA Patient */}
+        <button
+          onClick={() => nav('/patient/analytics')}
+          className="group relative text-left rounded-2xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(74,168,157,0.16)]"
+          style={{ background: 'hsl(var(--card))', borderColor: 'rgba(74,168,157,0.20)' }}
         >
-          <div className="space-y-1.5">
-            <StatusRow
-              label="Active sessions"
-              value={comms ? `${commsActive} of ${commsTotal} connected` : 'Checking…'}
-              ok={comms ? commsActive === commsTotal && commsTotal > 0 : undefined}
-            />
-            {comms && comms.recentAlerts.filter(a => !a.resolved).length > 0 && (
-              <StatusRow
-                label="Alerts"
-                value={`${comms.recentAlerts.filter(a => !a.resolved).length} active`}
-                ok={false}
-              />
-            )}
-            {comms && comms.sessions.flagged > 0 && (
-              <StatusRow label="Flagged numbers" value={`${comms.sessions.flagged} need attention`} ok={false} />
-            )}
-          </div>
-        </ProductCard>
+          {/* Ambient top glow */}
+          <div className="absolute inset-x-0 top-0 h-40 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse 110% 100% at 50% -10%, rgba(74,168,157,0.16) 0%, transparent 75%)' }} />
 
-        <ProductCard
-          title="ERA Connect"
-          subtitle="Patient-facing booking portal and telehealth integrations"
-          icon={<Zap className="w-5 h-5" />}
-          color="linear-gradient(135deg, #9b8ae9, #7b6ac9)"
-          path="/connect"
-          available={false}
-        />
+          <div className="relative p-6 flex flex-col h-full min-h-[220px]">
+            <div className="flex items-start justify-between mb-6">
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center"
+                style={{ background: 'rgba(74,168,157,0.14)', border: '1px solid rgba(74,168,157,0.28)' }}>
+                <Building2 className="w-5 h-5 text-teal" />
+              </div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground/25 group-hover:text-teal group-hover:translate-x-1 transition-all duration-200 mt-1" />
+            </div>
+
+            <div className="flex-1">
+              <h2 className="text-lg font-bold text-foreground tracking-tight mb-1.5">ERA Patient</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Hospital management, patient pipelines, and clinical automation
+              </p>
+            </div>
+
+            <div className="mt-5 pt-4 border-t flex items-center gap-2.5"
+              style={{ borderColor: 'rgba(74,168,157,0.14)' }}>
+              {health?.ok === true
+                ? <CheckCircle className="w-3.5 h-3.5 text-teal shrink-0" />
+                : health?.ok === false
+                ? <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0" />
+                : <div className="w-3.5 h-3.5 rounded-full border border-muted-foreground/20 shrink-0" />}
+              <span className="text-xs text-muted-foreground">
+                {health === null
+                  ? 'Checking status…'
+                  : health.ok
+                  ? 'All systems healthy'
+                  : 'Issues detected'}
+              </span>
+            </div>
+          </div>
+
+          <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(74,168,157,0.45), transparent)' }} />
+        </button>
+
+        {/* ERA Comms */}
+        <button
+          onClick={() => nav('/comms/sessions')}
+          className="group relative text-left rounded-2xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(191,124,147,0.16)]"
+          style={{ background: 'hsl(var(--card))', borderColor: 'rgba(191,124,147,0.20)' }}
+        >
+          {/* Ambient top glow */}
+          <div className="absolute inset-x-0 top-0 h-40 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse 110% 100% at 50% -10%, rgba(191,124,147,0.14) 0%, transparent 75%)' }} />
+
+          <div className="relative p-6 flex flex-col h-full min-h-[220px]">
+            <div className="flex items-start justify-between mb-6">
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center"
+                style={{ background: 'rgba(191,124,147,0.14)', border: '1px solid rgba(191,124,147,0.28)' }}>
+                <MessageSquare className="w-5 h-5 text-primary" />
+              </div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground/25 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200 mt-1" />
+            </div>
+
+            <div className="flex-1">
+              <h2 className="text-lg font-bold text-foreground tracking-tight mb-1.5">ERA Comms</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                WhatsApp messaging infrastructure, session management, and delivery
+              </p>
+            </div>
+
+            <div className="mt-5 pt-4 border-t flex items-center gap-2.5"
+              style={{ borderColor: 'rgba(191,124,147,0.14)' }}>
+              {commsHealthy === true
+                ? <CheckCircle className="w-3.5 h-3.5 text-teal shrink-0" />
+                : commsHealthy === false
+                ? <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0" />
+                : <div className="w-3.5 h-3.5 rounded-full border border-muted-foreground/20 shrink-0" />}
+              <span className="text-xs text-muted-foreground">
+                {comms === null
+                  ? 'Checking status…'
+                  : `${commsActive} of ${commsTotal} sessions connected`}
+              </span>
+            </div>
+          </div>
+
+          <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(191,124,147,0.45), transparent)' }} />
+        </button>
+      </div>
+
+      {/* ERA Connect — coming soon */}
+      <div
+        className="rounded-2xl border overflow-hidden opacity-40"
+        style={{ background: 'hsl(var(--card))', borderColor: 'rgba(255,255,255,0.07)' }}
+      >
+        <div className="p-5 flex items-center gap-4">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: 'rgba(155,138,233,0.12)', border: '1px solid rgba(155,138,233,0.22)' }}>
+            <Zap className="w-4 h-4" style={{ color: '#9b8ae9' }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground">ERA Connect</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Patient-facing booking portal and telehealth integrations</p>
+          </div>
+          <span className="ml-auto shrink-0 text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full"
+            style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(237,233,245,0.30)' }}>
+            Coming Soon
+          </span>
+        </div>
       </div>
     </div>
   )

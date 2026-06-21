@@ -11,7 +11,7 @@ type Thread = {
 }
 
 function statusColor(s: string) {
-  return s === 'open' ? 'text-rose bg-rose/10' : s === 'pending' ? 'text-amber-600 bg-amber-50' : 'text-teal bg-teal-light'
+  return s === 'open' ? 'text-rose bg-rose/10' : s === 'pending' ? 'text-amber-400 bg-amber-500/12' : 'text-teal bg-teal/15'
 }
 
 export function Support() {

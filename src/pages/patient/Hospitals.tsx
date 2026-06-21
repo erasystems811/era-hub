@@ -124,7 +124,7 @@ export function Hospitals() {
         <div className="glass overflow-hidden" style={{ padding: 0 }}>
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(233,145,200,0.2)' }}>
+              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                 {['Hospital', 'Subscription', 'Patients', 'Wallet', 'Added', ''].map(h => (
                   <th key={h} className="text-left text-xs text-charcoal-soft font-medium px-4 py-3">{h}</th>
                 ))}
@@ -134,7 +134,7 @@ export function Hospitals() {
               {filtered.map(h => (
                 <tr
                   key={h.id}
-                  className="border-b border-pink-border last:border-0 hover:bg-pink-light cursor-pointer transition-colors"
+                  className="border-b border-white/6 last:border-0 hover:bg-white/4 cursor-pointer transition-colors"
                   onClick={() => nav(`/patient/hospitals/${h.id}`)}
                 >
                   <td className="px-4 py-3">

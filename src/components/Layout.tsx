@@ -5,87 +5,130 @@ import { useNotifications } from '../contexts/notifications'
 import {
   LogOut, ChevronRight, ShieldCheck, CheckCircle2, Loader2,
   BarChart2, Building2, Rocket, AlertCircle, PanelLeftClose, PanelLeftOpen,
-  Menu, X, FlaskConical, TrendingUp, Headphones, Bell,
+  Menu, X, FlaskConical, TrendingUp, Headphones, Bell, Home,
   Kanban, Activity, MonitorPlay, Smartphone, Users, Layers,
-  CreditCard, Settings, Home, Zap, Star, Database, BookOpen,
+  CreditCard, Settings, Star, Database, BookOpen,
 } from 'lucide-react'
 import { ChangePasswordModal } from './ChangePasswordModal'
 import { NotificationPanel } from './NotificationPanel'
 
 type DeployState = 'idle' | 'pushing' | 'done' | 'error'
 
-interface LayoutProps {
-  children: ReactNode
-  breadcrumb?: { label: string; href?: string }[]
-}
-
 const PATIENT_NAV = [
-  { icon: BarChart2,    label: 'Analytics',        href: '/patient/analytics',        sub: 'Platform metrics' },
-  { icon: Building2,    label: 'Hospitals',         href: '/patient/hospitals',        sub: 'Account registry' },
-  { icon: TrendingUp,   label: 'Usage',             href: '/patient/usage',            sub: 'Hospital consumption' },
-  { icon: Bell,         label: 'Announcements',     href: '/patient/announcements',    sub: 'Push notices to hospitals' },
-  { icon: FlaskConical, label: 'Automation Log',    href: '/patient/automation',       sub: 'Email & SMS workflows' },
-  { icon: Headphones,   label: 'Support',           href: '/patient/support',          sub: 'Hospital tickets' },
-  { icon: Star,         label: 'System Feedback',   href: '/patient/feedback',         sub: 'Hospital staff ratings' },
-  { icon: Kanban,       label: 'Sales CRM',         href: '/patient/crm',              sub: 'Pipeline & leads' },
+  { icon: BarChart2,    label: 'Analytics',        href: '/patient/analytics',         sub: 'Platform metrics' },
+  { icon: Building2,    label: 'Hospitals',         href: '/patient/hospitals',         sub: 'Account registry' },
+  { icon: TrendingUp,   label: 'Usage',             href: '/patient/usage',             sub: 'Hospital consumption' },
+  { icon: Bell,         label: 'Announcements',     href: '/patient/announcements',     sub: 'Push notices' },
+  { icon: FlaskConical, label: 'Automation Log',    href: '/patient/automation',        sub: 'Email & SMS workflows' },
+  { icon: Headphones,   label: 'Support',           href: '/patient/support',           sub: 'Hospital tickets' },
+  { icon: Star,         label: 'System Feedback',   href: '/patient/feedback',          sub: 'Staff ratings' },
+  { icon: Kanban,       label: 'Sales CRM',         href: '/patient/crm',               sub: 'Pipeline & leads' },
   { icon: Activity,     label: 'Patient Analytics', href: '/patient/patient-analytics', sub: 'ERA patient app metrics' },
-  { icon: Database,     label: 'Knowledge Base',    href: '/patient/knowledge-base',   sub: 'RAG document management' },
-  { icon: MonitorPlay,  label: 'Demo Sessions',     href: '/patient/demo-sessions',    sub: 'Prospect demo tracking' },
-  { icon: BookOpen,     label: 'Docs & Settings',   href: '/patient/docs',             sub: 'Platform documentation' },
+  { icon: Database,     label: 'Knowledge Base',    href: '/patient/knowledge-base',    sub: 'RAG document management' },
+  { icon: MonitorPlay,  label: 'Demo Sessions',     href: '/patient/demo-sessions',     sub: 'Prospect demo tracking' },
+  { icon: BookOpen,     label: 'Docs & Settings',   href: '/patient/docs',              sub: 'Platform documentation' },
 ]
 
 const COMMS_NAV = [
-  { icon: Smartphone,  label: 'Sessions',        href: '/comms/sessions',   sub: 'WhatsApp connections' },
-  { icon: Users,       label: 'Businesses',       href: '/comms/businesses', sub: 'Client accounts' },
-  { icon: Layers,      label: 'Plans',            href: '/comms/plans',      sub: 'Subscription tiers' },
-  { icon: CreditCard,  label: 'Billing & Usage',  href: '/comms/billing',    sub: 'Revenue & consumption' },
-  { icon: Settings,    label: 'Settings',         href: '/comms/settings',   sub: 'API & configuration' },
+  { icon: Smartphone, label: 'Sessions',       href: '/comms/sessions',   sub: 'WhatsApp connections' },
+  { icon: Users,      label: 'Businesses',     href: '/comms/businesses', sub: 'Client accounts' },
+  { icon: Layers,     label: 'Plans',          href: '/comms/plans',      sub: 'Subscription tiers' },
+  { icon: CreditCard, label: 'Billing',        href: '/comms/billing',    sub: 'Revenue & consumption' },
+  { icon: Settings,   label: 'Settings',       href: '/comms/settings',   sub: 'API & configuration' },
 ]
 
-const BREADCRUMB_MAP: Record<string, { label: string; href?: string }[]> = {
-  '/':                            [],
-  '/patient':                     [{ label: 'ERA Patient' }],
-  '/comms':                       [{ label: 'ERA Comms' }],
-  '/patient/analytics':           [{ label: 'ERA Patient' }, { label: 'Analytics' }],
-  '/patient/hospitals':           [{ label: 'ERA Patient' }, { label: 'Hospitals' }],
-  '/patient/usage':               [{ label: 'ERA Patient' }, { label: 'Usage' }],
-  '/patient/announcements':       [{ label: 'ERA Patient' }, { label: 'Announcements' }],
-  '/patient/support':             [{ label: 'ERA Patient' }, { label: 'Support' }],
-  '/patient/automation':          [{ label: 'ERA Patient' }, { label: 'Automation Log' }],
-  '/patient/feedback':            [{ label: 'ERA Patient' }, { label: 'System Feedback' }],
-  '/patient/crm':                 [{ label: 'ERA Patient' }, { label: 'Sales CRM' }],
-  '/patient/patient-analytics':   [{ label: 'ERA Patient' }, { label: 'Patient Analytics' }],
-  '/patient/knowledge-base':      [{ label: 'ERA Patient' }, { label: 'Knowledge Base' }],
-  '/patient/demo-sessions':       [{ label: 'ERA Patient' }, { label: 'Demo Sessions' }],
-  '/patient/docs':                [{ label: 'ERA Patient' }, { label: 'Docs & Settings' }],
-  '/comms/sessions':              [{ label: 'ERA Comms' }, { label: 'Sessions' }],
-  '/comms/businesses':            [{ label: 'ERA Comms' }, { label: 'Businesses' }],
-  '/comms/plans':                 [{ label: 'ERA Comms' }, { label: 'Plans' }],
-  '/comms/billing':               [{ label: 'ERA Comms' }, { label: 'Billing & Usage' }],
-  '/comms/settings':              [{ label: 'ERA Comms' }, { label: 'Settings' }],
-}
+const PRODUCTS = {
+  patient: { name: 'ERA Patient', color: '#4AA89D', accentText: 'text-teal',    activeBg: 'bg-teal/15',    nav: PATIENT_NAV },
+  comms:   { name: 'ERA Comms',   color: '#BF7C93', accentText: 'text-primary', activeBg: 'bg-primary/15', nav: COMMS_NAV   },
+} as const
 
+const SB_BG     = 'hsl(262 22% 7%)'
+const SB_BORDER = 'hsl(262 14% 18%)'
 const SIDEBAR_KEY = 'era_hub_sidebar'
-const sbBg     = 'hsl(262 22% 7%)'
-const sbBorder = 'hsl(262 14% 18%)'
 
-export function Layout({ children, breadcrumb: breadcrumbProp }: LayoutProps) {
+/* ─── Hub Layout (home page — no sidebar) ─────────────────────── */
+function HubLayout({ children }: { children: ReactNode }) {
   const { logout } = useAuth()
   const { unreadCount } = useNotifications()
-  const { pathname } = useLocation()
-  const navigate = useNavigate()
+  const [showNotif, setShowNotif]       = useState(false)
+  const [showSecurity, setShowSecurity] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotif(false)
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [])
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <header
+        className="shrink-0 h-12 border-b flex items-center px-6 gap-3"
+        style={{ borderBottomColor: SB_BORDER, background: SB_BG }}
+      >
+        <img src="/erahub4.png" alt="ERA" className="w-6 h-6 object-contain opacity-75" />
+        <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-foreground/40">
+          Era Systems
+        </span>
+
+        <div className="ml-auto flex items-center gap-1" ref={notifRef}>
+          <div className="relative">
+            <button
+              onClick={() => setShowNotif(v => !v)}
+              className="p-2 rounded-lg text-muted-foreground/50 hover:text-foreground hover:bg-white/5 transition"
+            >
+              <Bell className="w-4 h-4" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-3 h-3 rounded-full bg-primary text-primary-foreground text-[8px] font-bold flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+            {showNotif && (
+              <div className="absolute right-0 top-10 z-50">
+                <NotificationPanel onClose={() => setShowNotif(false)} />
+              </div>
+            )}
+          </div>
+          <button onClick={() => setShowSecurity(true)}
+            className="p-2 rounded-lg text-muted-foreground/50 hover:text-foreground hover:bg-white/5 transition">
+            <ShieldCheck className="w-4 h-4" />
+          </button>
+          <button onClick={() => logout()}
+            className="p-2 rounded-lg text-muted-foreground/50 hover:text-foreground hover:bg-white/5 transition">
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+      </header>
+
+      <main className="flex-1 overflow-auto">{children}</main>
+
+      {showSecurity && <ChangePasswordModal onClose={() => setShowSecurity(false)} />}
+    </div>
+  )
+}
+
+/* ─── Product Layout (ERA Patient / ERA Comms — product-specific sidebar) */
+function ProductLayout({ product, children }: { product: 'patient' | 'comms'; children: ReactNode }) {
+  const { logout }       = useAuth()
+  const { unreadCount }  = useNotifications()
+  const { pathname }     = useLocation()
+  const navigate         = useNavigate()
+  const prod             = PRODUCTS[product]
 
   const [open, setOpen] = useState(() => {
     try { return localStorage.getItem(SIDEBAR_KEY) !== '0' } catch { return true }
   })
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [showSecurity, setShowSecurity] = useState(false)
-  const [showNotif, setShowNotif] = useState(false)
-  const [deployState, setDeployState] = useState<DeployState>('idle')
-  const [deployMsg, setDeployMsg] = useState('')
+  const [mobileOpen,    setMobileOpen]    = useState(false)
+  const [showSecurity,  setShowSecurity]  = useState(false)
+  const [showNotif,     setShowNotif]     = useState(false)
+  const [deployState,   setDeployState]   = useState<DeployState>('idle')
+  const [deployMsg,     setDeployMsg]     = useState('')
   const [confirmDeploy, setConfirmDeploy] = useState(false)
   const deployRef = useRef<HTMLDivElement>(null)
-  const notifRef = useRef<HTMLDivElement>(null)
+  const notifRef  = useRef<HTMLDivElement>(null)
 
   const toggleOpen = () => setOpen(v => {
     const next = !v
@@ -96,7 +139,7 @@ export function Layout({ children, breadcrumb: breadcrumbProp }: LayoutProps) {
   useEffect(() => {
     const h = (e: MouseEvent) => {
       if (deployRef.current && !deployRef.current.contains(e.target as Node)) setConfirmDeploy(false)
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotif(false)
+      if (notifRef.current  && !notifRef.current.contains(e.target as Node))  setShowNotif(false)
     }
     document.addEventListener('mousedown', h)
     return () => document.removeEventListener('mousedown', h)
@@ -120,44 +163,27 @@ export function Layout({ children, breadcrumb: breadcrumbProp }: LayoutProps) {
     }
   }
 
-  const isActive = (href: string) =>
-    href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(href + '/')
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+  const currentPage = prod.nav.find(n => isActive(n.href))
 
-  const inPatient = pathname.startsWith('/patient')
-  const inComms   = pathname.startsWith('/comms')
-
-  const productCtx = inPatient
-    ? { name: 'ERA Patient', color: '#4AA89D', borderColor: 'rgba(74,168,157,0.35)', bg: 'rgba(74,168,157,0.08)' }
-    : inComms
-    ? { name: 'ERA Comms', color: '#BF7C93', borderColor: 'rgba(191,124,147,0.35)', bg: 'rgba(191,124,147,0.08)' }
-    : null
-
-  const autoBreadcrumb = Object.entries(BREADCRUMB_MAP)
-    .filter(([k]) => k !== '/' && (pathname === k || pathname.startsWith(k + '/')))
-    .sort((a, b) => b[0].length - a[0].length)[0]?.[1] ?? []
-
-  const breadcrumb = breadcrumbProp ?? autoBreadcrumb
-
-  function NavItem({ icon: Icon, label, href, sub, accent }: {
-    icon: React.ComponentType<{ className?: string }>
-    label: string; href: string; sub: string; accent: 'pink' | 'teal'
-  }) {
+  function NavItem({ icon: Icon, label, href, sub }: { icon: React.ComponentType<{ className?: string }>; label: string; href: string; sub: string }) {
     const active = isActive(href)
-    const col = accent === 'teal' ? 'text-teal' : 'text-primary'
-    const bg  = accent === 'teal' ? 'bg-teal/15' : 'bg-primary/15'
     return (
       <button
         onClick={() => go(href)}
-        className={`w-full flex items-center transition-all duration-150 group rounded-lg ${
-          open ? 'gap-3 px-3 py-2.5' : 'justify-center p-2.5'
-        } ${active ? `${bg} ${col}` : 'text-muted-foreground/70 hover:bg-white/5 hover:text-foreground'}`}
         title={!open ? label : undefined}
+        className={`w-full flex items-center transition-all duration-150 rounded-lg ${
+          open ? 'gap-3 px-3 py-2' : 'justify-center p-2.5'
+        } ${active
+            ? `${prod.activeBg} ${prod.accentText}`
+            : 'text-muted-foreground/55 hover:bg-white/5 hover:text-foreground'
+        }`}
       >
-        <Icon className={`w-4 h-4 shrink-0 ${active ? col : ''}`} />
+        <Icon className="w-4 h-4 shrink-0" />
         {open && (
           <div className="flex-1 min-w-0 text-left">
             <p className="text-sm font-medium leading-tight">{label}</p>
-            <p className="text-xs text-muted-foreground/50 leading-tight mt-0.5">{sub}</p>
+            <p className="text-[11px] text-muted-foreground/38 leading-tight mt-0.5">{sub}</p>
           </div>
         )}
       </button>
@@ -167,202 +193,72 @@ export function Layout({ children, breadcrumb: breadcrumbProp }: LayoutProps) {
   function SidebarContent({ expanded }: { expanded: boolean }) {
     return (
       <>
-        {/* Brand */}
+        {/* Back to Hub + product identity */}
         <div
-          className={`flex items-center shrink-0 h-12 border-b ${expanded ? 'px-3 gap-3' : 'justify-center'}`}
-          style={{ borderBottomColor: sbBorder }}
+          className={`shrink-0 border-b ${expanded ? 'px-4 pt-3.5 pb-3' : 'px-2 py-3 flex flex-col items-center gap-2'}`}
+          style={{ borderBottomColor: SB_BORDER }}
         >
           {expanded ? (
             <>
-              <button onClick={() => go('/')} className="flex items-center gap-2.5 flex-1 min-w-0 hover:opacity-80 transition">
-                <img src="/erahub4.png" alt="ERA Systems" className="w-8 h-8 shrink-0 object-contain" />
-                <div className="min-w-0">
-                  <p className="text-[10px] font-bold text-foreground tracking-[0.15em] uppercase leading-tight">Era Systems</p>
-                  <p className="text-[8px] font-medium text-muted-foreground/40 uppercase tracking-[0.2em] leading-tight">Operator Hub</p>
-                </div>
+              <button
+                onClick={() => go('/')}
+                className="flex items-center gap-1.5 text-muted-foreground/30 hover:text-muted-foreground/55 transition mb-3 text-[10px] font-semibold tracking-[0.16em] uppercase"
+              >
+                <Home className="w-3 h-3" />
+                Hub
               </button>
-              <button onClick={toggleOpen} title="Collapse"
-                className="shrink-0 p-1 text-muted-foreground/40 hover:text-muted-foreground transition hidden md:block">
-                <PanelLeftClose className="w-3.5 h-3.5" />
-              </button>
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-bold tracking-[0.14em] uppercase" style={{ color: prod.color }}>
+                  {prod.name}
+                </p>
+                <button onClick={toggleOpen}
+                  className="p-1 text-muted-foreground/22 hover:text-muted-foreground/50 transition hidden md:block">
+                  <PanelLeftClose className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </>
           ) : (
-            <button onClick={toggleOpen} title="Expand" className="hover:opacity-80 transition">
-              <img src="/erahub4.png" alt="ERA Systems" className="w-8 h-8 object-contain" />
-            </button>
+            <>
+              <button onClick={() => go('/')} title="Back to Hub"
+                className="p-2 rounded-lg text-muted-foreground/30 hover:text-muted-foreground/60 hover:bg-white/5 transition">
+                <Home className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={toggleOpen} title="Expand"
+                className="p-2 rounded-lg text-muted-foreground/22 hover:text-muted-foreground/50 hover:bg-white/5 transition hidden md:block">
+                <PanelLeftOpen className="w-3.5 h-3.5" />
+              </button>
+            </>
           )}
         </div>
 
-        {/* Nav */}
-        <nav className={`flex-1 overflow-y-auto overflow-x-hidden ${expanded ? 'px-3 pt-3 pb-2 space-y-0.5' : 'px-2 py-3 space-y-1'}`}>
-
-          {/* ── HOME context: Hub overview + product entry points ── */}
-          {!inPatient && !inComms && (
-            <>
-              <button
-                onClick={() => go('/')}
-                className={`w-full flex items-center transition-all duration-150 group rounded-lg ${
-                  expanded ? 'gap-3 px-3 py-2.5' : 'justify-center p-2.5'
-                } ${isActive('/') ? 'bg-primary/15 text-primary' : 'text-muted-foreground/70 hover:bg-white/5 hover:text-foreground'}`}
-                title={!expanded ? 'Home' : undefined}
-              >
-                <Home className={`w-4 h-4 shrink-0 ${isActive('/') ? 'text-primary' : ''}`} />
-                {expanded && (
-                  <div className="flex-1 min-w-0 text-left">
-                    <p className="text-sm font-medium leading-tight">Home</p>
-                    <p className="text-xs text-muted-foreground/50 leading-tight mt-0.5">Platform overview</p>
-                  </div>
-                )}
-              </button>
-
-              <div className="my-1 mx-2 border-t" style={{ borderColor: sbBorder }} />
-
-              {/* ERA Patient entry card */}
-              <button
-                onClick={() => go('/patient')}
-                className={`w-full flex items-center transition-all duration-150 rounded-lg ${
-                  expanded ? 'gap-3 px-3 py-2.5' : 'justify-center p-2.5'
-                } text-muted-foreground/70 hover:bg-[rgba(74,168,157,0.08)] hover:text-[#4AA89D]`}
-                title={!expanded ? 'ERA Patient' : undefined}
-              >
-                <Building2 className="w-4 h-4 shrink-0" />
-                {expanded && (
-                  <div className="flex-1 min-w-0 text-left">
-                    <p className="text-sm font-medium leading-tight">ERA Patient</p>
-                    <p className="text-xs text-muted-foreground/50 leading-tight mt-0.5">Hospital platform</p>
-                  </div>
-                )}
-              </button>
-
-              {/* ERA Comms entry card */}
-              <button
-                onClick={() => go('/comms')}
-                className={`w-full flex items-center transition-all duration-150 rounded-lg ${
-                  expanded ? 'gap-3 px-3 py-2.5' : 'justify-center p-2.5'
-                } text-muted-foreground/70 hover:bg-[rgba(191,124,147,0.08)] hover:text-[#BF7C93]`}
-                title={!expanded ? 'ERA Comms' : undefined}
-              >
-                <Smartphone className="w-4 h-4 shrink-0" />
-                {expanded && (
-                  <div className="flex-1 min-w-0 text-left">
-                    <p className="text-sm font-medium leading-tight">ERA Comms</p>
-                    <p className="text-xs text-muted-foreground/50 leading-tight mt-0.5">WhatsApp infrastructure</p>
-                  </div>
-                )}
-              </button>
-
-              <div className="my-1 mx-2 border-t" style={{ borderColor: sbBorder }} />
-
-              <button
-                disabled
-                className={`w-full flex items-center opacity-30 cursor-not-allowed rounded-lg ${
-                  expanded ? 'gap-3 px-3 py-2.5' : 'justify-center p-2.5'
-                } text-muted-foreground/50`}
-                title={!expanded ? 'ERA Connect — Coming soon' : undefined}
-              >
-                <MonitorPlay className="w-4 h-4 shrink-0" />
-                {expanded && (
-                  <div className="flex-1 min-w-0 text-left">
-                    <p className="text-sm font-medium leading-tight">ERA Connect</p>
-                    <p className="text-xs text-muted-foreground/50 leading-tight mt-0.5">Coming soon</p>
-                  </div>
-                )}
-              </button>
-            </>
-          )}
-
-          {/* ── ERA PATIENT context: teal nav only ── */}
-          {inPatient && (
-            <>
-              {/* Back to hub */}
-              <button
-                onClick={() => go('/')}
-                className={`w-full flex items-center transition-all duration-150 rounded-lg text-muted-foreground/40 hover:text-muted-foreground hover:bg-white/5 ${
-                  expanded ? 'gap-3 px-3 py-2' : 'justify-center p-2.5'
-                }`}
-                title={!expanded ? 'Back to ERA Hub' : undefined}
-              >
-                <Home className="w-3.5 h-3.5 shrink-0" />
-                {expanded && <span className="text-xs font-medium">ERA Hub</span>}
-              </button>
-
-              {expanded && (
-                <div className="px-3 pt-2 pb-1">
-                  <div className="flex items-center gap-2 py-2 px-3 rounded-xl" style={{ background: 'rgba(74,168,157,0.08)', border: '1px solid rgba(74,168,157,0.15)' }}>
-                    <Building2 className="w-3.5 h-3.5 shrink-0" style={{ color: '#4AA89D' }} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] leading-none" style={{ color: '#4AA89D' }}>ERA Patient</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {!expanded && <div className="my-1 mx-2 border-t" style={{ borderColor: 'rgba(74,168,157,0.2)' }} />}
-
-              {PATIENT_NAV.map(item => (
-                <NavItem key={item.href} {...item} accent="teal" />
-              ))}
-            </>
-          )}
-
-          {/* ── ERA COMMS context: pink nav only ── */}
-          {inComms && (
-            <>
-              {/* Back to hub */}
-              <button
-                onClick={() => go('/')}
-                className={`w-full flex items-center transition-all duration-150 rounded-lg text-muted-foreground/40 hover:text-muted-foreground hover:bg-white/5 ${
-                  expanded ? 'gap-3 px-3 py-2' : 'justify-center p-2.5'
-                }`}
-                title={!expanded ? 'Back to ERA Hub' : undefined}
-              >
-                <Home className="w-3.5 h-3.5 shrink-0" />
-                {expanded && <span className="text-xs font-medium">ERA Hub</span>}
-              </button>
-
-              {expanded && (
-                <div className="px-3 pt-2 pb-1">
-                  <div className="flex items-center gap-2 py-2 px-3 rounded-xl" style={{ background: 'rgba(191,124,147,0.08)', border: '1px solid rgba(191,124,147,0.15)' }}>
-                    <Smartphone className="w-3.5 h-3.5 shrink-0" style={{ color: '#BF7C93' }} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] leading-none" style={{ color: '#BF7C93' }}>ERA Comms</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {!expanded && <div className="my-1 mx-2 border-t" style={{ borderColor: 'rgba(191,124,147,0.2)' }} />}
-
-              {COMMS_NAV.map(item => (
-                <NavItem key={item.href} {...item} accent="pink" />
-              ))}
-            </>
-          )}
+        {/* Navigation */}
+        <nav className={`flex-1 overflow-y-auto overflow-x-hidden ${expanded ? 'px-3 py-3 space-y-0.5' : 'px-2 py-3 space-y-1'}`}>
+          {prod.nav.map(item => <NavItem key={item.href} {...item} />)}
         </nav>
 
         {/* Deploy */}
-        <div className="px-3 py-2 border-t" style={{ borderTopColor: sbBorder }} ref={deployRef}>
+        <div className="px-3 py-2 border-t" style={{ borderTopColor: SB_BORDER }} ref={deployRef}>
           {!confirmDeploy ? (
             <button
               onClick={() => expanded ? setConfirmDeploy(true) : handleDeploy()}
               disabled={deployState === 'pushing'}
               title={!expanded ? 'Deploy' : undefined}
               className={`w-full flex items-center transition-all duration-150 rounded-lg disabled:opacity-50 ${
-                expanded ? 'gap-3 px-3 py-2.5' : 'justify-center p-2.5'
-              } ${
-                deployState === 'done'  ? 'text-emerald-400' :
-                deployState === 'error' ? 'text-destructive' :
-                'text-muted-foreground/70 hover:bg-white/5 hover:text-foreground'
-              }`}
+                expanded ? 'gap-3 px-3 py-2' : 'justify-center p-2.5'
+              } ${deployState === 'done'  ? 'text-emerald-400' :
+                 deployState === 'error' ? 'text-destructive'  :
+                 'text-muted-foreground/55 hover:bg-white/5 hover:text-foreground'}`}
             >
-              {deployState === 'pushing' ? <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
-                : deployState === 'done'  ? <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-                : deployState === 'error' ? <AlertCircle  className="w-4 h-4 shrink-0 text-destructive" />
+              {deployState === 'pushing' ? <Loader2    className="w-4 h-4 shrink-0 animate-spin" />
+                : deployState === 'done'  ? <CheckCircle2 className="w-4 h-4 shrink-0" />
+                : deployState === 'error' ? <AlertCircle  className="w-4 h-4 shrink-0" />
                 : <Rocket className="w-4 h-4 shrink-0" />}
               {expanded && (
                 <div className="flex-1 min-w-0 text-left">
                   <p className="text-sm font-medium leading-tight">
                     {deployState === 'pushing' ? 'Deploying…' : deployState === 'done' ? 'Deployed' : deployState === 'error' ? 'Failed' : 'Deploy'}
                   </p>
-                  <p className="text-xs text-muted-foreground/50 leading-tight mt-0.5 truncate">
+                  <p className="text-[11px] text-muted-foreground/38 leading-tight mt-0.5 truncate">
                     {deployMsg || 'Push to Railway'}
                   </p>
                 </div>
@@ -385,29 +281,20 @@ export function Layout({ children, breadcrumb: breadcrumbProp }: LayoutProps) {
           )}
         </div>
 
-        {/* Bottom actions */}
-        <div className="px-3 pb-3 space-y-0.5 border-t pt-2" style={{ borderTopColor: sbBorder }}>
-          {[
+        {/* Security + Sign Out */}
+        <div className="px-3 pb-3 pt-2 space-y-0.5 border-t" style={{ borderTopColor: SB_BORDER }}>
+          {([
             { icon: ShieldCheck, label: 'Security', action: () => setShowSecurity(true) },
             { icon: LogOut,      label: 'Sign Out',  action: () => logout() },
-          ].map(item => (
+          ] as const).map(item => (
             <button key={item.label} onClick={item.action} title={!expanded ? item.label : undefined}
-              className={`w-full flex items-center text-muted-foreground/60 hover:bg-white/5 hover:text-muted-foreground transition-all duration-150 rounded-lg ${
+              className={`w-full flex items-center text-muted-foreground/45 hover:bg-white/5 hover:text-muted-foreground transition-all duration-150 rounded-lg ${
                 expanded ? 'gap-3 px-3 py-2' : 'justify-center p-2.5'
               }`}>
               <item.icon className="w-4 h-4 shrink-0" />
               {expanded && <span className="text-sm font-medium">{item.label}</span>}
             </button>
           ))}
-
-          <button onClick={toggleOpen} title={open ? 'Collapse' : 'Expand'}
-            className={`hidden md:flex w-full items-center text-muted-foreground/30 hover:text-muted-foreground/50 transition-all duration-150 rounded-lg ${
-              expanded ? 'gap-3 px-3 py-1.5' : 'justify-center p-2.5'
-            }`}>
-            {expanded
-              ? <><PanelLeftClose className="w-4 h-4 shrink-0" /><span className="text-sm">Collapse</span></>
-              : <PanelLeftOpen className="w-4 h-4 shrink-0" />}
-          </button>
         </div>
       </>
     )
@@ -419,7 +306,7 @@ export function Layout({ children, breadcrumb: breadcrumbProp }: LayoutProps) {
       {/* Desktop sidebar */}
       <aside
         className="hidden md:flex shrink-0 flex-col transition-all duration-200"
-        style={{ width: open ? 212 : 48, background: sbBg, borderRight: `1px solid ${sbBorder}` }}
+        style={{ width: open ? 216 : 52, background: SB_BG, borderRight: `1px solid ${SB_BORDER}` }}
       >
         <SidebarContent expanded={open} />
       </aside>
@@ -428,77 +315,62 @@ export function Layout({ children, breadcrumb: breadcrumbProp }: LayoutProps) {
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 h-full w-64 flex flex-col" style={{ background: sbBg, borderRight: `1px solid ${sbBorder}` }}>
-            <div className="absolute top-2 right-2 z-10">
-              <button onClick={() => setMobileOpen(false)}
-                className="p-1.5 rounded-lg text-muted-foreground/50 hover:text-muted-foreground hover:bg-white/5 transition">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+          <aside className="absolute left-0 top-0 h-full w-64 flex flex-col"
+            style={{ background: SB_BG, borderRight: `1px solid ${SB_BORDER}` }}>
+            <button onClick={() => setMobileOpen(false)}
+              className="absolute top-2 right-2 p-1.5 rounded-lg text-muted-foreground/50 hover:text-muted-foreground hover:bg-white/5 transition z-10">
+              <X className="w-4 h-4" />
+            </button>
             <SidebarContent expanded={true} />
           </aside>
         </div>
       )}
 
-      {/* Main */}
+      {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
 
         {/* Topbar */}
         <header
-          className="shrink-0 h-12 border-b flex items-center px-4 md:px-6 gap-2"
-          style={{ borderBottomColor: productCtx?.borderColor ?? 'hsl(262 14% 18%)', background: 'hsl(262 20% 9%)' }}
+          className="shrink-0 h-12 border-b flex items-center px-4 md:px-6 gap-3"
+          style={{ borderBottomColor: SB_BORDER, background: 'hsl(262 20% 9%)' }}
         >
-          <button
-            className="md:hidden shrink-0 p-1 -ml-1 rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-white/5 transition"
-            onClick={() => setMobileOpen(true)}
-          >
-            <Menu className="w-5 h-5" />
+          <button className="md:hidden shrink-0 p-1.5 rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-white/5 transition"
+            onClick={() => setMobileOpen(true)}>
+            <Menu className="w-4 h-4" />
           </button>
 
-          {productCtx && (
-            <span className="text-[9px] font-bold uppercase tracking-[0.18em] px-2 py-0.5 rounded-full hidden sm:inline shrink-0"
-              style={{ color: productCtx.color, background: productCtx.bg }}>
-              {productCtx.name}
+          <span
+            className="text-[9px] font-bold uppercase tracking-[0.18em] px-2 py-0.5 rounded-full shrink-0 hidden sm:inline"
+            style={{ color: prod.color, background: `${prod.color}1A` }}
+          >
+            {prod.name}
+          </span>
+
+          {currentPage && (
+            <span className="flex items-center gap-2">
+              <ChevronRight className="w-3 h-3 text-muted-foreground/25 shrink-0" />
+              <span className="text-[10px] font-semibold tracking-wider uppercase text-foreground/65">
+                {currentPage.label}
+              </span>
             </span>
           )}
 
-          {breadcrumb.length > 0 ? (
-            <>
-              {!productCtx && <span className="text-[10px] text-muted-foreground/30 font-medium tracking-wider uppercase hidden sm:inline">Era Hub</span>}
-              {breadcrumb.slice(1).map((c, i) => (
-                <span key={i} className="flex items-center gap-2">
-                  <ChevronRight className="w-3 h-3 text-border/60 shrink-0 hidden sm:block" />
-                  {c.href
-                    ? <button onClick={() => navigate(c.href!)} className="text-[10px] text-muted-foreground/60 hover:text-foreground transition tracking-wider uppercase font-medium">{c.label}</button>
-                    : <span className="text-[10px] text-foreground/80 font-semibold tracking-wider uppercase">{c.label}</span>}
-                </span>
-              ))}
-            </>
-          ) : (
-            <span className="text-[9px] text-muted-foreground/25 font-medium tracking-[0.3em] uppercase">
-              Evaluate · Rebuild · Automate
-            </span>
-          )}
-
-          <div className="ml-auto flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/70" />
-            <span className="text-[9px] text-muted-foreground/30 uppercase tracking-widest hidden sm:inline">Platform</span>
-
-            {/* Notification bell */}
-            <div className="relative" ref={notifRef}>
+          <div className="ml-auto flex items-center gap-1" ref={notifRef}>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/60 mr-1 hidden sm:block" />
+            <div className="relative">
               <button
                 onClick={() => setShowNotif(v => !v)}
-                className="ml-2 p-1.5 rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-white/5 transition relative"
+                className="p-2 rounded-lg text-muted-foreground/50 hover:text-foreground hover:bg-white/5 transition relative"
               >
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center">
+                  <span className="absolute top-1.5 right-1.5 w-3 h-3 rounded-full bg-primary text-primary-foreground text-[8px] font-bold flex items-center justify-center">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </button>
               {showNotif && (
-                <div className="absolute right-0 top-9 z-50">
+                <div className="absolute right-0 top-10 z-50">
                   <NotificationPanel onClose={() => setShowNotif(false)} />
                 </div>
               )}
@@ -514,4 +386,12 @@ export function Layout({ children, breadcrumb: breadcrumbProp }: LayoutProps) {
       {showSecurity && <ChangePasswordModal onClose={() => setShowSecurity(false)} />}
     </div>
   )
+}
+
+/* ─── Root export — picks the right shell based on route ─────── */
+export function Layout({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation()
+  if (pathname.startsWith('/patient')) return <ProductLayout product="patient">{children}</ProductLayout>
+  if (pathname.startsWith('/comms'))   return <ProductLayout product="comms">{children}</ProductLayout>
+  return <HubLayout>{children}</HubLayout>
 }

@@ -2,7 +2,7 @@ import { useState, FormEvent } from 'react'
 import { useAuth } from '../contexts/auth'
 import { Lock, User, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
-const inputCls = "w-full pl-10 pr-10 py-2.5 bg-[hsl(0_0%_10%)] border border-[hsl(0_0%_14%)] text-foreground text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all duration-150 font-medium tracking-wide"
+const inputCls = "w-full pl-10 pr-10 py-2.5 bg-[hsl(262_16%_11%)] border border-[hsl(262_14%_18%)] text-foreground text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all duration-150 font-medium tracking-wide"
 
 export function Login() {
   const { login } = useAuth()
@@ -24,43 +24,39 @@ export function Login() {
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-      style={{ background: 'hsl(0 0% 2%)' }}
+      style={{ background: 'hsl(262 22% 6%)' }}
     >
-      {/* Primary spotlight — pink burst from top */}
+      {/* Primary spotlight — dusty rose burst from top */}
       <div className="pointer-events-none absolute inset-0"
-        style={{ background: 'radial-gradient(ellipse 90% 55% at 50% -5%, hsl(333 66% 46% / 0.18) 0%, hsl(333 50% 30% / 0.08) 45%, transparent 70%)' }} />
+        style={{ background: 'radial-gradient(ellipse 90% 55% at 50% -5%, hsl(340 35% 61% / 0.16) 0%, hsl(340 35% 35% / 0.07) 45%, transparent 70%)' }} />
 
       {/* Secondary teal accent — bottom */}
       <div className="pointer-events-none absolute inset-0"
-        style={{ background: 'radial-gradient(ellipse 60% 35% at 50% 110%, hsl(175 84% 32% / 0.10) 0%, transparent 65%)' }} />
+        style={{ background: 'radial-gradient(ellipse 60% 35% at 50% 110%, hsl(175 40% 48% / 0.09) 0%, transparent 65%)' }} />
 
       {/* Top border beam */}
       <div className="pointer-events-none absolute top-0 left-0 right-0 h-px"
-        style={{ background: 'linear-gradient(90deg, transparent 0%, hsl(333 66% 46% / 0.5) 30%, hsl(175 84% 32% / 0.4) 50%, hsl(333 66% 46% / 0.5) 70%, transparent 100%)' }} />
+        style={{ background: 'linear-gradient(90deg, transparent 0%, hsl(340 35% 61% / 0.45) 30%, hsl(175 40% 48% / 0.35) 50%, hsl(340 35% 61% / 0.45) 70%, transparent 100%)' }} />
 
       {/* Bottom border beam */}
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px"
-        style={{ background: 'linear-gradient(90deg, transparent 10%, hsl(333 66% 46% / 0.2) 50%, transparent 90%)' }} />
+        style={{ background: 'linear-gradient(90deg, transparent 10%, hsl(340 35% 61% / 0.18) 50%, transparent 90%)' }} />
 
       {/* Left edge glow */}
       <div className="pointer-events-none absolute top-0 left-0 bottom-0 w-px"
-        style={{ background: 'linear-gradient(180deg, transparent, hsl(333 66% 46% / 0.25) 40%, hsl(175 84% 32% / 0.15) 60%, transparent)' }} />
+        style={{ background: 'linear-gradient(180deg, transparent, hsl(340 35% 61% / 0.20) 40%, hsl(175 40% 48% / 0.12) 60%, transparent)' }} />
 
       {/* Right edge glow */}
       <div className="pointer-events-none absolute top-0 right-0 bottom-0 w-px"
-        style={{ background: 'linear-gradient(180deg, transparent, hsl(333 66% 46% / 0.25) 40%, hsl(175 84% 32% / 0.15) 60%, transparent)' }} />
+        style={{ background: 'linear-gradient(180deg, transparent, hsl(340 35% 61% / 0.20) 40%, hsl(175 40% 48% / 0.12) 60%, transparent)' }} />
 
       {/* Background crosshair */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.025]">
-        <div className="absolute w-[600px] h-px" style={{ background: 'hsl(333 66% 80%)' }} />
-        <div className="absolute w-px h-[600px]" style={{ background: 'hsl(333 66% 80%)' }} />
-        <div className="absolute w-[400px] h-[400px] rounded-full border" style={{ borderColor: 'hsl(333 66% 80%)' }} />
-        <div className="absolute w-[200px] h-[200px] rounded-full border" style={{ borderColor: 'hsl(175 84% 50%)' }} />
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.020]">
+        <div className="absolute w-[600px] h-px" style={{ background: 'hsl(340 35% 75%)' }} />
+        <div className="absolute w-px h-[600px]" style={{ background: 'hsl(340 35% 75%)' }} />
+        <div className="absolute w-[400px] h-[400px] rounded-full border" style={{ borderColor: 'hsl(340 35% 75%)' }} />
+        <div className="absolute w-[200px] h-[200px] rounded-full border" style={{ borderColor: 'hsl(175 40% 60%)' }} />
       </div>
-
-      {/* Scan line texture */}
-      <div className="pointer-events-none absolute inset-0 opacity-[0.015]"
-        style={{ backgroundImage: 'repeating-linear-gradient(0deg, hsl(333 66% 80%), hsl(333 66% 80%) 1px, transparent 1px, transparent 4px)' }} />
 
       <div className="w-full max-w-xs relative z-10">
 
@@ -78,10 +74,10 @@ export function Login() {
         {/* Login card */}
         <form onSubmit={submit} className="space-y-4">
           <div
-            className="border border-[hsl(0_0%_13%)] bg-card space-y-3 p-4"
-            style={{ boxShadow: '0 16px 40px rgba(0,0,0,0.6), 0 0 0 1px hsl(220 18% 28% / 0.6)' }}
+            className="border border-[hsl(262_14%_18%)] bg-card space-y-3 p-4"
+            style={{ boxShadow: '0 16px 40px rgba(0,0,0,0.55), 0 0 0 1px hsl(262 14% 22% / 0.5)' }}
           >
-            <div className="border-b border-[hsl(0_0%_13%)] pb-3 mb-1">
+            <div className="border-b border-[hsl(262_14%_18%)] pb-3 mb-1">
               <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-[0.25em]">Operator Login</p>
             </div>
 
@@ -137,7 +133,7 @@ export function Login() {
             type="submit"
             disabled={loading || !username || !password}
             className="w-full py-2.5 bg-primary text-primary-foreground text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
-            style={{ boxShadow: '0 4px 20px hsl(333 66% 46% / 0.25)' }}
+            style={{ boxShadow: '0 4px 20px hsl(340 35% 61% / 0.22)' }}
           >
             {loading ? 'Signing in…' : 'Sign In'}
           </button>

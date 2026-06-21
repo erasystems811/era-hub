@@ -4,67 +4,149 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── ERA Systems Hub — Deep Navy Operator Console ─────────────── */
+/* ── ERA Systems Hub — Obsidian Rose ───────────────────────────── */
 :root {
-  --background:          222 47% 7%;
-  --foreground:          220 20% 97%;
-  --border:              220 28% 18%;
-  --input:               222 40% 13%;
-  --ring:                333 66% 46%;
-  --card:                222 42% 10%;
-  --card-foreground:     220 20% 97%;
-  --primary:             333 66% 46%;
-  --primary-foreground:  0 0% 100%;
-  --secondary:           222 35% 15%;
-  --secondary-foreground:220 15% 88%;
-  --muted:               222 35% 13%;
-  --muted-foreground:    220 12% 58%;
-  --accent:              222 35% 17%;
-  --accent-foreground:   220 20% 97%;
-  --destructive:         0 72% 58%;
+  /* Warm obsidian — deep purple-black, not cold navy */
+  --background:          262 20% 9%;    /* #120F1A  page bg    */
+  --card:                262 16% 13%;   /* #1C1826  card bg    */
+  --secondary:           262 13% 17%;   /* #252030  elevated   */
+  --accent:              262 12% 21%;   /* #2B263A  hover bg   */
+  --muted:               262 14% 15%;   /* #1F1B2C  muted bg   */
+  --input:               262 16% 15%;   /* #1E1929  input bg   */
+
+  /* Warm near-white text */
+  --foreground:          270 18% 94%;   /* #EDE9F5  primary    */
+  --card-foreground:     270 18% 94%;
+  --secondary-foreground:270 10% 76%;   /* #C3BAD6  secondary  */
+  --muted-foreground:    270  8% 54%;   /* #8A829C  muted      */
+  --accent-foreground:   270 18% 94%;
+
+  /* Dusty rose — sophisticated, never hot-pink */
+  --primary:             340 35% 61%;   /* #BF7D93  */
+  --primary-foreground:  0   0% 100%;
+  --ring:                340 35% 61%;
+
+  /* Sage-teal secondary */
+  --teal:                175 40% 48%;   /* #4AA89D  */
+  --teal-dark:           175 40% 39%;   /* #3B887E  */
+
+  /* Borders */
+  --border:              262 14% 21%;   /* very subtle */
+
+  /* Danger */
+  --destructive:         348 50% 60%;   /* #CF738A  */
   --destructive-foreground: 0 0% 100%;
-  --teal:                175 84% 32%;
-  --radius:              0.5rem;
-}
 
-/* Operational grid texture */
-.op-grid-bg {
-  background-image:
-    linear-gradient(hsl(220 18% 22% / 0.5) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(220 18% 22% / 0.5) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-/* Scan line shimmer for loading */
-@keyframes scan {
-  from { transform: translateY(-100%); }
-  to   { transform: translateY(100%); }
-}
-.scan-shimmer::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 0%, hsl(333 66% 46% / 0.04) 50%, transparent 100%);
-  animation: scan 2s linear infinite;
+  --radius: 0.625rem;
 }
 
 @layer base {
   * {
-    @apply border-border;
-    overflow-wrap: break-word;
-    word-break: break-word;
-    min-width: 0;
     box-sizing: border-box;
+    @apply border-border;
+    min-width: 0;
   }
   html, body {
     @apply font-sans antialiased bg-background text-foreground;
     overflow-x: hidden;
     max-width: 100vw;
     font-feature-settings: "tnum" 1;
+    -webkit-font-smoothing: antialiased;
   }
   img, video, svg { max-width: 100%; height: auto; }
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: hsl(220 28% 22%); border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(220 28% 30%); }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.20); }
+}
+
+@layer components {
+  /* ── Cards ── */
+  .glass {
+    background: hsl(var(--card));
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.40), 0 4px 16px rgba(0,0,0,0.28);
+  }
+  .glass-sm {
+    background: hsl(var(--card));
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.30);
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    background: #BF7D93;
+    color: white;
+    box-shadow: 0 2px 12px rgba(191,125,147,0.32);
+    @apply font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
+  }
+  .btn-primary:hover  { background: #A8697E; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.40; cursor: not-allowed; }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.05);
+    color: #EDE9F5;
+    border: 1.5px solid rgba(255,255,255,0.10);
+    @apply font-medium text-sm px-5 py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
+  }
+  .btn-secondary:hover  { border-color: rgba(255,255,255,0.18); background: rgba(255,255,255,0.08); }
+  .btn-secondary:active { transform: scale(0.98); }
+  .btn-secondary:disabled { opacity: 0.40; cursor: not-allowed; }
+
+  .btn-ghost {
+    color: rgba(237,233,245,0.55);
+    @apply font-medium text-sm px-4 py-2 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
+  }
+  .btn-ghost:hover  { background: rgba(255,255,255,0.07); color: #EDE9F5; }
+  .btn-ghost:active { transform: scale(0.98); }
+
+  .btn-danger {
+    background: #CF738A;
+    color: white;
+    @apply font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
+  }
+  .btn-danger:hover  { opacity: 0.90; }
+  .btn-danger:active { transform: scale(0.98); }
+
+  .btn-teal {
+    background: #4AA89D;
+    color: white;
+    box-shadow: 0 2px 12px rgba(74,168,157,0.28);
+    @apply font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
+  }
+  .btn-teal:hover  { background: #3B887E; }
+  .btn-teal:active { transform: scale(0.98); }
+  .btn-teal:disabled { opacity: 0.40; cursor: not-allowed; }
+
+  /* ── Input ── */
+  .input {
+    @apply w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all;
+    background: rgba(255,255,255,0.05);
+    border: 1.5px solid rgba(255,255,255,0.09);
+    color: #EDE9F5;
+  }
+  .input::placeholder { color: rgba(237,233,245,0.32); }
+  .input:focus {
+    border-color: rgba(191,125,147,0.55);
+    box-shadow: 0 0 0 3px rgba(191,125,147,0.12);
+  }
+
+  /* ── Typography ── */
+  .page-title    { @apply text-2xl font-bold tracking-tight; color: #EDE9F5; }
+  .section-title { @apply text-base font-semibold; color: #EDE9F5; }
+  .label         { @apply block text-xs font-semibold uppercase tracking-wide mb-1.5; color: rgba(237,233,245,0.45); }
+  .caption       { @apply text-sm; color: rgba(237,233,245,0.55); }
+
+  /* ── Badges ── */
+  .badge-pink  { background: rgba(191,124,147,0.14); color: #C98BA0; border: 1px solid rgba(191,124,147,0.24); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-teal  { background: rgba(74,168,157,0.14);  color: #5DADA3; border: 1px solid rgba(74,168,157,0.22);  @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-slate { background: rgba(255,255,255,0.07); color: rgba(237,233,245,0.55); border: 1px solid rgba(255,255,255,0.10); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-rose  { background: rgba(207,115,138,0.14); color: #D4879C; border: 1px solid rgba(207,115,138,0.24); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+
+  /* ── Divider ── */
+  .divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 1.25rem 0; }
 }

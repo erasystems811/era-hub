@@ -64,7 +64,7 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
   return (
     <div className="fixed inset-0 z-40 flex">
       <div className="flex-1 bg-black/20 backdrop-blur-sm" onClick={onClose} />
-      <div className="w-[480px] bg-bg border-l border-pink-border overflow-y-auto p-6">
+      <div className="w-[480px] bg-background border-l border-white/8 overflow-y-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="section-title">{client.name}</h2>
