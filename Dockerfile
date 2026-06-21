@@ -13,8 +13,9 @@ ENV VITE_COMMS_OPERATOR_SECRET=$VITE_COMMS_OPERATOR_SECRET
 
 RUN npm run build
 
-FROM nginx:1.25-alpine
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 8080
-CMD ["/bin/sh", "-c", "sed -i \"s/PORT_PLACEHOLDER/${PORT:-8080}/g\" /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY server.js .
+EXPOSE 3000
+CMD ["node", "server.js"]
