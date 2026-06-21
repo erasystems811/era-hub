@@ -138,7 +138,8 @@ export function Hospitals() {
         </div>
       ) : (
         <div className="rounded-2xl border border-white/07 bg-card overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm" style={{ minWidth: 580 }}>
             <thead>
               <tr className="border-b border-white/07">
                 {['Hospital', 'Subscription', 'Patients', 'Wallet', 'Added', ''].map(h => (
@@ -176,6 +177,10 @@ export function Hospitals() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+          </div>
         </div>
       )}
 

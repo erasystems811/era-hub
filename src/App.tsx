@@ -21,13 +21,19 @@ import { DemoSessions }     from './pages/patient/DemoSessions'
 import { Docs }             from './pages/patient/Docs'
 
 // ERA Comms
-import { CommsHome }   from './pages/comms/CommsHome'
-import { Sessions }    from './pages/comms/Sessions'
-import { Businesses }  from './pages/comms/Businesses'
-import { Onboarding }  from './pages/comms/Onboarding'
-import { Plans }       from './pages/comms/Plans'
-import { Billing }     from './pages/comms/Billing'
-import { CommsSettings } from './pages/comms/CommsSettings'
+import { CommsHome }      from './pages/comms/CommsHome'
+import { CommsDashboard } from './pages/comms/CommsDashboard'
+import { Sessions }       from './pages/comms/Sessions'
+import { Businesses }     from './pages/comms/Businesses'
+import { Requests }       from './pages/comms/Requests'
+import { Onboarding }     from './pages/comms/Onboarding'
+import { Plans }          from './pages/comms/Plans'
+import { Billing }        from './pages/comms/Billing'
+import { CommsSettings }  from './pages/comms/CommsSettings'
+import { EventLog }       from './pages/comms/EventLog'
+import { Alerts }         from './pages/comms/Alerts'
+import { AuditTrail }     from './pages/comms/AuditTrail'
+import { Investigation }  from './pages/comms/Investigation'
 
 function ProtectedApp() {
   return (
@@ -52,13 +58,19 @@ function ProtectedApp() {
         <Route path="/patient/docs" element={<Docs />} />
 
         {/* ERA Comms */}
-        <Route path="/comms" element={<CommsHome />} />
-        <Route path="/comms/sessions" element={<Sessions />} />
-        <Route path="/comms/businesses" element={<Businesses />} />
-        <Route path="/comms/onboarding" element={<Onboarding />} />
-        <Route path="/comms/plans" element={<Plans />} />
-        <Route path="/comms/billing" element={<Billing />} />
-        <Route path="/comms/settings" element={<CommsSettings />} />
+        <Route path="/comms"              element={<CommsHome />} />
+        <Route path="/comms/dashboard"    element={<CommsDashboard />} />
+        <Route path="/comms/sessions"     element={<Sessions />} />
+        <Route path="/comms/businesses"   element={<Businesses />} />
+        <Route path="/comms/requests"     element={<Requests />} />
+        <Route path="/comms/onboarding"   element={<Onboarding />} />
+        <Route path="/comms/plans"        element={<Plans />} />
+        <Route path="/comms/billing"      element={<Billing />} />
+        <Route path="/comms/settings"     element={<CommsSettings />} />
+        <Route path="/comms/event-log"    element={<EventLog />} />
+        <Route path="/comms/alerts"       element={<Alerts />} />
+        <Route path="/comms/audit"        element={<AuditTrail />} />
+        <Route path="/comms/investigate"  element={<Investigation />} />
 
         {/* Future */}
         <Route path="/connect" element={

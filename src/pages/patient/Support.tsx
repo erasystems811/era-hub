@@ -62,8 +62,8 @@ export function Support() {
       </div>
 
       <div className="flex gap-4 flex-1 min-h-0">
-        {/* Ticket list */}
-        <div className="w-72 shrink-0 rounded-2xl border border-white/07 bg-card overflow-y-auto">
+        {/* Ticket list — hidden on mobile when a thread is open */}
+        <div className={`${selected ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-72 shrink-0 rounded-2xl border border-white/07 bg-card overflow-y-auto`}>
           {loading ? (
             <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" /> Loading…
@@ -96,8 +96,17 @@ export function Support() {
           )}
         </div>
 
-        {/* Thread panel */}
-        <div className="flex-1 rounded-2xl border border-white/07 bg-card flex flex-col min-w-0">
+        {/* Thread panel — hidden on mobile when no ticket selected */}
+        <div className={`${!selected ? 'hidden md:flex' : 'flex'} flex-1 rounded-2xl border border-white/07 bg-card flex-col min-w-0`}>
+          {/* Mobile back button */}
+          {selected && (
+            <button
+              className="md:hidden flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground border-b border-white/07 hover:text-foreground transition shrink-0"
+              onClick={() => { setSelected(null); setThread(null) }}
+            >
+              ← Back to tickets
+            </button>
+          )}
           {!selected ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
               <div className="w-12 h-12 rounded-2xl bg-white/05 flex items-center justify-center">

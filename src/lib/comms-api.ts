@@ -91,6 +91,20 @@ export interface ApiKey {
   lastUsedAt: string | null; createdAt: string
 }
 
+export interface OnboardingRequest {
+  id:           string
+  tier:         'ai_agent' | 'developer'
+  businessName: string
+  contactEmail: string
+  contactPhone: string | null
+  description:  string | null
+  planId:       string | null
+  planName:     string | null
+  status:       'pending' | 'approved' | 'rejected'
+  rejectedReason: string | null
+  createdAt:    string
+}
+
 export interface Alert {
   id: string; type: string; severity: 'info' | 'warning' | 'critical'
   message: string; clientId: string | null; sessionId: string | null
@@ -122,10 +136,20 @@ export const commsApi = {
   listApiKeys:  (clientId: string) => get<ApiKey[]>(`/clients/${clientId}/api-keys`),
   revokeApiKey: (keyId: string) => del<void>(`/api-keys/${keyId}`),
 
-  listSessions: () => get<Session[]>('/sessions'),
-  createSession: (data: { clientId: string; phoneNumber: string; role?: 'primary' | 'backup' }) =>
+  listSessions:   () => get<Session[]>('/sessions'),
+  createSession:  (data: { clientId: string; phoneNumber: string; role?: 'primary' | 'backup' }) =>
     post<{ id: string; phoneNumber: string; role: string; status: string }>('/sessions', data),
-  stopSession:   (id: string) => del<void>(`/sessions/${id}`),
+  stopSession:    (id: string) => del<void>(`/sessions/${id}`),
+
+  // Master session — ERA Systems own number used for OTP and platform messages
+  getMasterSession:    () => get<Session | null>('/sessions/master'),
+  sendOtp:             (phoneNumber: string) => post<{ otpId: string }>('/sessions/otp/send', { phoneNumber }),
+  verifyOtp:           (otpId: string, code: string) => post<{ sessionId: string }>('/sessions/otp/verify', { otpId, code }),
+
+  // Business onboarding requests
+  listRequests:   () => get<OnboardingRequest[]>('/requests'),
+  approveRequest: (id: string) => post<void>(`/requests/${id}/approve`, {}),
+  rejectRequest:  (id: string, reason?: string) => post<void>(`/requests/${id}/reject`, { reason }),
 
   monitoring: () => get<MonitoringSnapshot>('/monitoring'),
   listAlerts:  () => get<Alert[]>('/alerts'),

@@ -7,7 +7,8 @@ import {
   BarChart2, Building2, Rocket, AlertCircle, PanelLeftClose, PanelLeftOpen,
   Menu, X, FlaskConical, TrendingUp, Headphones, Bell, Home,
   Kanban, Activity, MonitorPlay, Smartphone, Users, Layers,
-  CreditCard, Settings, Star, Database, BookOpen,
+  CreditCard, Settings, Star, Database, BookOpen, Radio,
+  ScrollText, ShieldAlert, Search, ClipboardList,
 } from 'lucide-react'
 import { ChangePasswordModal } from './ChangePasswordModal'
 import { NotificationPanel } from './NotificationPanel'
@@ -30,11 +31,17 @@ const PATIENT_NAV = [
 ]
 
 const COMMS_NAV = [
-  { icon: Smartphone, label: 'Sessions',       href: '/comms/sessions',   sub: 'WhatsApp connections' },
-  { icon: Users,      label: 'Businesses',     href: '/comms/businesses', sub: 'Client accounts' },
-  { icon: Layers,     label: 'Plans',          href: '/comms/plans',      sub: 'Subscription tiers' },
-  { icon: CreditCard, label: 'Billing',        href: '/comms/billing',    sub: 'Revenue & consumption' },
-  { icon: Settings,   label: 'Settings',       href: '/comms/settings',   sub: 'API & configuration' },
+  { icon: Radio,         label: 'Dashboard',    href: '/comms/dashboard',    sub: 'Live platform view' },
+  { icon: Smartphone,    label: 'Sessions',     href: '/comms/sessions',     sub: 'WhatsApp connections' },
+  { icon: Users,         label: 'Businesses',   href: '/comms/businesses',   sub: 'Client accounts' },
+  { icon: ClipboardList, label: 'Requests',     href: '/comms/requests',     sub: 'Onboarding queue' },
+  { icon: Layers,        label: 'Plans',        href: '/comms/plans',        sub: 'Subscription tiers' },
+  { icon: CreditCard,    label: 'Billing',      href: '/comms/billing',      sub: 'Revenue & consumption' },
+  { icon: ScrollText,    label: 'Event Log',    href: '/comms/event-log',    sub: 'Full activity history' },
+  { icon: ShieldAlert,   label: 'Alerts',       href: '/comms/alerts',       sub: 'Issues & notifications' },
+  { icon: BookOpen,      label: 'Audit Trail',  href: '/comms/audit',        sub: 'Who did what & when' },
+  { icon: Search,        label: 'Investigate',  href: '/comms/investigate',  sub: 'Search any business' },
+  { icon: Settings,      label: 'Settings',     href: '/comms/settings',     sub: 'API & configuration' },
 ]
 
 const PRODUCTS = {

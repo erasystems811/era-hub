@@ -49,7 +49,7 @@ export function AutomationLog() {
       </div>
 
       {/* Filter tab bar */}
-      <div className="flex gap-1 mb-5 p-1 rounded-xl border border-white/07 bg-card w-fit">
+      <div className="flex gap-1 mb-5 p-1 rounded-xl border border-white/07 bg-card w-fit overflow-x-auto max-w-full">
         {FILTERS.map(s => (
           <button key={s} onClick={() => setFilter(s)}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all capitalize ${
@@ -74,7 +74,8 @@ export function AutomationLog() {
         </div>
       ) : (
         <div className="rounded-2xl border border-white/07 bg-card overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm" style={{ minWidth: 680 }}>
             <thead>
               <tr className="border-b border-white/07">
                 {['Hospital', 'Patient', 'Type', 'Channel', 'Status', 'Sent', ''].map(h => (
@@ -115,6 +116,7 @@ export function AutomationLog() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

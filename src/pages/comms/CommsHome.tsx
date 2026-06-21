@@ -1,42 +1,22 @@
 ﻿import { useNavigate } from 'react-router-dom'
-import { Smartphone, Users, Layers, CreditCard, Settings, ArrowRight, MessageSquare } from 'lucide-react'
+import {
+  Smartphone, Users, Layers, CreditCard, Settings, ArrowRight,
+  MessageSquare, Radio, ClipboardList, ScrollText, ShieldAlert,
+  BookOpen, Search,
+} from 'lucide-react'
 
 const FEATURES = [
-  {
-    icon: Smartphone,
-    label: 'Sessions',
-    sub: 'WhatsApp connection management',
-    href: '/comms/sessions',
-    badge: 'Live',
-  },
-  {
-    icon: Users,
-    label: 'Businesses',
-    sub: 'Client accounts & onboarding',
-    href: '/comms/businesses',
-    badge: null,
-  },
-  {
-    icon: Layers,
-    label: 'Plans',
-    sub: 'Subscription tiers & pricing',
-    href: '/comms/plans',
-    badge: null,
-  },
-  {
-    icon: CreditCard,
-    label: 'Billing & Usage',
-    sub: 'Revenue tracking & consumption',
-    href: '/comms/billing',
-    badge: null,
-  },
-  {
-    icon: Settings,
-    label: 'Settings',
-    sub: 'API keys & configuration',
-    href: '/comms/settings',
-    badge: null,
-  },
+  { icon: Radio,         label: 'Dashboard',   sub: 'Live platform view',           href: '/comms/dashboard',   badge: 'Live' },
+  { icon: Smartphone,    label: 'Sessions',    sub: 'WhatsApp connection management', href: '/comms/sessions',   badge: 'Live' },
+  { icon: Users,         label: 'Businesses',  sub: 'Client accounts & onboarding',  href: '/comms/businesses', badge: null },
+  { icon: ClipboardList, label: 'Requests',    sub: 'Onboarding approval queue',     href: '/comms/requests',   badge: null },
+  { icon: Layers,        label: 'Plans',       sub: 'Subscription tiers & pricing',  href: '/comms/plans',      badge: null },
+  { icon: CreditCard,    label: 'Billing',     sub: 'Revenue tracking & consumption', href: '/comms/billing',   badge: null },
+  { icon: ScrollText,    label: 'Event Log',   sub: 'Full searchable activity history', href: '/comms/event-log', badge: null },
+  { icon: ShieldAlert,   label: 'Alerts',      sub: 'Platform issues & notifications', href: '/comms/alerts',   badge: null },
+  { icon: BookOpen,      label: 'Audit Trail', sub: 'Who did what and when',         href: '/comms/audit',      badge: null },
+  { icon: Search,        label: 'Investigate', sub: 'Search any business or number', href: '/comms/investigate', badge: null },
+  { icon: Settings,      label: 'Settings',    sub: 'API keys & configuration',      href: '/comms/settings',   badge: null },
 ]
 
 export function CommsHome() {
