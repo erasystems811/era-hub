@@ -14,14 +14,14 @@ export function Login() {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4"
-      style={{ background: 'linear-gradient(135deg, #C4286F 0%, #A82060 60%, #8A1850 100%)' }}
+      style={{ background: 'linear-gradient(135deg, #FFF0F8 0%, #FFD6EC 60%, #FFC0E0 100%)' }}
     >
       {/* Decorative blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-40"
-          style={{ background: 'radial-gradient(circle, #B5226A 0%, transparent 70%)' }} />
+          style={{ background: 'radial-gradient(circle, #F9A8D4 0%, transparent 70%)' }} />
         <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full opacity-25"
-          style={{ background: 'radial-gradient(circle, #7A1248 0%, transparent 70%)' }} />
+          style={{ background: 'radial-gradient(circle, #F472B6 0%, transparent 70%)' }} />
       </div>
 
       <div className="relative w-full max-w-sm">
