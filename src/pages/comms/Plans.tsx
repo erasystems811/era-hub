@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, Bot, Mic, BarChart3, X, AlertCircle, Check } from 'lucide-react'
-import { Glass } from '../../components/Glass'
 import { commsApi, Plan, CreatePlanData } from '../../lib/comms-api'
 import { fmtNumber } from '../../lib/utils'
 
@@ -310,29 +309,46 @@ export function Plans() {
     setDeleteTarget(null)
   }
 
+  const billable = plans.filter(p => p.billingModel !== 'none' && p.monthlyFee && p.monthlyFee > 0)
+  const free     = plans.filter(p => p.billingModel === 'none' || !p.monthlyFee)
+
   if (loading) return <div className="text-center py-16 text-muted-foreground">Loading…</div>
 
   return (
-    <div>
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="page-title">Plans</h1>
           <p className="caption mt-0.5">{plans.length} plan{plans.length !== 1 ? 's' : ''} configured</p>
         </div>
-        <button className="btn-primary" onClick={() => setFormTarget('create')}>
+        <button className="btn-primary flex items-center gap-2" onClick={() => setFormTarget('create')}>
           <Plus className="w-4 h-4" /> Create Plan
         </button>
       </div>
 
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: 'Total Plans',   value: plans.length,    color: 'text-foreground' },
+          { label: 'Paid Plans',    value: billable.length, color: 'text-primary' },
+          { label: 'Free / Internal', value: free.length,  color: 'text-teal' },
+        ].map(s => (
+          <div key={s.label} className="rounded-xl border border-white/07 bg-card px-4 py-3.5">
+            <p className="text-xs text-muted-foreground font-medium">{s.label}</p>
+            <p className={`text-2xl font-bold tabular-nums mt-0.5 ${s.color}`}>{s.value}</p>
+          </div>
+        ))}
+      </div>
+
       {/* Table */}
       {plans.length === 0 ? (
-        <Glass className="text-center py-12">
+        <div className="rounded-2xl border border-white/07 bg-card text-center py-14">
           <p className="font-medium text-foreground">No plans configured</p>
           <p className="caption mt-1">Create your first plan to onboard businesses.</p>
-        </Glass>
+        </div>
       ) : (
-        <Glass style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="rounded-2xl border border-white/07 bg-card overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
@@ -401,7 +417,7 @@ export function Plans() {
               ))}
             </tbody>
           </table>
-        </Glass>
+        </div>
       )}
 
       {/* Feature legend */}
