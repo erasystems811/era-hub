@@ -42,8 +42,8 @@ const PRODUCTS = {
   comms:   { name: 'ERA Comms',   color: '#BF7C93', accentText: 'text-primary', activeBg: 'bg-primary/15', nav: COMMS_NAV   },
 } as const
 
-const SB_BG     = 'rgba(15, 12, 22, 0.82)'
-const SB_BORDER = 'rgba(255,255,255,0.07)'
+const SB_BG     = 'rgba(28, 10, 18, 0.84)'
+const SB_BORDER = 'rgba(203,122,149,0.14)'
 const SB_BLUR   = 'blur(28px) saturate(160%)'
 const SIDEBAR_KEY = 'era_hub_sidebar'
 
