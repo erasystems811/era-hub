@@ -114,8 +114,8 @@ export function Sidebar() {
     <aside
       className="fixed left-0 top-0 h-full w-56 flex flex-col z-20"
       style={{
-        background: 'linear-gradient(180deg, #FBF0F8 0%, #F4E0EE 100%)',
-        borderRight: '1px solid rgba(196,40,111,0.12)',
+        background: 'linear-gradient(180deg, #E8CEDF 0%, #DFC0D5 100%)',
+        borderRight: '1px solid rgba(181,34,106,0.15)',
       }}
     >
       {/* Logo */}

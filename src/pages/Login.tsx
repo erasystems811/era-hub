@@ -14,14 +14,14 @@ export function Login() {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4"
-      style={{ background: 'linear-gradient(135deg, #FBF0F8 0%, #F4E0EE 60%, #EDD0E6 100%)' }}
+      style={{ background: 'linear-gradient(135deg, #EFD9E8 0%, #E5C8DC 60%, #D8B5CC 100%)' }}
     >
       {/* Decorative blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-25"
-          style={{ background: 'radial-gradient(circle, #C4286F 0%, transparent 70%)' }} />
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full opacity-15"
-          style={{ background: 'radial-gradient(circle, #8B1A4A 0%, transparent 70%)' }} />
+        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-40"
+          style={{ background: 'radial-gradient(circle, #B5226A 0%, transparent 70%)' }} />
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full opacity-25"
+          style={{ background: 'radial-gradient(circle, #7A1248 0%, transparent 70%)' }} />
       </div>
 
       <div className="relative w-full max-w-sm">
@@ -29,7 +29,7 @@ export function Login() {
         <div className="text-center mb-8">
           <div
             className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-bold mx-auto mb-4 shadow-glass"
-            style={{ background: 'linear-gradient(135deg, #C4286F 0%, #8B1A4A 100%)' }}
+            style={{ background: 'linear-gradient(135deg, #B5226A 0%, #7A1248 100%)' }}
           >
             E
           </div>

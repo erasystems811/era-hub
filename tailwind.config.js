@@ -4,19 +4,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Background: warm pinkish tint — same energy as ERA Patient's teal tint
-        bg:           '#FBF0F8',
-        'bg-2':       '#F4E0EE',
-        // Primary pink: bold, saturated, confident — same visual weight as teal
-        pink:         '#C4286F',
-        'pink-light': 'rgba(196,40,111,0.08)',
-        'pink-border':'rgba(196,40,111,0.16)',
-        // Teal: kept only for data/status indicators (health dots, etc.)
-        teal:         '#4A9BA8',
-        'teal-light': 'rgba(74,155,168,0.09)',
-        charcoal:     '#111827',
-        'charcoal-soft': '#6B7280',
-        rose:         '#B91C4D',
+        // Proper pinkish background — same way ERA Patient has a teal-tinted bg
+        bg:            '#EFD9E8',
+        'bg-2':        '#E5C8DC',
+        // Primary pink: bold, saturated, defined — the teal of this app
+        pink:          '#B5226A',
+        'pink-light':  'rgba(181,34,106,0.08)',
+        'pink-border': 'rgba(181,34,106,0.18)',
+        // Teal: only for healthy/active status dots
+        teal:          '#4A9BA8',
+        'teal-light':  'rgba(74,155,168,0.09)',
+        charcoal:      '#0F172A',
+        'charcoal-soft':'#64748B',
+        rose:          '#BE123C',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
@@ -28,9 +28,9 @@ export default {
       },
       backdropBlur: { xs: '4px' },
       boxShadow: {
-        glass:     '0 2px 24px rgba(196,40,111,0.08), 0 1px 4px rgba(0,0,0,0.05)',
-        'glass-lg':'0 8px 40px rgba(196,40,111,0.13), 0 2px 8px rgba(0,0,0,0.07)',
-        card:      '0 1px 12px rgba(0,0,0,0.05)',
+        glass:     '0 4px 32px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
+        'glass-lg':'0 12px 48px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)',
+        card:      '0 1px 12px rgba(0,0,0,0.06)',
       },
     },
   },
