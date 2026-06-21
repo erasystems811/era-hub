@@ -1,312 +1,263 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Check, Copy, Eye, EyeOff, Loader2 } from 'lucide-react'
-import { QRModal } from '../../components/QRModal'
-import { commsApi, Plan } from '../../lib/comms-api'
-import { slugify } from '../../lib/utils'
+import { Users, Clock, CheckCircle2, Loader2, Bell, ChevronRight, AlertTriangle } from 'lucide-react'
+import { commsApi, type Client, type OnboardingRequest } from '../../lib/comms-api'
 
-const SCOPES = ['messages:send', 'sessions:read', 'webhooks:manage']
+type Stage = 'request_submitted' | 'approved' | 'login_created' | 'whatsapp_connected' | 'ai_configured' | 'live'
 
-const STEPS = [
-  'Business details',
-  'Choose plan',
-  'API access',
-  'WhatsApp number',
-  'Scan QR',
-  'All done',
+const STAGES: { key: Stage; label: string }[] = [
+  { key: 'request_submitted',  label: 'Submitted' },
+  { key: 'approved',           label: 'Approved' },
+  { key: 'login_created',      label: 'Login Created' },
+  { key: 'whatsapp_connected', label: 'WhatsApp Connected' },
+  { key: 'ai_configured',      label: 'AI Configured' },
+  { key: 'live',               label: 'Live' },
 ]
 
-function StepTracker({ current }: { current: number }) {
+const STAGE_INDEX: Record<Stage, number> = Object.fromEntries(STAGES.map((s, i) => [s.key, i])) as Record<Stage, number>
+
+interface PipelineEntry {
+  id: string
+  name: string
+  plan: string
+  stage: Stage
+  stageIndex: number
+  createdAt: string
+  isStuck: boolean
+  clientId?: string
+}
+
+function deriveStage(client: Client): Stage {
+  if (client.active && client.sessionCount > 0) return 'live'
+  if (client.sessionCount > 0) return 'whatsapp_connected'
+  return 'approved'
+}
+
+function isStuck(createdAt: string, hourThreshold = 48): boolean {
+  return (Date.now() - new Date(createdAt).getTime()) > hourThreshold * 3600 * 1000
+}
+
+function timeAgo(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime()
+  const h = Math.floor(diff / 3600000)
+  if (h < 1)  return 'just now'
+  if (h < 24) return `${h}h ago`
+  const d = Math.floor(h / 24)
+  return `${d}d ago`
+}
+
+function StageProgress({ stageIndex }: { stageIndex: number }) {
+  const total = STAGES.length
+  const pct   = Math.round((stageIndex / (total - 1)) * 100)
   return (
-    <div className="flex items-start mb-10 overflow-x-auto pb-1 gap-0">
-      {STEPS.map((label, i) => (
-        <div key={i} className="flex items-start shrink-0">
-          <div className="flex flex-col items-center">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 ${
-              i < current
-                ? 'bg-teal text-white shadow-[0_0_12px_rgba(74,168,157,0.4)]'
-                : i === current
-                ? 'bg-teal text-white ring-4 ring-teal/20'
-                : 'bg-white/06 text-muted-foreground/50 border border-white/10'
-            }`}>
-              {i < current ? <Check className="w-3.5 h-3.5" /> : i + 1}
-            </div>
-            <span className={`text-[10px] mt-1.5 font-medium whitespace-nowrap text-center leading-tight ${
-              i === current
-                ? 'text-teal'
-                : i < current
-                ? 'text-muted-foreground/60'
-                : 'text-muted-foreground/30'
-            }`}>
-              {label}
-            </span>
-          </div>
-          {i < STEPS.length - 1 && (
-            <div className={`h-0.5 w-10 mx-1 mt-4 shrink-0 rounded-full transition-all ${
-              i < current ? 'bg-teal/50' : 'bg-white/08'
-            }`} />
-          )}
-        </div>
-      ))}
+    <div className="flex items-center gap-2 flex-1 min-w-0">
+      <div className="flex-1 min-w-0 h-1.5 rounded-full bg-white/[0.07] overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all"
+          style={{
+            width: `${pct}%`,
+            background: pct === 100
+              ? 'hsl(161 70% 50%)'
+              : 'linear-gradient(90deg, #BF7C93, #d4a0b5)',
+          }}
+        />
+      </div>
+      <span className="text-xs text-muted-foreground shrink-0">{STAGES[stageIndex].label}</span>
     </div>
   )
 }
 
 export function Onboarding() {
   const nav = useNavigate()
-  const [step, setStep] = useState(0)
-  const [plans, setPlans] = useState<Plan[]>([])
+  const [clients,  setClients]  = useState<Client[]>([])
+  const [requests, setRequests] = useState<OnboardingRequest[]>([])
+  const [loading,  setLoading]  = useState(true)
 
-  const [name, setName]   = useState('')
-  const [slug, setSlug]   = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [autoSlug, setAutoSlug] = useState(true)
+  useEffect(() => {
+    Promise.all([
+      commsApi.listClients().catch(() => [] as Client[]),
+      commsApi.listRequests().catch(() => [] as OnboardingRequest[]),
+    ]).then(([c, r]) => { setClients(c); setRequests(r) }).finally(() => setLoading(false))
+  }, [])
 
-  const [planId, setPlanId] = useState('')
+  // Build pipeline entries
+  const pipeline: PipelineEntry[] = []
 
-  const [clientId, setClientId] = useState('')
-  const [apiKey, setApiKey]     = useState('')
-  const [showKey, setShowKey]   = useState(true)
-  const [copied, setCopied]     = useState(false)
-
-  const [waPhone, setWaPhone]     = useState('+234')
-  const [sessionId, setSessionId] = useState('')
-  const [showQR, setShowQR]       = useState(false)
-
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState<string | null>(null)
-
-  useEffect(() => { void commsApi.listPlans().then(setPlans).catch(() => null) }, [])
-  useEffect(() => { if (autoSlug) setSlug(slugify(name)) }, [name, autoSlug])
-
-  const createBusiness = async () => {
-    setLoading(true); setError(null)
-    try {
-      const client = await commsApi.createClient({
-        name, slug, planId,
-        contactEmail: email || undefined,
-        contactPhone: phone || undefined,
-      })
-      setClientId(client.id)
-      const key = await commsApi.createApiKey(client.id, 'Default key', SCOPES)
-      setApiKey(key.key)
-      setStep(2)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Something went wrong') }
-    finally { setLoading(false) }
+  // Clients (approved and beyond)
+  for (const c of clients) {
+    const stage = deriveStage(c)
+    pipeline.push({
+      id:         c.id,
+      name:       c.name,
+      plan:       c.planName,
+      stage,
+      stageIndex: STAGE_INDEX[stage],
+      createdAt:  c.createdAt,
+      isStuck:    !c.active && isStuck(c.createdAt),
+      clientId:   c.id,
+    })
   }
 
-  const createSession = async () => {
-    setLoading(true); setError(null)
-    try {
-      const s = await commsApi.createSession({ clientId, phoneNumber: waPhone })
-      setSessionId(s.id)
-      setStep(4)
-      setShowQR(true)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Something went wrong') }
-    finally { setLoading(false) }
+  // Approved requests not yet in clients
+  const clientNames = new Set(clients.map(c => c.name.toLowerCase()))
+  for (const r of requests) {
+    if (r.status !== 'approved') continue
+    if (clientNames.has(r.businessName.toLowerCase())) continue
+    pipeline.push({
+      id:         r.id,
+      name:       r.businessName,
+      plan:       r.planName ?? '—',
+      stage:      'login_created',
+      stageIndex: STAGE_INDEX['login_created'],
+      createdAt:  r.createdAt,
+      isStuck:    isStuck(r.createdAt, 24),
+    })
   }
 
-  const copy = () => {
-    void navigator.clipboard.writeText(apiKey)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  // Pending requests
+  for (const r of requests) {
+    if (r.status !== 'pending') continue
+    pipeline.push({
+      id:         r.id,
+      name:       r.businessName,
+      plan:       r.planName ?? '—',
+      stage:      'request_submitted',
+      stageIndex: STAGE_INDEX['request_submitted'],
+      createdAt:  r.createdAt,
+      isStuck:    isStuck(r.createdAt, 12),
+    })
   }
 
-  const selectedPlan = plans.find(p => p.id === planId)
+  pipeline.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+  const totalInPipeline  = pipeline.length
+  const stuckCount       = pipeline.filter(p => p.isStuck && p.stageIndex < STAGE_INDEX['live']).length
+  const liveCount        = pipeline.filter(p => p.stage === 'live').length
+  const avgDaysToLive    = (() => {
+    const live = pipeline.filter(p => p.stage === 'live')
+    if (!live.length) return null
+    const avg = live.reduce((s, p) => s + (Date.now() - new Date(p.createdAt).getTime()), 0) / live.length
+    return Math.round(avg / 86400000)
+  })()
 
   return (
-    <div className="max-w-2xl">
-      <div className="mb-8">
-        <h1 className="page-title">Add a business</h1>
-        <p className="caption mt-0.5">Set up a new business account in a few steps</p>
+    <div className="max-w-5xl space-y-8">
+      <div>
+        <h1 className="page-title">Onboarding</h1>
+        <p className="caption mt-0.5">Track business setup progress end to end</p>
       </div>
 
-      <StepTracker current={step} />
+      {/* Summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { icon: Users,         label: 'In Pipeline',         value: loading ? '—' : String(totalInPipeline) },
+          { icon: AlertTriangle, label: 'Stuck',               value: loading ? '—' : String(stuckCount),  amber: true },
+          { icon: CheckCircle2,  label: 'Live',                value: loading ? '—' : String(liveCount),   green: true },
+          { icon: Clock,         label: 'Avg Days to Live',    value: loading ? '—' : avgDaysToLive !== null ? `${avgDaysToLive}d` : '—' },
+        ].map(({ icon: Icon, label, value, amber, green }) => (
+          <div key={label} className="rounded-xl border border-white/[0.07] bg-card p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Icon className={`w-3.5 h-3.5 ${amber ? 'text-amber-400' : green ? 'text-emerald-400' : 'text-primary/70'}`} />
+              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">{label}</span>
+            </div>
+            <div className={`text-2xl font-bold ${amber && stuckCount > 0 ? 'text-amber-400' : green ? 'text-emerald-400' : 'text-foreground'}`}>
+              {value}
+            </div>
+          </div>
+        ))}
+      </div>
 
-      {/* Step 0 — Business details */}
-      {step === 0 && (
-        <div className="rounded-2xl border border-white/10 bg-card p-6">
-          <h2 className="section-title mb-5">Business details</h2>
-          {error && (
-            <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 mb-4">{error}</div>
-          )}
-          <div className="space-y-4">
-            <div>
-              <label className="label">Business name</label>
-              <input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Acme Health" />
-            </div>
-            <div>
-              <label className="label">Slug (URL identifier)</label>
-              <input
-                className="input font-mono text-sm"
-                value={slug}
-                onChange={e => { setAutoSlug(false); setSlug(e.target.value) }}
-                placeholder="acme-health"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">Contact email (optional)</label>
-                <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@acmehealth.com" />
+      {/* Stage legend */}
+      <div className="flex items-center gap-1 overflow-x-auto pb-1">
+        {STAGES.map((s, i) => (
+          <div key={s.key} className="flex items-center gap-1 shrink-0">
+            <div className="flex flex-col items-center">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold bg-white/[0.06] text-muted-foreground/60 border border-white/[0.08]">
+                {i + 1}
               </div>
-              <div>
-                <label className="label">Contact phone (optional)</label>
-                <input className="input" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+2348012345678" />
-              </div>
+              <span className="text-[9px] text-muted-foreground/40 mt-1 whitespace-nowrap">{s.label}</span>
             </div>
+            {i < STAGES.length - 1 && <div className="w-6 h-px bg-white/[0.08] mb-3" />}
           </div>
-          <div className="flex justify-end mt-6">
-            <button className="btn-primary" disabled={!name || !slug} onClick={() => setStep(1)}>
-              Next: choose plan
-            </button>
-          </div>
+        ))}
+      </div>
+
+      {/* Pipeline list */}
+      <div className="rounded-xl border border-white/[0.07] bg-card overflow-hidden">
+        <div className="px-5 py-4 border-b border-white/[0.07]">
+          <h2 className="text-sm font-semibold text-foreground">All Businesses</h2>
         </div>
-      )}
-
-      {/* Step 1 — Plan */}
-      {step === 1 && (
-        <div className="rounded-2xl border border-white/10 bg-card p-6">
-          <h2 className="section-title mb-5">Choose a plan for {name}</h2>
-          <div className="space-y-3">
-            {plans.map(p => (
-              <label key={p.id} className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                planId === p.id
-                  ? 'border-teal bg-teal/08'
-                  : 'border-white/10 bg-white/[0.02] hover:border-teal/30 hover:bg-white/[0.04]'
-              }`}>
-                <input type="radio" name="plan" value={p.id} checked={planId === p.id} onChange={() => setPlanId(p.id)} className="mt-1 accent-teal" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="font-semibold text-foreground truncate">{p.displayName}</div>
-                    <div className="text-sm font-medium text-foreground shrink-0">
-                      {p.monthlyFee ? `₦${p.monthlyFee.toLocaleString()}/mo` : 'Free'}
-                    </div>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {p.limits.monthlyMessages ? `${p.limits.monthlyMessages.toLocaleString()} messages/month` : 'Unlimited messages'}
-                    {' · '}
-                    {p.limits.maxSessions ? `${p.limits.maxSessions} session${p.limits.maxSessions !== 1 ? 's' : ''}` : 'Unlimited sessions'}
-                  </div>
-                </div>
-              </label>
+        {loading ? (
+          <div className="divide-y divide-white/[0.04]">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="px-5 py-4 flex items-center gap-4 animate-pulse">
+                <div className="h-4 bg-white/06 rounded w-32" />
+                <div className="h-2 bg-white/06 rounded flex-1" />
+                <div className="h-4 bg-white/06 rounded w-20" />
+              </div>
             ))}
           </div>
-          <div className="flex gap-2 justify-end mt-6">
-            <button className="btn-secondary" onClick={() => setStep(0)}>Back</button>
-            <button className="btn-primary" disabled={!planId || loading} onClick={createBusiness}>
-              {loading
-                ? <><Loader2 className="w-4 h-4 animate-spin inline mr-1.5" />Setting up…</>
-                : 'Create account'}
-            </button>
+        ) : pipeline.length === 0 ? (
+          <div className="px-5 py-12 text-center">
+            <Users className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No businesses in the pipeline yet</p>
+            <p className="text-xs text-muted-foreground/50 mt-1">Businesses appear here when they submit an onboarding request</p>
           </div>
-          {error && <p className="text-sm text-red-400 mt-3 text-right">{error}</p>}
-        </div>
-      )}
+        ) : (
+          <div className="divide-y divide-white/[0.04]">
+            {pipeline.map(entry => (
+              <div key={entry.id} className="px-5 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-colors">
+                <div className="w-52 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-foreground truncate">{entry.name}</p>
+                    {entry.isStuck && entry.stageIndex < STAGE_INDEX['live'] && (
+                      <span title="Stalled — no progress in 48h+">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">{entry.plan} · {timeAgo(entry.createdAt)}</p>
+                </div>
 
-      {/* Step 2 — API key */}
-      {step === 2 && (
-        <div className="rounded-2xl border border-white/10 bg-card p-6">
-          <div className="text-center mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-teal/10 border border-teal/20 flex items-center justify-center mx-auto mb-3">
-              <Check className="w-7 h-7 text-teal" />
-            </div>
-            <h2 className="section-title">Account created</h2>
-            <p className="caption mt-1">
-              {name} is set up on the{' '}
-              <span className="font-semibold text-foreground capitalize">{selectedPlan?.name}</span> plan
-            </p>
-          </div>
+                <StageProgress stageIndex={entry.stageIndex} />
 
-          <div className="p-4 rounded-xl mb-4 border" style={{ background: 'rgba(74,168,157,0.05)', borderColor: 'rgba(74,168,157,0.18)' }}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">API key — shown once only</span>
-              <div className="flex gap-1.5">
-                <button className="btn-ghost py-1 px-2" onClick={() => setShowKey(v => !v)}>
-                  {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                </button>
-                <button className="btn-ghost py-1 px-2 flex items-center gap-1.5" onClick={copy}>
-                  {copied ? <Check className="w-3.5 h-3.5 text-teal" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span className="text-xs">{copied ? 'Copied!' : 'Copy'}</span>
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-amber-400 transition-colors px-2 py-1 rounded-lg hover:bg-amber-500/10"
+                    onClick={() => {/* TODO: send reminder email via API */}}
+                    title="Send reminder"
+                  >
+                    <Bell className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Remind</span>
+                  </button>
+                  {entry.clientId && (
+                    <button
+                      onClick={() => nav('/comms/businesses')}
+                      className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded-lg hover:bg-primary/10"
+                    >
+                      View <ChevronRight className="w-3 h-3" />
+                    </button>
+                  )}
+                  {!entry.clientId && entry.stage === 'request_submitted' && (
+                    <button
+                      onClick={() => nav('/comms/requests')}
+                      className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded-lg hover:bg-primary/10"
+                    >
+                      Review <ChevronRight className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="font-mono text-sm text-foreground break-all leading-relaxed">
-              {showKey ? apiKey : '•'.repeat(Math.min(apiKey.length, 40))}
-            </div>
+            ))}
           </div>
+        )}
+      </div>
 
-          <p className="text-xs text-muted-foreground text-center mb-6">
-            Save this key now. It won't be visible again after you leave this screen.
-          </p>
-
-          <div className="flex justify-end">
-            <button className="btn-primary" onClick={() => setStep(3)}>
-              Next: connect WhatsApp
-            </button>
-          </div>
+      {/* Loader for loading state */}
+      {loading && (
+        <div className="flex justify-center">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
         </div>
-      )}
-
-      {/* Step 3 — WhatsApp number */}
-      {step === 3 && (
-        <div className="rounded-2xl border border-white/10 bg-card p-6">
-          <h2 className="section-title mb-2">Connect a WhatsApp number</h2>
-          <p className="caption mb-5">
-            Enter the WhatsApp number {name} will use to send messages. You'll scan a QR code next.
-          </p>
-          {error && (
-            <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 mb-4">{error}</div>
-          )}
-          <div>
-            <label className="label">WhatsApp number</label>
-            <input className="input" value={waPhone} onChange={e => setWaPhone(e.target.value)} placeholder="+2348012345678" />
-            <p className="text-xs text-muted-foreground/50 mt-1.5">Include the country code, e.g. +234 for Nigeria</p>
-          </div>
-          <div className="flex gap-2 justify-end mt-6">
-            <button className="btn-secondary" onClick={() => setStep(2)}>Back</button>
-            <button className="btn-primary" disabled={!waPhone || loading} onClick={createSession}>
-              {loading
-                ? <><Loader2 className="w-4 h-4 animate-spin inline mr-1.5" />Starting…</>
-                : 'Show QR code'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Step 4 — waiting for QR */}
-      {step === 4 && !showQR && (
-        <div className="rounded-2xl border border-white/10 bg-card px-6 py-14 text-center">
-          <h2 className="section-title mb-2">All done</h2>
-          <p className="caption mb-6">{name} is ready. WhatsApp number is connecting.</p>
-          <button className="btn-primary" onClick={() => nav('/comms/businesses')}>
-            View all businesses
-          </button>
-        </div>
-      )}
-
-      {/* Step 5 — complete */}
-      {step === 5 && (
-        <div className="rounded-2xl border border-white/10 bg-card px-6 py-14 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-teal/10 border border-teal/20 flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-teal" />
-          </div>
-          <h2 className="section-title mb-2">Everything is ready</h2>
-          <p className="caption mb-6">{name} is live. Messages can now be sent through {waPhone}.</p>
-          <div className="flex gap-2 justify-center">
-            <button className="btn-secondary" onClick={() => nav('/comms/businesses')}>View businesses</button>
-            <button className="btn-primary" onClick={() => nav('/comms/sessions')}>View sessions</button>
-          </div>
-        </div>
-      )}
-
-      {showQR && sessionId && step === 4 && (
-        <QRModal
-          sessionId={sessionId}
-          phoneNumber={waPhone}
-          onClose={() => { setShowQR(false); setStep(5) }}
-          onConnected={() => { setShowQR(false); setStep(5) }}
-        />
       )}
     </div>
   )

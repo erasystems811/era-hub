@@ -54,6 +54,10 @@ import { AuditTrail }     from './pages/comms/AuditTrail'
 import { Investigation }   from './pages/comms/Investigation'
 import { ConnectSession }  from './pages/comms/ConnectSession'
 import { BillingDetail }  from './pages/comms/BillingDetail'
+import { AIEngine }       from './pages/comms/AIEngine'
+import { AIClientConfig } from './pages/comms/AIClientConfig'
+import { AILogs }         from './pages/comms/AILogs'
+import { AITemplates }    from './pages/comms/AITemplates'
 
 function ProtectedApp() {
   return (
@@ -91,8 +95,12 @@ function ProtectedApp() {
         <Route path="/comms/event-log"    element={<EventLog />} />
         <Route path="/comms/alerts"       element={<Alerts />} />
         <Route path="/comms/audit"        element={<AuditTrail />} />
-        <Route path="/comms/investigate"     element={<Investigation />} />
-        <Route path="/comms/connect-session" element={<ConnectSession />} />
+        <Route path="/comms/investigate"          element={<Investigation />} />
+        <Route path="/comms/connect-session"      element={<ConnectSession />} />
+        <Route path="/comms/ai-engine"            element={<AIEngine />} />
+        <Route path="/comms/ai-config/:clientId"  element={<AIClientConfig />} />
+        <Route path="/comms/ai-logs"              element={<AILogs />} />
+        <Route path="/comms/ai-templates"         element={<AITemplates />} />
 
         {/* Future */}
         <Route path="/connect" element={

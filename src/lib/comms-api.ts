@@ -116,6 +116,24 @@ export interface MonitoringSnapshot {
   recentAlerts: Pick<Alert, 'id' | 'type' | 'severity' | 'message' | 'createdAt' | 'resolved'>[]
 }
 
+export interface AITemplateField {
+  key: string; label: string; placeholder: string; required: boolean
+}
+
+export type AITemplateCategory = 'order_taking' | 'booking' | 'support' | 'lead_gen' | 'custom'
+
+export interface AITemplate {
+  id: string
+  name: string
+  category: AITemplateCategory
+  description: string
+  instruction: string
+  triggerKeywords: string[]
+  fields: AITemplateField[]
+  archived: boolean
+  createdAt: string
+}
+
 // ── API ──────────────────────────────────────────────────────────────────────
 
 export const commsApi = {
@@ -154,6 +172,12 @@ export const commsApi = {
 
   monitoring: () => get<MonitoringSnapshot>('/monitoring'),
   listAlerts:  () => get<Alert[]>('/alerts'),
+
+  // AI template library
+  listTemplates:   () => get<AITemplate[]>('/ai-templates'),
+  createTemplate:  (data: Omit<AITemplate, 'id' | 'archived' | 'createdAt'>) => post<AITemplate>('/ai-templates', data),
+  updateTemplate:  (id: string, data: Partial<Omit<AITemplate, 'id' | 'createdAt'>>) => patch<AITemplate>(`/ai-templates/${id}`, data),
+  archiveTemplate: (id: string) => del<void>(`/ai-templates/${id}`),
 }
 
 export function commsQrSocket(sessionId: string): WebSocket {
