@@ -173,6 +173,7 @@ export function Support() {
   }
 
   const closeThread = () => { setSelected(null); setThread(null) }
+  const overlayRef  = useRef<HTMLDivElement>(null)
 
   useEffect(() => { void loadTickets() }, [])
 
@@ -180,33 +181,65 @@ export function Support() {
     if (thread) endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [thread])
 
+  /* When the thread overlay is open:
+     1. Lock body so the gradient background cannot repaint (stops scatter).
+     2. Use visualViewport API to track the exact visible height including
+        keyboard — far more reliable than 100dvh on iOS Safari. */
+  useEffect(() => {
+    if (!selected) return
+
+    const body = document.body
+    const html = document.documentElement
+    body.style.overflow = 'hidden'
+    html.style.overflow = 'hidden'
+
+    const update = () => {
+      const vv = window.visualViewport
+      if (!overlayRef.current || !vv) return
+      overlayRef.current.style.height = `${vv.height}px`
+      overlayRef.current.style.top    = `${vv.offsetTop}px`
+    }
+
+    window.visualViewport?.addEventListener('resize', update)
+    window.visualViewport?.addEventListener('scroll', update)
+    update()
+
+    return () => {
+      body.style.overflow = ''
+      html.style.overflow = ''
+      window.visualViewport?.removeEventListener('resize', update)
+      window.visualViewport?.removeEventListener('scroll', update)
+    }
+  }, [selected])
+
   const selectedTicket = tickets.find(t => t.id === selected)
   const openCount      = tickets.filter(t => t.status === 'open').length
 
-  /* Mobile full-screen thread — rendered at document.body via portal.
-     Uses height:100dvh so it correctly shrinks when the iOS keyboard opens.
-     Solid colors only — no backdrop-filter so nothing recalculates on resize. */
+  /* Mobile full-screen thread — portal at document.body.
+     Completely opaque solid background + no backdrop-filter anywhere.
+     Height/top set by visualViewport JS above. */
   const mobileThread = selected ? createPortal(
     <div
+      ref={overlayRef}
       style={{
         position: 'fixed',
         top: 0, left: 0, right: 0,
-        height: '100dvh',
+        height: '100dvh',      /* JS overrides this once vp fires */
         zIndex: 200,
         display: 'flex',
         flexDirection: 'column',
-        background: 'hsl(262 22% 6%)',
+        background: '#0e0b14', /* fully opaque — nothing bleeds through */
         overflow: 'hidden',
+        contain: 'layout style paint',  /* isolated paint layer */
       }}
     >
-      {/* Header — solid bg, no blur */}
+      {/* Header — 100% opaque, no backdrop-filter */}
       <div
         className="shrink-0 flex items-center gap-3 px-4 border-b"
         style={{
           height: 56,
-          background: 'rgb(14, 11, 20)',
+          background: '#0e0b14',
           borderBottomColor: 'rgba(255,255,255,0.10)',
-          paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
         <button
