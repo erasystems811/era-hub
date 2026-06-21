@@ -53,6 +53,7 @@ import { Alerts }         from './pages/comms/Alerts'
 import { AuditTrail }     from './pages/comms/AuditTrail'
 import { Investigation }   from './pages/comms/Investigation'
 import { ConnectSession }  from './pages/comms/ConnectSession'
+import { BillingDetail }  from './pages/comms/BillingDetail'
 
 function ProtectedApp() {
   return (
@@ -84,7 +85,8 @@ function ProtectedApp() {
         <Route path="/comms/requests"     element={<Requests />} />
         <Route path="/comms/onboarding"   element={<Onboarding />} />
         <Route path="/comms/plans"        element={<Plans />} />
-        <Route path="/comms/billing"      element={<Billing />} />
+        <Route path="/comms/billing"              element={<Billing />} />
+        <Route path="/comms/billing/:clientId"   element={<BillingDetail />} />
         <Route path="/comms/settings"     element={<CommsSettings />} />
         <Route path="/comms/event-log"    element={<EventLog />} />
         <Route path="/comms/alerts"       element={<Alerts />} />
