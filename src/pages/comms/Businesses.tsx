@@ -1,44 +1,82 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useState, type ComponentType } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Users, Search, Eye, EyeOff, Copy, Check, Trash2, X, Loader2, ChevronRight } from 'lucide-react'
+import {
+  Plus, Users, Search, Eye, EyeOff, Copy, Check, Trash2, X, Loader2,
+  ChevronRight, AlertCircle, Pencil, BarChart2, KeyRound, Save,
+} from 'lucide-react'
 import { StatusDot } from '../../components/StatusDot'
 import { commsApi, Client, ClientDetail, ApiKey, Plan } from '../../lib/comms-api'
 import { fmtDate, fmtNumber } from '../../lib/utils'
 import { pageCache } from '../../lib/cache'
 
+type DrawerTab = 'overview' | 'edit' | 'keys'
+
+const FIELD = "w-full px-3.5 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/[0.10] text-foreground text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/15 transition-all"
+const LABEL = "text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-1.5 block"
+
 function ClientDrawer({ client, plans, onClose, onUpdated }: {
   client: Client; plans: Plan[]
   onClose: () => void; onUpdated: () => void
 }) {
-  const [detail, setDetail] = useState<ClientDetail | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [newLabel, setNewLabel] = useState('')
-  const [showKey, setShowKey] = useState<Record<string, boolean>>({})
-  const [freshKey, setFreshKey] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const [detail, setDetail]         = useState<ClientDetail | null>(null)
+  const [loading, setLoading]       = useState(true)
+  const [drawerError, setDrawerError] = useState<string | null>(null)
+  const [tab, setTab]               = useState<DrawerTab>('overview')
+  const [saving, setSaving]         = useState(false)
+  const [saveOk, setSaveOk]         = useState(false)
 
-  useEffect(() => {
-    void commsApi.getClient(client.id).then(d => { setDetail(d); setLoading(false) })
-  }, [client.id])
+  // Edit form state
+  const [editName,  setEditName]  = useState('')
+  const [editSlug,  setEditSlug]  = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [editPhone, setEditPhone] = useState('')
+  const [editPlan,  setEditPlan]  = useState('')
 
-  const createKey = async () => {
-    if (!detail || !newLabel) return
-    setSaving(true)
-    try {
-      const k = await commsApi.createApiKey(detail.id, newLabel, ['messages:send', 'sessions:read'])
-      setFreshKey(k.key)
-      setNewLabel('')
-      setDetail(await commsApi.getClient(detail.id))
-    } finally { setSaving(false) }
+  // API keys state
+  const [newLabel,  setNewLabel]  = useState('')
+  const [freshKey,  setFreshKey]  = useState<string | null>(null)
+  const [showKey,   setShowKey]   = useState<Record<string, boolean>>({})
+  const [copied,    setCopied]    = useState(false)
+
+  const reload = (id: string) => {
+    setLoading(true); setDrawerError(null)
+    commsApi.getClient(id)
+      .then(d => {
+        if (!d) {
+          setDrawerError('No data returned for this business. It may have been deleted or the API is unavailable.')
+          setLoading(false)
+          return
+        }
+        setDetail(d)
+        setEditName(d.name ?? '')
+        setEditSlug(d.slug ?? '')
+        setEditEmail(d.contactEmail ?? '')
+        setEditPhone(d.contactPhone ?? '')
+        setEditPlan(d.planId ?? '')
+        setLoading(false)
+      })
+      .catch(e => { setDrawerError(e instanceof Error ? e.message : 'Failed to load business details'); setLoading(false) })
   }
 
-  const revokeKey = async (keyId: string) => {
+  useEffect(() => { reload(client.id) }, [client.id])
+
+  const saveEdit = async () => {
     if (!detail) return
-    if (!confirm('Remove this access key?')) return
-    await commsApi.revokeApiKey(keyId)
-    setDetail(await commsApi.getClient(detail.id))
-    onUpdated()
+    setSaving(true)
+    try {
+      await commsApi.updateClient(detail.id, {
+        name:         editName.trim()  || undefined,
+        planId:       editPlan         || undefined,
+        contactEmail: editEmail.trim() || undefined,
+        contactPhone: editPhone.trim() || undefined,
+      })
+      setSaveOk(true)
+      setTimeout(() => setSaveOk(false), 2000)
+      reload(detail.id)
+      onUpdated()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Save failed')
+    } finally { setSaving(false) }
   }
 
   const toggleActive = async () => {
@@ -46,152 +84,322 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
     setSaving(true)
     try {
       await commsApi.updateClient(detail.id, { active: !detail.active })
-      setDetail(await commsApi.getClient(detail.id))
+      reload(detail.id)
       onUpdated()
     } finally { setSaving(false) }
   }
 
-  const copyKey = async (text: string) => {
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
+  const createKey = async () => {
+    if (!detail || !newLabel) return
+    setSaving(true)
+    try {
+      const k = await commsApi.createApiKey(detail.id, newLabel, ['messages:send', 'sessions:read'])
+      setFreshKey(k.key); setNewLabel('')
+      reload(detail.id)
+    } finally { setSaving(false) }
   }
+
+  const revokeKey = async (keyId: string) => {
+    if (!detail || !confirm('Remove this access key?')) return
+    await commsApi.revokeApiKey(keyId)
+    reload(detail.id); onUpdated()
+  }
+
+  const copyText = async (text: string) => {
+    await navigator.clipboard.writeText(text)
+    setCopied(true); setTimeout(() => setCopied(false), 1500)
+  }
+
+  const TABS: { id: DrawerTab; label: string; icon: ComponentType<{ className?: string }> }[] = [
+    { id: 'overview', label: 'Overview',  icon: BarChart2 },
+    { id: 'edit',     label: 'Edit',      icon: Pencil    },
+    { id: 'keys',     label: 'API Keys',  icon: KeyRound  },
+  ]
 
   return (
     <div className="fixed inset-0 z-40 flex">
       <div className="flex-1 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="w-[480px] bg-[rgba(255,255,255,0.07)] backdrop-blur-xl border-l border-white/13 overflow-y-auto flex flex-col">
-        {/* Drawer header */}
-        <div className="px-6 py-5 border-b border-white/07 flex items-start justify-between gap-4 shrink-0">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary text-sm font-bold flex items-center justify-center shrink-0">
-                {client.name[0]?.toUpperCase()}
+      <div className="w-[500px] flex flex-col" style={{ background: 'hsl(262 20% 8%)', borderLeft: '1px solid rgba(255,255,255,0.09)' }}>
+
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-11 h-11 rounded-2xl bg-primary/15 text-primary text-base font-bold flex items-center justify-center shrink-0">
+                {(detail?.name ?? client.name)[0]?.toUpperCase()}
               </div>
               <div className="min-w-0">
-                <h2 className="font-semibold text-foreground truncate">{client.name}</h2>
-                <p className="text-xs text-muted-foreground font-mono">{client.slug}</p>
+                <h2 className="font-bold text-foreground truncate text-base leading-tight">
+                  {detail?.name ?? client.name}
+                </h2>
+                <p className="text-xs text-muted-foreground font-mono mt-0.5">{detail?.slug ?? client.slug}</p>
               </div>
             </div>
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition shrink-0 mt-0.5 w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/07">
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition shrink-0 mt-1">
-            <X className="w-4 h-4" />
-          </button>
+
+          {/* Status + plan strip */}
+          {detail && !loading && (
+            <div className="flex items-center gap-3 flex-wrap">
+              <StatusDot status={detail.active ? 'active' : 'inactive'} label={detail.active ? 'Active' : 'Suspended'} size="sm" />
+              <span className="text-muted-foreground/30 text-xs">·</span>
+              <span className="text-xs text-muted-foreground capitalize">{detail.planName}</span>
+              <span className="text-muted-foreground/30 text-xs">·</span>
+              <span className="text-xs text-muted-foreground">{detail.usage?.sessionsActive ?? 0} session{(detail.usage?.sessionsActive ?? 0) !== 1 ? 's' : ''}</span>
+              <span className="text-muted-foreground/30 text-xs">·</span>
+              <span className="text-xs text-muted-foreground tabular-nums">{fmtNumber(detail.usage?.monthlyMessages ?? 0)} msg/mo</span>
+            </div>
+          )}
+
+          {/* Tabs */}
+          <div className="flex gap-1 mt-4">
+            {TABS.map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  tab === t.id
+                    ? 'bg-primary/15 text-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-white/06'
+                }`}>
+                <t.icon className="w-3.5 h-3.5" />
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
-            <div className="flex items-center gap-2 text-muted-foreground py-8 justify-center">
+            <div className="flex items-center gap-2 text-muted-foreground py-12 justify-center">
               <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+            </div>
+          ) : drawerError ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
+              <AlertCircle className="w-8 h-8 text-red-400/60" />
+              <p className="text-sm font-medium text-foreground">Failed to load details</p>
+              <p className="text-xs text-muted-foreground max-w-xs">{drawerError}</p>
+              <button className="text-xs text-primary hover:text-primary/80 transition mt-1" onClick={() => reload(client.id)}>
+                Try again
+              </button>
             </div>
           ) : detail && (
             <>
-              {/* Info grid */}
-              <div className="rounded-xl border border-white/07 bg-card p-4 grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-1.5">Status</p>
-                  <StatusDot status={detail.active ? 'active' : 'inactive'} label={detail.active ? 'Active' : 'Suspended'} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-1.5">Plan</p>
-                  <p className="text-sm font-medium text-foreground capitalize">{detail.planName}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-1.5">Sessions</p>
-                  <p className="text-sm text-foreground">{detail.usage.sessionsActive} active</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-1.5">Messages / month</p>
-                  <p className="text-sm text-foreground tabular-nums">{fmtNumber(detail.usage.monthlyMessages)}</p>
-                </div>
-                {detail.contactEmail && (
-                  <div className="col-span-2">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-1.5">Email</p>
-                    <p className="text-sm text-foreground truncate">{detail.contactEmail}</p>
+              {/* ── OVERVIEW TAB ── */}
+              {tab === 'overview' && (
+                <div className="space-y-4">
+                  {/* Stat grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: 'Sessions active',     value: String(detail.usage?.sessionsActive ?? 0) },
+                      { label: 'Messages this month', value: fmtNumber(detail.usage?.monthlyMessages ?? 0) },
+                      { label: 'Plan',                value: detail.planName ?? '—', cap: true },
+                      { label: 'Member since',        value: fmtDate(detail.createdAt) },
+                    ].map(s => (
+                      <div key={s.label} className="rounded-xl border border-white/07 bg-card px-4 py-3.5">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-1">{s.label}</p>
+                        <p className={`text-sm font-semibold text-foreground ${s.cap ? 'capitalize' : 'tabular-nums'}`}>{s.value}</p>
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
 
-              <button
-                className={`w-full text-sm py-2 rounded-xl font-medium transition-colors border ${
-                  detail.active
-                    ? 'border-red-500/25 text-red-400 hover:bg-red-500/10'
-                    : 'btn-teal'
-                }`}
-                onClick={toggleActive}
-                disabled={saving}
-              >
-                {saving ? <><Loader2 className="w-3.5 h-3.5 animate-spin inline mr-1.5" />Saving…</> : detail.active ? 'Suspend access' : 'Restore access'}
-              </button>
+                  {detail.contactEmail && (
+                    <div className="rounded-xl border border-white/07 bg-card px-4 py-3.5">
+                      <p className={LABEL}>Contact email</p>
+                      <p className="text-sm text-foreground truncate">{detail.contactEmail}</p>
+                    </div>
+                  )}
+                  {detail.contactPhone && (
+                    <div className="rounded-xl border border-white/07 bg-card px-4 py-3.5">
+                      <p className={LABEL}>Contact phone</p>
+                      <p className="text-sm text-foreground">{detail.contactPhone}</p>
+                    </div>
+                  )}
 
-              {/* New key banner */}
-              {freshKey && (
-                <div className="rounded-xl border border-teal/20 bg-teal/05 p-4">
-                  <p className="text-xs font-semibold text-teal mb-2">New key — copy now, won't be shown again</p>
-                  <p className="font-mono text-xs text-foreground break-all mb-2">{freshKey}</p>
-                  <button className="text-xs flex items-center gap-1.5 text-muted-foreground hover:text-teal transition"
-                    onClick={() => void copyKey(freshKey)}>
-                    {copied ? <Check className="w-3.5 h-3.5 text-teal" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copied ? 'Copied!' : 'Copy to clipboard'}
+                  {/* Suspend / Restore */}
+                  <button
+                    className={`w-full text-sm py-2.5 rounded-xl font-medium transition-colors border ${
+                      detail.active
+                        ? 'border-amber-500/25 text-amber-400 hover:bg-amber-500/10'
+                        : 'border-teal/25 text-teal hover:bg-teal/10'
+                    }`}
+                    onClick={toggleActive} disabled={saving}
+                  >
+                    {saving
+                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin inline mr-1.5" />Saving…</>
+                      : detail.active ? 'Suspend access' : 'Restore access'}
+                  </button>
+
+                  {/* Danger zone */}
+                  <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 mt-2">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-red-400/60 mb-3">Danger zone</p>
+                    <button
+                      className="w-full text-sm py-2.5 rounded-xl font-medium border border-red-500/30 text-red-400 hover:bg-red-500/15 transition-colors disabled:opacity-50"
+                      disabled={saving}
+                      onClick={async () => {
+                        if (!confirm(`Permanently delete "${detail.name}"? This cannot be undone.`)) return
+                        setSaving(true)
+                        try { await commsApi.deleteClient(detail.id); onUpdated(); onClose() }
+                        catch (e) { alert(e instanceof Error ? e.message : 'Delete failed') }
+                        finally { setSaving(false) }
+                      }}
+                    >
+                      Delete business permanently
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── EDIT TAB ── */}
+              {tab === 'edit' && (
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-white/07 bg-card p-4 space-y-4">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50 border-b border-white/06 pb-3">Business info</p>
+
+                    <div>
+                      <label className={LABEL}>Business name</label>
+                      <input className={FIELD} value={editName} onChange={e => setEditName(e.target.value)} placeholder="e.g. Acme Hospital" />
+                    </div>
+
+                    <div>
+                      <label className={LABEL}>Slug <span className="text-muted-foreground/40 normal-case tracking-normal font-normal">(used in API calls)</span></label>
+                      <input className={FIELD} value={editSlug} onChange={e => setEditSlug(e.target.value)} placeholder="e.g. acme-hospital" disabled
+                        title="Slug cannot be changed after creation — it would break existing integrations" />
+                      <p className="text-[10px] text-muted-foreground/40 mt-1.5">Slug is locked — changing it would break existing integrations.</p>
+                    </div>
+
+                    <div>
+                      <label className={LABEL}>Contact email</label>
+                      <input className={FIELD} type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} placeholder="contact@business.com" />
+                    </div>
+
+                    <div>
+                      <label className={LABEL}>Contact phone</label>
+                      <input className={FIELD} type="tel" value={editPhone} onChange={e => setEditPhone(e.target.value)} placeholder="+234 800 000 0000" />
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-white/07 bg-card p-4 space-y-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50 border-b border-white/06 pb-3">Subscription</p>
+
+                    <div>
+                      <label className={LABEL}>Plan</label>
+                      <select className={FIELD} value={editPlan} onChange={e => setEditPlan(e.target.value)}>
+                        {plans.map(p => (
+                          <option key={p.id} value={p.id}>
+                            {p.displayName}{p.monthlyFee ? ` — ₦${p.monthlyFee.toLocaleString()}/mo` : ' — Free'}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={LABEL}>Access status</label>
+                      <button
+                        type="button"
+                        onClick={toggleActive}
+                        disabled={saving}
+                        className={`w-full text-sm py-2.5 rounded-xl font-medium transition-colors border ${
+                          detail.active
+                            ? 'border-amber-500/25 text-amber-400 hover:bg-amber-500/10'
+                            : 'border-teal/25 text-teal hover:bg-teal/10'
+                        }`}
+                      >
+                        {saving ? <><Loader2 className="w-3.5 h-3.5 animate-spin inline mr-1.5" />Saving…</> : detail.active ? 'Suspend access' : 'Restore access'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={saveEdit} disabled={saving || !editName.trim()}
+                    className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    {saving
+                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…</>
+                      : saveOk
+                      ? <><Check className="w-3.5 h-3.5" /> Saved!</>
+                      : <><Save className="w-3.5 h-3.5" /> Save changes</>}
                   </button>
                 </div>
               )}
 
-              {/* API keys */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-3">Access keys</h3>
-                {detail.apiKeys.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No API keys yet</p>
-                ) : (
-                  <div className="space-y-2 mb-3">
-                    {detail.apiKeys.map((k: ApiKey) => (
-                      <div key={k.id} className="rounded-xl border border-white/07 bg-card px-4 py-3 flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground">{k.label}</p>
-                          <p className="font-mono text-xs text-muted-foreground truncate">
-                            {showKey[k.id] ? k.keyPreview : '••••••••••••••••' + k.keyPreview.slice(-8)}
-                          </p>
-                        </div>
-                        <div className="flex gap-1 shrink-0">
-                          <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/07 transition"
-                            onClick={() => setShowKey(p => ({ ...p, [k.id]: !p[k.id] }))}>
-                            {showKey[k.id] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </button>
-                          <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition"
-                            onClick={() => void revokeKey(k.id)}>
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <div className="flex gap-2">
-                  <input className="input flex-1 text-sm" placeholder="Key label (e.g. Production)" value={newLabel} onChange={e => setNewLabel(e.target.value)} />
-                  <button className="btn-primary text-sm" disabled={!newLabel || saving} onClick={createKey}>Generate</button>
-                </div>
-              </div>
+              {/* ── KEYS TAB ── */}
+              {tab === 'keys' && (
+                <div className="space-y-4">
+                  {freshKey && (
+                    <div className="rounded-xl border border-teal/20 bg-teal/05 p-4">
+                      <p className="text-xs font-semibold text-teal mb-2">New key generated — copy now, won't be shown again</p>
+                      <p className="font-mono text-xs text-foreground break-all mb-3 leading-relaxed">{freshKey}</p>
+                      <button className="text-xs flex items-center gap-1.5 text-muted-foreground hover:text-teal transition"
+                        onClick={() => void copyText(freshKey)}>
+                        {copied ? <Check className="w-3.5 h-3.5 text-teal" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copied ? 'Copied!' : 'Copy to clipboard'}
+                      </button>
+                    </div>
+                  )}
 
-              {/* Plan change */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-3">Change plan</h3>
-                <select
-                  className="input"
-                  value={detail.planId}
-                  onChange={async e => {
-                    setSaving(true)
-                    try {
-                      await commsApi.updateClient(detail.id, { planId: e.target.value })
-                      setDetail(await commsApi.getClient(detail.id))
-                      onUpdated()
-                    } finally { setSaving(false) }
-                  }}
-                >
-                  {plans.map(p => (
-                    <option key={p.id} value={p.id}>{p.displayName} — {p.monthlyFee ? `₦${p.monthlyFee.toLocaleString()}/mo` : 'Free'}</option>
-                  ))}
-                </select>
-              </div>
+                  {/* Generate new key */}
+                  <div className="rounded-xl border border-white/07 bg-card p-4 space-y-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50 border-b border-white/06 pb-3">Generate new key</p>
+                    <div>
+                      <label className={LABEL}>Key label</label>
+                      <input className={FIELD} placeholder="e.g. Production, Staging" value={newLabel}
+                        onChange={e => setNewLabel(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter' && newLabel) void createKey() }} />
+                    </div>
+                    <button className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      disabled={!newLabel || saving} onClick={createKey}>
+                      {saving ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating…</> : <><KeyRound className="w-3.5 h-3.5" /> Generate key</>}
+                    </button>
+                  </div>
+
+                  {/* Existing keys */}
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50 mb-3">
+                      Active keys ({(detail.apiKeys ?? []).length})
+                    </p>
+                    {(detail.apiKeys ?? []).length === 0 ? (
+                      <div className="rounded-xl border border-white/07 bg-card px-4 py-8 text-center">
+                        <KeyRound className="w-6 h-6 text-muted-foreground/20 mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">No keys yet</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {(detail.apiKeys ?? []).map((k: ApiKey) => (
+                          <div key={k.id} className="rounded-xl border border-white/07 bg-card px-4 py-3 flex items-center gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="text-sm font-medium text-foreground">{k.label}</p>
+                                {k.lastUsedAt && (
+                                  <span className="text-[10px] text-muted-foreground/50">used {fmtDate(k.lastUsedAt)}</span>
+                                )}
+                              </div>
+                              <p className="font-mono text-xs text-muted-foreground">
+                                {showKey[k.id] ? k.keyPreview : '••••••••••••••••' + k.keyPreview.slice(-8)}
+                              </p>
+                            </div>
+                            <div className="flex gap-1 shrink-0">
+                              <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/07 transition"
+                                onClick={() => setShowKey(p => ({ ...p, [k.id]: !p[k.id] }))}>
+                                {showKey[k.id] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                              </button>
+                              <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/07 transition"
+                                onClick={() => void copyText(k.keyPreview)}>
+                                <Copy className="w-3.5 h-3.5" />
+                              </button>
+                              <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition"
+                                onClick={() => void revokeKey(k.id)}>
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>

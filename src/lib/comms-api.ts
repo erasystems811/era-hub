@@ -115,6 +115,7 @@ export const commsApi = {
     post<Client>('/clients', data),
   updateClient: (id: string, data: Partial<Pick<Client, 'name' | 'planId' | 'active' | 'contactEmail' | 'contactPhone'>>) =>
     patch<Client>(`/clients/${id}`, data),
+  deleteClient: (id: string) => del<void>(`/clients/${id}`),
 
   createApiKey: (clientId: string, label: string, scopes: string[]) =>
     post<{ id: string; key: string; label: string; scopes: string[] }>(`/clients/${clientId}/api-keys`, { label, scopes }),
