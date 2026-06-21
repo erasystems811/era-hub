@@ -1,120 +1,368 @@
-import { useEffect, useState } from 'react'
-import { CheckCircle, AlertTriangle, XCircle } from 'lucide-react'
-import { Glass } from '../../components/Glass'
-import { patientApi, HealthCheck, Hospital } from '../../lib/patient-api'
-import { fmtMoney } from '../../lib/utils'
+import { useEffect, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  Building2, CheckCircle2, XCircle, AlertCircle, CalendarClock,
+  RefreshCw, Database, MessageSquare, Clock, Mail, Smartphone, Cpu,
+  Loader2, Activity, Wifi, Zap, ChevronRight, ArrowUpRight,
+  TrendingUp, ShieldAlert, MailCheck, MessageCircle,
+} from 'lucide-react'
+import { patientApi, HealthCheck, Hospital, AutomationLog } from '../../lib/patient-api'
 import { pageCache } from '../../lib/cache'
 
-export function Analytics() {
-  const [health, setHealth] = useState<HealthCheck | null>(() => pageCache.get('analytics:health'))
-  const [hospitals, setHospitals] = useState<Hospital[]>(() => pageCache.get<Hospital[]>('analytics:hospitals') ?? [])
-  const [loading, setLoading] = useState(() => !pageCache.get('analytics:health'))
+function timeAgo(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime()
+  const m = Math.floor(diff / 60000)
+  if (m < 1) return 'just now'
+  if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h ago`
+  return `${Math.floor(h / 24)}d ago`
+}
 
-  useEffect(() => {
-    void Promise.all([
-      patientApi.getHealth().catch(() => null),
-      patientApi.listHospitals().catch(() => []),
-    ]).then(([h, hs]) => {
-      if (h) pageCache.set('analytics:health', h)
-      pageCache.set('analytics:hospitals', hs ?? [])
-      setHealth(h)
-      setHospitals(hs ?? [])
-    }).finally(() => setLoading(false))
+function channelIcon(channel: string) {
+  if (channel === 'email') return <Mail className="w-3.5 h-3.5 shrink-0 text-blue-400/70" />
+  if (channel.includes('whatsapp')) return <MessageCircle className="w-3.5 h-3.5 shrink-0 text-emerald-400/70" />
+  return <MessageSquare className="w-3.5 h-3.5 shrink-0 text-muted-foreground/50" />
+}
+
+function StatCard({ label, value, icon: Icon, color, gold, loading, sub }: {
+  label: string; value: number; icon: React.ComponentType<{ className?: string }>
+  color: string; gold?: boolean; loading: boolean; sub?: string
+}) {
+  return (
+    <div className={`relative flex flex-col justify-between p-5 rounded-xl border transition-all ${
+      gold ? 'border-amber-500/25 bg-amber-500/5' : 'border-white/08 bg-card'
+    }`}>
+      <div className="flex items-start justify-between mb-4">
+        <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+        <div className={`p-1.5 rounded-lg ${gold ? 'bg-amber-500/10' : 'bg-teal/10'}`}>
+          <Icon className={`w-3.5 h-3.5 ${color}`} />
+        </div>
+      </div>
+      {loading
+        ? <div className="h-8 w-12 bg-muted/60 animate-pulse rounded-lg" />
+        : <div>
+            <p className="text-3xl font-bold text-foreground tabular-nums leading-none">{value}</p>
+            {sub && <p className="text-xs text-muted-foreground mt-1.5">{sub}</p>}
+          </div>
+      }
+    </div>
+  )
+}
+
+function HealthCard({ check }: { check: { name: string; ok: boolean; warning?: boolean; detail: string; balance?: string } }) {
+  const Icon = check.name === 'Database' ? Database
+    : check.name.startsWith('SMS') ? MessageSquare
+    : check.name.startsWith('WhatsApp') ? Smartphone
+    : check.name.startsWith('Email') ? Mail
+    : check.name === 'OpenAI' ? Cpu : Clock
+  const fail = !check.ok, warn = check.ok && check.warning
+  return (
+    <div title={[check.detail, check.balance].filter(Boolean).join(' · ')}
+      className={`p-4 rounded-xl border flex flex-col gap-3 cursor-default select-none ${
+        fail ? 'border-red-500/25 bg-red-500/8' : warn ? 'border-amber-500/20 bg-amber-500/6' : 'border-white/08 bg-card'
+      }`}>
+      <div className="flex items-center justify-between">
+        <div className={`p-1.5 rounded-lg ${fail ? 'bg-red-500/10' : warn ? 'bg-amber-500/10' : 'bg-emerald-500/10'}`}>
+          <Icon className={`w-3.5 h-3.5 ${fail ? 'text-red-400' : warn ? 'text-amber-400' : 'text-emerald-400'}`} />
+        </div>
+        <span className={`w-2 h-2 rounded-full ${fail ? 'bg-red-400' : warn ? 'bg-amber-400' : 'bg-emerald-400 shadow-[0_0_6px_hsl(134_61%_51%/0.6)]'}`} />
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-foreground">{check.name}</p>
+        <p className={`text-xs mt-0.5 ${fail ? 'text-red-400' : warn ? 'text-amber-400' : 'text-muted-foreground'}`}>
+          {check.balance ?? check.detail}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function LogRow({ log }: { log: AutomationLog }) {
+  const ok = log.status === 'sent'
+  const pending = log.status === 'pending' || log.status === 'queued'
+  return (
+    <div className="flex items-center gap-3 py-3 border-b border-white/06 last:border-0">
+      <div className={`p-1.5 rounded-lg shrink-0 ${ok ? 'bg-emerald-500/10' : pending ? 'bg-amber-500/10' : 'bg-red-500/10'}`}>
+        {channelIcon(log.channel)}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-foreground truncate">
+          {log.automationType.replace(/_/g, ' ')}
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5 truncate">
+          {log.patientName ? `${log.patientName} · ` : ''}{log.hospitalName ?? 'Unknown hospital'}
+        </p>
+      </div>
+      <div className="shrink-0 text-right">
+        <p className="text-xs text-muted-foreground tabular-nums">{timeAgo(log.createdAt)}</p>
+        <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1 ${
+          ok ? 'bg-emerald-500/12 text-emerald-400' :
+          pending ? 'bg-amber-500/12 text-amber-400' :
+          'bg-red-500/12 text-red-400'
+        }`}>{log.status}</span>
+      </div>
+    </div>
+  )
+}
+
+export function Analytics() {
+  const navigate = useNavigate()
+  const [hospitals, setHospitals] = useState<Hospital[]>(() => pageCache.get<Hospital[]>('analytics:hospitals') ?? [])
+  const [health, setHealth] = useState<HealthCheck | null>(() => pageCache.get('analytics:health'))
+  const [logs, setLogs] = useState<AutomationLog[]>(() => pageCache.get<AutomationLog[]>('analytics:logs') ?? [])
+  const [healthLoading, setHealthLoading] = useState(() => !pageCache.get('analytics:health'))
+  const [hospitalsLoading, setHospitalsLoading] = useState(() => !pageCache.get('analytics:hospitals'))
+  const [logsLoading, setLogsLoading] = useState(() => !pageCache.get('analytics:logs'))
+  const [lastRefresh, setLastRefresh] = useState(new Date())
+
+  const fetchAll = useCallback(async () => {
+    setHealthLoading(true); setHospitalsLoading(true); setLogsLoading(true)
+    setLastRefresh(new Date())
+    const [h, hosp, l] = await Promise.allSettled([
+      patientApi.getHealth(),
+      patientApi.listHospitals(),
+      patientApi.getAutomationLog({}),
+    ])
+    if (h.status === 'fulfilled' && h.value) {
+      pageCache.set('analytics:health', h.value)
+      setHealth(h.value)
+    } else setHealth(null)
+    if (hosp.status === 'fulfilled') {
+      pageCache.set('analytics:hospitals', hosp.value ?? [])
+      setHospitals(hosp.value ?? [])
+    }
+    if (l.status === 'fulfilled') {
+      const slice = (l.value as AutomationLog[]).slice(0, 20)
+      pageCache.set('analytics:logs', slice)
+      setLogs(slice)
+    }
+    setHealthLoading(false); setHospitalsLoading(false); setLogsLoading(false)
   }, [])
 
-  if (loading) return <div className="text-center py-16 text-charcoal-soft">Loading…</div>
+  useEffect(() => { void fetchAll() }, [fetchAll])
 
-  const active = hospitals.filter(h => h.active).length
-  const byStatus = hospitals.reduce((acc, h) => {
-    acc[h.subscriptionStatus] = (acc[h.subscriptionStatus] ?? 0) + 1; return acc
-  }, {} as Record<string, number>)
-  const totalWallet = hospitals.reduce((sum, h) => sum + (h.walletBalanceKobo ?? 0), 0)
-  const totalPatients = hospitals.reduce((sum, h) => sum + h.patientCount, 0)
+  const now = Date.now()
+  const in5d = now + 5 * 24 * 60 * 60 * 1000
+
+  const isSuspended = (h: Hospital) => !h.active || h.subscriptionStatus === 'inactive' || h.subscriptionStatus === 'suspended'
+
+  const stats = {
+    total:        hospitals.length,
+    active:       hospitals.filter(h => h.active && h.subscriptionStatus === 'active').length,
+    trial:        hospitals.filter(h => h.active && h.subscriptionStatus === 'trial').length,
+    suspended:    hospitals.filter(h => isSuspended(h)).length,
+    expiringSoon: hospitals.filter(h => {
+      if (!h.active || !h.subscriptionExpiresAt) return false
+      const exp = new Date(h.subscriptionExpiresAt).getTime()
+      return exp > now && exp <= in5d
+    }).length,
+  }
+
+  const needsAttention = hospitals.filter(h => {
+    if (isSuspended(h)) return false
+    if (h.subscriptionStatus === 'trial') return true
+    if (!h.subscriptionExpiresAt) return false
+    const exp = new Date(h.subscriptionExpiresAt).getTime()
+    return exp > now && exp <= in5d
+  })
+
+  const healthChecks = health?.checks ?? []
+  const overallStatus = !health ? 'unknown' : !health.ok ? 'degraded' : health.anyWarning ? 'warning' : 'operational'
+  const statusCfg = {
+    operational: { label: 'All Systems Running',       color: 'text-emerald-400', dot: 'bg-emerald-400 shadow-[0_0_8px_hsl(134_61%_51%/0.7)]', border: 'border-emerald-500/20', bg: 'bg-emerald-500/6' },
+    warning:     { label: 'Service Warning Detected',  color: 'text-amber-400',   dot: 'bg-amber-400',   border: 'border-amber-500/20',  bg: 'bg-amber-500/6'  },
+    degraded:    { label: 'Service Disruption Active', color: 'text-red-400',     dot: 'bg-red-400',     border: 'border-red-500/20',    bg: 'bg-red-500/6'    },
+    unknown:     { label: 'Status Unknown',            color: 'text-muted-foreground', dot: 'bg-muted-foreground/40', border: 'border-white/08', bg: 'bg-white/03' },
+  }[overallStatus]
+
+  const sentToday = logs.filter(l => new Date(l.createdAt).toDateString() === new Date().toDateString()).length
+  const failedLogs = logs.filter(l => l.status === 'failed').length
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-5xl">
+      {/* Page header */}
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <p className="text-xs font-semibold text-teal/70 mb-1">ERA Patient</p>
+          <h1 className="page-title">Platform Overview</h1>
+          <p className="caption mt-1">Hospital accounts · automated workflows · system health</p>
+        </div>
+        <div className="flex items-center gap-3 mt-1">
+          <p className="text-xs text-muted-foreground hidden sm:block">
+            Updated {lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </p>
+          <button onClick={() => void fetchAll()}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 text-sm text-muted-foreground hover:text-foreground hover:border-teal/30 transition">
+            <RefreshCw className={`w-3.5 h-3.5 ${(healthLoading || hospitalsLoading || logsLoading) ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      {/* System status banner */}
+      <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border mb-6 ${statusCfg.border} ${statusCfg.bg}`}>
+        <span className={`w-2 h-2 rounded-full shrink-0 ${statusCfg.dot}`} />
+        <p className={`text-sm font-semibold ${statusCfg.color}`}>{statusCfg.label}</p>
+        <div className="ml-auto flex items-center gap-4">
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Zap className="w-3 h-3 text-teal/60" />
+            {logsLoading ? '…' : sentToday} sent today
+          </span>
+          {failedLogs > 0 && (
+            <span className="flex items-center gap-1.5 text-xs text-red-400">
+              <ShieldAlert className="w-3 h-3" />
+              {failedLogs} failed
+            </span>
+          )}
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Activity className="w-3 h-3" />Live
+          </span>
+        </div>
+      </div>
+
+      {/* Account metrics */}
       <div className="mb-6">
-        <h1 className="page-title">Analytics</h1>
-        <p className="caption mt-0.5">ERA Patient — system overview</p>
+        <h2 className="text-sm font-semibold text-muted-foreground mb-3">Account Registry</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          <StatCard label="Total"          value={stats.total}        icon={Building2}     color="text-teal"                                                          loading={hospitalsLoading} />
+          <StatCard label="Active"         value={stats.active}       icon={CheckCircle2}  color="text-emerald-400"                                                   loading={hospitalsLoading} sub="subscribed" />
+          <StatCard label="Trial"          value={stats.trial}        icon={AlertCircle}   color="text-amber-400"                                                     loading={hospitalsLoading} sub="on trial" />
+          <StatCard label="Suspended"      value={stats.suspended}    icon={XCircle}       color="text-red-400"                                                       loading={hospitalsLoading} />
+          <StatCard label="Expiring ≤5d"  value={stats.expiringSoon} icon={CalendarClock} color={stats.expiringSoon > 0 ? 'text-amber-400' : 'text-muted-foreground/40'} loading={hospitalsLoading} gold={stats.expiringSoon > 0} sub={stats.expiringSoon > 0 ? 'needs action' : 'all clear'} />
+        </div>
       </div>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
-        {[
-          { label: 'Total hospitals', value: hospitals.length.toString() },
-          { label: 'Active', value: active.toString() },
-          { label: 'Total patients', value: totalPatients.toLocaleString() },
-          { label: 'Total wallet balance', value: fmtMoney(totalWallet) },
-        ].map(s => (
-          <Glass key={s.label} sm className="!p-4">
-            <div className="text-2xl font-semibold text-charcoal">{s.value}</div>
-            <div className="text-xs text-charcoal-soft mt-0.5">{s.label}</div>
-          </Glass>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        {/* Health checks */}
-        <Glass>
-          <h3 className="section-title mb-4">System health</h3>
-          {!health ? (
-            <p className="caption">Unable to reach the system health endpoint</p>
-          ) : (
-            <div className="space-y-2">
-              {health.checks.map(c => (
-                <div key={c.name} className="flex items-start gap-2.5 py-2 border-b border-pink-border last:border-0">
-                  {c.ok
-                    ? <CheckCircle className="w-4 h-4 text-teal shrink-0 mt-0.5" />
-                    : c.warning
-                    ? <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                    : <XCircle className="w-4 h-4 text-rose shrink-0 mt-0.5" />
-                  }
-                  <div>
-                    <div className="text-sm font-medium text-charcoal">{c.name}</div>
-                    <div className="text-xs text-charcoal-soft">{c.detail}</div>
-                    {c.balance && <div className="text-xs text-teal">{c.balance}</div>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Glass>
-
-        {/* Subscription breakdown */}
-        <Glass>
-          <h3 className="section-title mb-4">Subscriptions</h3>
-          <div className="space-y-3">
-            {Object.entries(byStatus).map(([status, count]) => (
-              <div key={status} className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full shrink-0"
-                  style={{ background: status === 'active' ? '#4A9BA8' : status === 'trial' ? '#F59E0B' : '#D05080' }} />
-                <span className="text-sm text-charcoal capitalize flex-1">{status}</span>
-                <span className="text-sm font-semibold text-charcoal">{count}</span>
-                <div className="w-24 h-1.5 rounded-full bg-pink-light overflow-hidden">
-                  <div className="h-full rounded-full bg-teal"
-                    style={{ width: `${(count / hospitals.length) * 100}%` }} />
-                </div>
-              </div>
-            ))}
+      {/* System health */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-muted-foreground">System Status</h2>
+          <button onClick={() => void fetchAll()} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition rounded-lg px-2 py-1 hover:bg-white/5">
+            <Wifi className="w-3 h-3" />Probe
+          </button>
+        </div>
+        {healthLoading ? (
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            {[1,2,3,4,5,6].map(i => <div key={i} className="h-24 rounded-xl border border-white/08 bg-card animate-pulse" />)}
           </div>
+        ) : healthChecks.length > 0 ? (
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            {healthChecks.map(c => <HealthCard key={c.name} check={c} />)}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 py-6 rounded-xl border border-white/08 bg-card px-4">
+            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground/50" />
+            <span className="text-sm text-muted-foreground">Health endpoint unavailable</span>
+          </div>
+        )}
+      </div>
 
-          {hospitals.length > 0 && (
-            <div className="mt-5 pt-4 border-t border-pink-border">
-              <h4 className="text-xs font-medium text-charcoal-soft mb-3">Largest wallets</h4>
-              {hospitals
-                .filter(h => h.walletBalanceKobo)
-                .sort((a, b) => (b.walletBalanceKobo ?? 0) - (a.walletBalanceKobo ?? 0))
-                .slice(0, 5)
-                .map(h => (
-                  <div key={h.id} className="flex items-center justify-between py-1.5">
-                    <span className="text-sm text-charcoal truncate">{h.name}</span>
-                    <span className="text-sm font-medium text-charcoal-soft">{fmtMoney(h.walletBalanceKobo)}</span>
-                  </div>
-                ))
-              }
+      {/* Two-column: Needs Attention + Automation Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+
+        {/* Needs Attention */}
+        <div className="rounded-xl border border-white/08 bg-card overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-white/08">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-amber-400/70" />
+              <p className="text-sm font-semibold text-foreground">Needs Attention</p>
+            </div>
+            {needsAttention.length > 0 && (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400">
+                {needsAttention.length}
+              </span>
+            )}
+          </div>
+          {hospitalsLoading ? (
+            <div className="p-4 space-y-2">
+              {[1,2,3].map(i => <div key={i} className="h-12 rounded-lg bg-white/04 animate-pulse" />)}
+            </div>
+          ) : needsAttention.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-2">
+              <CheckCircle2 className="w-6 h-6 text-emerald-400/40" />
+              <p className="text-sm text-muted-foreground">All accounts in good standing</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-white/06">
+              {needsAttention.slice(0, 6).map(h => {
+                const expDate = h.subscriptionExpiresAt ? new Date(h.subscriptionExpiresAt) : null
+                const daysLeft = expDate ? Math.ceil((expDate.getTime() - now) / 86400000) : null
+                const isTrial = h.subscriptionStatus === 'trial'
+                return (
+                  <button key={h.id} onClick={() => navigate('/patient/hospitals')}
+                    className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-white/[0.04] transition group text-left">
+                    <div className="w-8 h-8 rounded-lg bg-teal/10 flex items-center justify-center shrink-0">
+                      <span className="text-xs font-bold text-teal">{h.name[0]}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">{h.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {isTrial ? 'On trial' : expDate ? `Expires ${expDate.toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}` : '—'}
+                      </p>
+                    </div>
+                    <div className="shrink-0">
+                      {isTrial && <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/12 text-amber-400">Trial</span>}
+                      {!isTrial && daysLeft !== null && <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/12 text-amber-400">{daysLeft}d</span>}
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-muted-foreground transition shrink-0" />
+                  </button>
+                )
+              })}
             </div>
           )}
-        </Glass>
+          {needsAttention.length > 6 && (
+            <div className="border-t border-white/06 px-5 py-3">
+              <button onClick={() => navigate('/patient/hospitals')}
+                className="flex items-center gap-1.5 text-sm text-teal hover:text-teal/80 transition font-medium">
+                View all {needsAttention.length} <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Automation Activity feed */}
+        <div className="rounded-xl border border-white/08 bg-card overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-white/08">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-teal/70" />
+              <p className="text-sm font-semibold text-foreground">Automation Activity</p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_hsl(134_61%_51%/0.6)]" />
+              <span className="text-xs text-muted-foreground">Live</span>
+            </div>
+          </div>
+          {logsLoading ? (
+            <div className="p-4 space-y-2">
+              {[1,2,3,4].map(i => <div key={i} className="h-12 rounded-lg bg-white/04 animate-pulse" />)}
+            </div>
+          ) : logs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-2">
+              <MailCheck className="w-6 h-6 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">No automation logs yet</p>
+            </div>
+          ) : (
+            <div className="px-5 overflow-y-auto" style={{ maxHeight: 320 }}>
+              {logs.map(l => <LogRow key={l.id} log={l} />)}
+            </div>
+          )}
+          {logs.length > 0 && (
+            <div className="border-t border-white/06 px-5 py-3 flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">{logs.length} most recent events</p>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60" />{logs.filter(l => l.status === 'sent').length} sent</span>
+                {failedLogs > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-400/60" />{failedLogs} failed</span>}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-8 pt-5 border-t border-white/06">
+        <p className="text-xs text-muted-foreground/30 text-center tracking-widest uppercase">
+          Evaluate · Rebuild · Automate
+        </p>
       </div>
     </div>
   )
