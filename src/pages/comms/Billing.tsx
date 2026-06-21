@@ -38,14 +38,15 @@ export function Billing() {
   useEffect(() => {
     setLoading(true)
     setError('')
-    Promise.all([
+    Promise.allSettled([
       eventsApi.listUsage(period),
       commsApi.listPlans(),
-    ]).then(([u, p]) => {
-      setUsage(u)
-      setPlans(p)
-    }).catch(e => setError(e instanceof Error ? e.message : 'Failed to load billing data'))
-      .finally(() => setLoading(false))
+    ]).then(([usageResult, plansResult]) => {
+      if (usageResult.status === 'fulfilled') setUsage(usageResult.value)
+      else setUsage([]) // usage endpoint not yet live — show zeros
+      if (plansResult.status === 'fulfilled') setPlans(plansResult.value)
+      else setError(plansResult.reason instanceof Error ? plansResult.reason.message : 'Failed to load plans')
+    }).finally(() => setLoading(false))
   }, [period])
 
   const isCurrentPeriod = period === currentPeriod()
@@ -146,8 +147,8 @@ export function Billing() {
       ) : usage.length === 0 ? (
         <div className="rounded-2xl border border-white/[0.07] bg-card flex flex-col items-center justify-center py-16 gap-3">
           <CreditCard className="w-10 h-10 text-muted-foreground/20" />
-          <p className="font-semibold text-foreground">No billing data for {periodLabel(period)}</p>
-          <p className="caption text-sm">Usage records will appear once businesses are active</p>
+          <p className="font-semibold text-foreground">No usage data for {periodLabel(period)}</p>
+          <p className="caption text-sm">Usage records are collected as businesses send messages. The usage API endpoint may not be active yet.</p>
         </div>
       ) : (
         <>

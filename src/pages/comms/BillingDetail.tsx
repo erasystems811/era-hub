@@ -45,16 +45,16 @@ export function BillingDetail() {
     if (!clientId) return
     setLoading(true)
     const periods = last6Periods()
-    Promise.all([
+    Promise.allSettled([
       commsApi.getClient(clientId),
-      eventsApi.getBusinessUsage(clientId, currentPeriod()),
+      eventsApi.getBusinessUsage(clientId, currentPeriod()).catch(() => null),
       ...periods.slice(0).map(p => eventsApi.getBusinessUsage(clientId, p).catch(() => null)),
-    ]).then(([c, cur, ...hist]) => {
-      setClient(c as ClientDetail)
-      setCurrentUsage(cur as UsageRecord)
-      setHistory(hist as (UsageRecord | null)[])
-    }).catch(e => setError(e instanceof Error ? e.message : 'Failed to load billing detail'))
-      .finally(() => setLoading(false))
+    ]).then(([clientResult, curResult, ...histResults]) => {
+      if (clientResult.status === 'fulfilled') setClient(clientResult.value as ClientDetail)
+      else { setError(clientResult.reason instanceof Error ? clientResult.reason.message : 'Failed to load client'); return }
+      if (curResult.status === 'fulfilled') setCurrentUsage(curResult.value as UsageRecord | null)
+      setHistory(histResults.map(r => r.status === 'fulfilled' ? r.value as UsageRecord | null : null))
+    }).finally(() => setLoading(false))
   }, [clientId])
 
   const period = currentPeriod()
