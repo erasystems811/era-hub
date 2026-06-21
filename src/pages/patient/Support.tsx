@@ -3,6 +3,7 @@ import { Headphones, Send, ChevronRight } from 'lucide-react'
 import { Glass } from '../../components/Glass'
 import { patientApi, SupportTicket } from '../../lib/patient-api'
 import { fmtDateTime, timeAgo } from '../../lib/utils'
+import { pageCache } from '../../lib/cache'
 
 type Thread = {
   ticket: object
@@ -14,16 +15,20 @@ function statusColor(s: string) {
 }
 
 export function Support() {
-  const [tickets, setTickets] = useState<SupportTicket[]>([])
+  const [tickets, setTickets] = useState<SupportTicket[]>(() => pageCache.get<SupportTicket[]>('support:tickets') ?? [])
   const [selected, setSelected] = useState<number | null>(null)
   const [thread, setThread] = useState<Thread | null>(null)
   const [reply, setReply] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => !pageCache.get('support:tickets'))
   const [sending, setSending] = useState(false)
 
   const loadTickets = async () => {
     setLoading(true)
-    try { setTickets(await patientApi.listSupportTickets()) } finally { setLoading(false) }
+    try {
+      const data = await patientApi.listSupportTickets()
+      pageCache.set('support:tickets', data)
+      setTickets(data)
+    } finally { setLoading(false) }
   }
 
   const openThread = async (id: number) => {

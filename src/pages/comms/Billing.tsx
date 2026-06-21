@@ -3,13 +3,17 @@ import { CreditCard } from 'lucide-react'
 import { Glass } from '../../components/Glass'
 import { commsApi, Client } from '../../lib/comms-api'
 import { fmtNumber } from '../../lib/utils'
+import { pageCache } from '../../lib/cache'
 
 export function Billing() {
-  const [clients, setClients] = useState<Client[]>([])
-  const [loading, setLoading] = useState(true)
+  const [clients, setClients] = useState<Client[]>(() => pageCache.get<Client[]>('comms:clients') ?? [])
+  const [loading, setLoading] = useState(() => !pageCache.get('comms:clients'))
 
   useEffect(() => {
-    void commsApi.listClients().then(setClients).finally(() => setLoading(false))
+    void commsApi.listClients().then(data => {
+      pageCache.set('comms:clients', data)
+      setClients(data)
+    }).finally(() => setLoading(false))
   }, [])
 
   if (loading) return <div className="text-center py-16 text-charcoal-soft">Loading…</div>

@@ -103,6 +103,50 @@ export interface WalletInfo {
   transactions: { id: number; type: string; amount_kobo: number; description: string; created_at: string }[]
 }
 
+export interface HospitalUsageStat {
+  id: number; name: string; active: boolean; createdAt: string | null; daysSince: number
+  totalPatients: number
+  currentMonth: { label: string; daysElapsed: number; patients: number; emails: number; sms: number; avgPatientsDay: number; avgEmailsDay: number; avgSmsDay: number }
+  history: { label: string; patients: number; emails: number; sms: number; avgPatientsDay: number; avgEmailsDay: number; avgSmsDay: number }[]
+}
+
+export interface Announcement {
+  id: number; hospitalId: number | null; hospitalName: string | null
+  title: string; message: string; type: 'info' | 'warning' | 'update'
+  published: boolean; createdAt: string; publishedAt: string | null
+  expiresAt: string | null; targetModule: string | null
+}
+
+export interface SystemFeedbackEntry {
+  id: number; hospital_id: number; hospital_name: string
+  user_role: string; rating: number; comment: string | null; created_at: string
+}
+
+export interface PatientAnalyticsData {
+  totalPatients: number; newToday: number; newThisWeek: number
+  activeToday: number; activeThisWeek: number
+  pageViewsToday: number; pageViewsWeek: number
+  topPages: { route: string; views: number }[]
+  dailySignups: { date: string; count: number }[]
+  recentFeedback: PatientFeedbackItem[]
+}
+
+export interface PatientFeedbackItem {
+  id: number; username: string | null; rating: number | null
+  category: string; message: string; created_at: string
+}
+
+export interface RagDocument {
+  id: number; title: string; category: string; source: string | null
+  chunk_index: number; content: string; created_at: string
+}
+
+export interface DemoSession {
+  id: number; session_id: string; first_name: string; last_name: string
+  email: string | null; phone: string; stage_reached: string | null
+  completed: boolean; started_at: string; completed_at: string | null
+}
+
 // ── API ──────────────────────────────────────────────────────────────────────
 
 export const patientApi = {
@@ -157,4 +201,63 @@ export const patientApi = {
 
   changePassword: (currentPassword: string, newPassword: string) =>
     post<{ ok: boolean }>('/super-admin/change-password', { currentPassword, newPassword }),
+
+  // Usage
+  usageStats: () => get<{ stats: HospitalUsageStat[] }>('/super-admin/usage-stats'),
+
+  // Announcements
+  listAnnouncements: () => get<Announcement[]>('/super-admin/announcements'),
+  createAnnouncement: (data: { title: string; message: string; type: string; hospitalId?: number | null; expiresAt?: string | null; publish?: boolean; targetModule?: string | null }) =>
+    post<Announcement>('/super-admin/announcements', data),
+  updateAnnouncement: (id: number, data: { title?: string; message?: string; type?: string; expiresAt?: string | null; hospitalId?: number | null; targetModule?: string | null }) =>
+    patch<Announcement>(`/super-admin/announcements/${id}`, data),
+  publishAnnouncement: (id: number) => patch<void>(`/super-admin/announcements/${id}/publish`, {}),
+  deleteAnnouncement: (id: number) => del<void>(`/super-admin/announcements/${id}`),
+  autoDraftAnnouncements: () => {
+    const token = getToken()
+    return fetch(`${PATIENT_API}/api/super-admin/announcements/auto-draft`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { 'x-super-admin-token': token } : {}) },
+    }).then(async r => {
+      if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error((e as { error?: string }).error ?? 'Failed') }
+    })
+  },
+
+  // System feedback
+  listSystemFeedback: () => get<SystemFeedbackEntry[]>('/system-feedback'),
+  broadcastFeedback: () => post<void>('/system-feedback/broadcast', {}),
+
+  // Patient analytics
+  getPatientAnalytics: () => get<PatientAnalyticsData>('/super-admin/patient-analytics'),
+  listPatientFeedback: (params?: { page?: number; category?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.page) qs.set('page', String(params.page))
+    if (params?.category) qs.set('category', params.category)
+    return get<{ items: PatientFeedbackItem[]; total: number; page: number; limit: number }>(`/super-admin/patient-feedback${qs.size ? '?' + qs.toString() : ''}`)
+  },
+
+  // Knowledge base
+  listKnowledgeDocs: (params?: { category?: string; search?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.category && params.category !== 'all') qs.set('category', params.category)
+    if (params?.search) qs.set('search', params.search)
+    return get<{ documents: RagDocument[]; total: number }>(`/super-admin/knowledge-base${qs.size ? '?' + qs.toString() : ''}`)
+  },
+  uploadKnowledgeDoc: (data: { title: string; category: string; source?: string; content: string }) =>
+    post<{ ok: boolean; chunks: number; title: string }>('/super-admin/knowledge-base', data),
+  deleteKnowledgeDoc: (id: number) => del<void>(`/super-admin/knowledge-base/${id}`),
+  testKnowledgeQuery: (query: string, category: string) =>
+    post<{ query: string; category: string; results: string[] }>('/super-admin/knowledge-base/test', { query, category }),
+
+  // Demo sessions
+  listDemoSessions: () => get<DemoSession[]>('/demo/sessions'),
+
+  // Config
+  getConfig: () => get<{ eraPatientUrl: string }>('/super-admin/config'),
+
+  // Test comms
+  testSms: (to: string, senderId?: string) =>
+    post<{ ok: boolean; detail: string }>('/super-admin/test-sms', { to, senderId }),
+  testEmail: (to: string) =>
+    post<{ ok: boolean; from?: string; error?: string }>('/super-admin/test-email', { to }),
 }

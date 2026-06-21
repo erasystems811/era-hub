@@ -3,17 +3,20 @@ import { CheckCircle, AlertTriangle, XCircle } from 'lucide-react'
 import { Glass } from '../../components/Glass'
 import { patientApi, HealthCheck, Hospital } from '../../lib/patient-api'
 import { fmtMoney } from '../../lib/utils'
+import { pageCache } from '../../lib/cache'
 
 export function Analytics() {
-  const [health, setHealth] = useState<HealthCheck | null>(null)
-  const [hospitals, setHospitals] = useState<Hospital[]>([])
-  const [loading, setLoading] = useState(true)
+  const [health, setHealth] = useState<HealthCheck | null>(() => pageCache.get('analytics:health'))
+  const [hospitals, setHospitals] = useState<Hospital[]>(() => pageCache.get<Hospital[]>('analytics:hospitals') ?? [])
+  const [loading, setLoading] = useState(() => !pageCache.get('analytics:health'))
 
   useEffect(() => {
     void Promise.all([
       patientApi.getHealth().catch(() => null),
       patientApi.listHospitals().catch(() => []),
     ]).then(([h, hs]) => {
+      if (h) pageCache.set('analytics:health', h)
+      pageCache.set('analytics:hospitals', hs ?? [])
       setHealth(h)
       setHospitals(hs ?? [])
     }).finally(() => setLoading(false))

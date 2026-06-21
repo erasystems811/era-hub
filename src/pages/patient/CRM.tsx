@@ -3,6 +3,7 @@ import { Plus, Briefcase, Trash2, CheckCircle } from 'lucide-react'
 import { Glass } from '../../components/Glass'
 import { patientApi, CrmLead } from '../../lib/patient-api'
 import { fmtDate } from '../../lib/utils'
+import { pageCache } from '../../lib/cache'
 
 const STAGES = ['prospect', 'demo_scheduled', 'negotiation', 'closed_won', 'closed_lost']
 const STAGE_LABEL: Record<string, string> = {
@@ -83,8 +84,8 @@ function LeadCard({ lead, onUpdate, onDelete }: {
 }
 
 export function CRM() {
-  const [leads, setLeads] = useState<CrmLead[]>([])
-  const [loading, setLoading] = useState(true)
+  const [leads, setLeads] = useState<CrmLead[]>(() => pageCache.get<CrmLead[]>('crm:leads') ?? [])
+  const [loading, setLoading] = useState(() => !pageCache.get('crm:leads'))
   const [stageFilter, setStageFilter] = useState<string>('all')
   const [showCreate, setShowCreate] = useState(false)
   const [newName, setNewName] = useState('')
@@ -93,7 +94,11 @@ export function CRM() {
 
   const load = async () => {
     setLoading(true)
-    try { setLeads(await patientApi.listCrmLeads()) } finally { setLoading(false) }
+    try {
+      const data = await patientApi.listCrmLeads()
+      pageCache.set('crm:leads', data)
+      setLeads(data)
+    } finally { setLoading(false) }
   }
 
   useEffect(() => { void load() }, [])

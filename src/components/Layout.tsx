@@ -7,7 +7,7 @@ import {
   BarChart2, Building2, Rocket, AlertCircle, PanelLeftClose, PanelLeftOpen,
   Menu, X, FlaskConical, TrendingUp, Headphones, Bell,
   Kanban, Activity, MonitorPlay, Smartphone, Users, Layers,
-  CreditCard, Settings, Home, Zap,
+  CreditCard, Settings, Home, Zap, Star, Database, BookOpen,
 } from 'lucide-react'
 import { ChangePasswordModal } from './ChangePasswordModal'
 import { NotificationPanel } from './NotificationPanel'
@@ -20,11 +20,18 @@ interface LayoutProps {
 }
 
 const PATIENT_NAV = [
-  { icon: BarChart2,    label: 'Analytics',       href: '/patient/analytics',  sub: 'Platform metrics' },
-  { icon: Building2,    label: 'Hospitals',        href: '/patient/hospitals',  sub: 'Account registry' },
-  { icon: Headphones,   label: 'Support',          href: '/patient/support',    sub: 'Hospital tickets' },
-  { icon: FlaskConical, label: 'Automation Log',   href: '/patient/automation', sub: 'Email & SMS workflows' },
-  { icon: Kanban,       label: 'Sales CRM',        href: '/patient/crm',        sub: 'Pipeline & leads' },
+  { icon: BarChart2,    label: 'Analytics',        href: '/patient/analytics',        sub: 'Platform metrics' },
+  { icon: Building2,    label: 'Hospitals',         href: '/patient/hospitals',        sub: 'Account registry' },
+  { icon: TrendingUp,   label: 'Usage',             href: '/patient/usage',            sub: 'Hospital consumption' },
+  { icon: Bell,         label: 'Announcements',     href: '/patient/announcements',    sub: 'Push notices to hospitals' },
+  { icon: FlaskConical, label: 'Automation Log',    href: '/patient/automation',       sub: 'Email & SMS workflows' },
+  { icon: Headphones,   label: 'Support',           href: '/patient/support',          sub: 'Hospital tickets' },
+  { icon: Star,         label: 'System Feedback',   href: '/patient/feedback',         sub: 'Hospital staff ratings' },
+  { icon: Kanban,       label: 'Sales CRM',         href: '/patient/crm',              sub: 'Pipeline & leads' },
+  { icon: Activity,     label: 'Patient Analytics', href: '/patient/patient-analytics', sub: 'ERA patient app metrics' },
+  { icon: Database,     label: 'Knowledge Base',    href: '/patient/knowledge-base',   sub: 'RAG document management' },
+  { icon: MonitorPlay,  label: 'Demo Sessions',     href: '/patient/demo-sessions',    sub: 'Prospect demo tracking' },
+  { icon: BookOpen,     label: 'Docs & Settings',   href: '/patient/docs',             sub: 'Platform documentation' },
 ]
 
 const COMMS_NAV = [
@@ -36,17 +43,24 @@ const COMMS_NAV = [
 ]
 
 const BREADCRUMB_MAP: Record<string, { label: string; href?: string }[]> = {
-  '/':                   [],
-  '/patient/analytics':  [{ label: 'ERA Patient' }, { label: 'Analytics' }],
-  '/patient/hospitals':  [{ label: 'ERA Patient' }, { label: 'Hospitals' }],
-  '/patient/support':    [{ label: 'ERA Patient' }, { label: 'Support' }],
-  '/patient/automation': [{ label: 'ERA Patient' }, { label: 'Automation Log' }],
-  '/patient/crm':        [{ label: 'ERA Patient' }, { label: 'Sales CRM' }],
-  '/comms/sessions':     [{ label: 'ERA Comms' }, { label: 'Sessions' }],
-  '/comms/businesses':   [{ label: 'ERA Comms' }, { label: 'Businesses' }],
-  '/comms/plans':        [{ label: 'ERA Comms' }, { label: 'Plans' }],
-  '/comms/billing':      [{ label: 'ERA Comms' }, { label: 'Billing & Usage' }],
-  '/comms/settings':     [{ label: 'ERA Comms' }, { label: 'Settings' }],
+  '/':                            [],
+  '/patient/analytics':           [{ label: 'ERA Patient' }, { label: 'Analytics' }],
+  '/patient/hospitals':           [{ label: 'ERA Patient' }, { label: 'Hospitals' }],
+  '/patient/usage':               [{ label: 'ERA Patient' }, { label: 'Usage' }],
+  '/patient/announcements':       [{ label: 'ERA Patient' }, { label: 'Announcements' }],
+  '/patient/support':             [{ label: 'ERA Patient' }, { label: 'Support' }],
+  '/patient/automation':          [{ label: 'ERA Patient' }, { label: 'Automation Log' }],
+  '/patient/feedback':            [{ label: 'ERA Patient' }, { label: 'System Feedback' }],
+  '/patient/crm':                 [{ label: 'ERA Patient' }, { label: 'Sales CRM' }],
+  '/patient/patient-analytics':   [{ label: 'ERA Patient' }, { label: 'Patient Analytics' }],
+  '/patient/knowledge-base':      [{ label: 'ERA Patient' }, { label: 'Knowledge Base' }],
+  '/patient/demo-sessions':       [{ label: 'ERA Patient' }, { label: 'Demo Sessions' }],
+  '/patient/docs':                [{ label: 'ERA Patient' }, { label: 'Docs & Settings' }],
+  '/comms/sessions':              [{ label: 'ERA Comms' }, { label: 'Sessions' }],
+  '/comms/businesses':            [{ label: 'ERA Comms' }, { label: 'Businesses' }],
+  '/comms/plans':                 [{ label: 'ERA Comms' }, { label: 'Plans' }],
+  '/comms/billing':               [{ label: 'ERA Comms' }, { label: 'Billing & Usage' }],
+  '/comms/settings':              [{ label: 'ERA Comms' }, { label: 'Settings' }],
 }
 
 const SIDEBAR_KEY = 'era_hub_sidebar'
@@ -106,6 +120,12 @@ export function Layout({ children, breadcrumb: breadcrumbProp }: LayoutProps) {
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(href + '/')
+
+  const productCtx = pathname.startsWith('/patient/')
+    ? { name: 'ERA Patient', color: '#4AA89D', borderColor: 'rgba(74,168,157,0.35)', bg: 'rgba(74,168,157,0.08)' }
+    : pathname.startsWith('/comms/')
+    ? { name: 'ERA Comms', color: '#BF7C93', borderColor: 'rgba(191,124,147,0.35)', bg: 'rgba(191,124,147,0.08)' }
+    : null
 
   const autoBreadcrumb = Object.entries(BREADCRUMB_MAP)
     .filter(([k]) => k !== '/' && (pathname === k || pathname.startsWith(k + '/')))
@@ -342,7 +362,7 @@ export function Layout({ children, breadcrumb: breadcrumbProp }: LayoutProps) {
         {/* Topbar */}
         <header
           className="shrink-0 h-12 border-b flex items-center px-4 md:px-6 gap-2"
-          style={{ borderBottomColor: 'hsl(222 40% 14%)', background: 'hsl(222 47% 7%)' }}
+          style={{ borderBottomColor: productCtx?.borderColor ?? 'hsl(222 40% 14%)', background: 'hsl(222 47% 7%)' }}
         >
           <button
             className="md:hidden shrink-0 p-1 -ml-1 rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-white/5 transition"
@@ -351,10 +371,17 @@ export function Layout({ children, breadcrumb: breadcrumbProp }: LayoutProps) {
             <Menu className="w-5 h-5" />
           </button>
 
+          {productCtx && (
+            <span className="text-[9px] font-bold uppercase tracking-[0.18em] px-2 py-0.5 rounded-full hidden sm:inline shrink-0"
+              style={{ color: productCtx.color, background: productCtx.bg }}>
+              {productCtx.name}
+            </span>
+          )}
+
           {breadcrumb.length > 0 ? (
             <>
-              <span className="text-[10px] text-muted-foreground/30 font-medium tracking-wider uppercase hidden sm:inline">Era Hub</span>
-              {breadcrumb.map((c, i) => (
+              {!productCtx && <span className="text-[10px] text-muted-foreground/30 font-medium tracking-wider uppercase hidden sm:inline">Era Hub</span>}
+              {breadcrumb.slice(1).map((c, i) => (
                 <span key={i} className="flex items-center gap-2">
                   <ChevronRight className="w-3 h-3 text-border/60 shrink-0 hidden sm:block" />
                   {c.href

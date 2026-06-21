@@ -5,6 +5,7 @@ import { StatusDot } from '../../components/StatusDot'
 import { QRModal } from '../../components/QRModal'
 import { commsApi, Session, Client } from '../../lib/comms-api'
 import { timeAgo, fmtNumber } from '../../lib/utils'
+import { pageCache } from '../../lib/cache'
 
 const STATUS_LABEL: Record<string, string> = {
   pending_qr: 'Waiting for QR scan',
@@ -104,9 +105,9 @@ function ConfirmStopModal({ session, onClose, onStopped }: {
 }
 
 export function Sessions() {
-  const [sessions, setSessions] = useState<Session[]>([])
-  const [clients, setClients] = useState<Client[]>([])
-  const [loading, setLoading] = useState(true)
+  const [sessions, setSessions] = useState<Session[]>(() => pageCache.get<Session[]>('comms:sessions') ?? [])
+  const [clients, setClients] = useState<Client[]>(() => pageCache.get<Client[]>('comms:clients') ?? [])
+  const [loading, setLoading] = useState(() => !pageCache.get('comms:sessions'))
   const [showAdd, setShowAdd] = useState(false)
   const [qrModal, setQrModal] = useState<ConnectModal | null>(null)
   const [stopModal, setStopModal] = useState<Session | null>(null)
@@ -115,6 +116,7 @@ export function Sessions() {
     setLoading(true)
     try {
       const [s, c] = await Promise.all([commsApi.listSessions(), commsApi.listClients()])
+      pageCache.set('comms:sessions', s); pageCache.set('comms:clients', c)
       setSessions(s); setClients(c)
     } finally { setLoading(false) }
   }

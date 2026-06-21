@@ -5,6 +5,7 @@ import { Glass } from '../../components/Glass'
 import { StatusDot } from '../../components/StatusDot'
 import { commsApi, Client, ClientDetail, ApiKey, Plan } from '../../lib/comms-api'
 import { fmtDate, fmtNumber } from '../../lib/utils'
+import { pageCache } from '../../lib/cache'
 
 function ClientDrawer({ client, plans, onClose, onUpdated }: {
   client: Client; plans: Plan[]
@@ -185,9 +186,9 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
 
 export function Businesses() {
   const nav = useNavigate()
-  const [clients, setClients] = useState<Client[]>([])
-  const [plans, setPlans] = useState<Plan[]>([])
-  const [loading, setLoading] = useState(true)
+  const [clients, setClients] = useState<Client[]>(() => pageCache.get<Client[]>('comms:clients') ?? [])
+  const [plans, setPlans] = useState<Plan[]>(() => pageCache.get<Plan[]>('comms:plans') ?? [])
+  const [loading, setLoading] = useState(() => !pageCache.get('comms:clients'))
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Client | null>(null)
 
@@ -195,6 +196,7 @@ export function Businesses() {
     setLoading(true)
     try {
       const [c, p] = await Promise.all([commsApi.listClients(), commsApi.listPlans()])
+      pageCache.set('comms:clients', c); pageCache.set('comms:plans', p)
       setClients(c); setPlans(p)
     } finally { setLoading(false) }
   }

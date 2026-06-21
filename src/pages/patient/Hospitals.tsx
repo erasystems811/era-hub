@@ -4,6 +4,7 @@ import { Plus, Search, Building2, CheckCircle, XCircle } from 'lucide-react'
 import { Glass } from '../../components/Glass'
 import { patientApi, Hospital } from '../../lib/patient-api'
 import { fmtDate, fmtMoney } from '../../lib/utils'
+import { pageCache } from '../../lib/cache'
 
 interface CreateForm { name: string; username: string; subscriptionStatus: string }
 
@@ -56,15 +57,19 @@ function CreateHospitalModal({ onClose, onCreated }: { onClose: () => void; onCr
 }
 
 export function Hospitals() {
-  const [hospitals, setHospitals] = useState<Hospital[]>([])
-  const [loading, setLoading] = useState(true)
+  const [hospitals, setHospitals] = useState<Hospital[]>(() => pageCache.get<Hospital[]>('hospitals') ?? [])
+  const [loading, setLoading] = useState(() => !pageCache.get('hospitals'))
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const nav = useNavigate()
 
   const load = async () => {
     setLoading(true)
-    try { setHospitals(await patientApi.listHospitals()) } finally { setLoading(false) }
+    try {
+      const data = await patientApi.listHospitals()
+      pageCache.set('hospitals', data)
+      setHospitals(data)
+    } finally { setLoading(false) }
   }
 
   useEffect(() => { void load() }, [])
