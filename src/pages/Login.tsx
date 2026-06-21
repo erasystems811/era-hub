@@ -14,7 +14,7 @@ export function Login() {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4"
-      style={{ background: 'linear-gradient(135deg, #EFD9E8 0%, #E5C8DC 60%, #D8B5CC 100%)' }}
+      style={{ background: 'linear-gradient(135deg, #C4286F 0%, #A82060 60%, #8A1850 100%)' }}
     >
       {/* Decorative blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">

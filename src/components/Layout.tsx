@@ -4,7 +4,7 @@ import { TopBar } from './TopBar'
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen" style={{ background: '#F9E8F4' }}>
+    <div className="min-h-screen" style={{ background: '#C4286F' }}>
       <Sidebar />
       <TopBar />
       <main className="ml-56 pt-14 min-h-screen">

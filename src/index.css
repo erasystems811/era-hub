@@ -6,74 +6,98 @@
   * { box-sizing: border-box; }
   html { font-family: 'Inter', system-ui, sans-serif; }
   body {
-    background: #EFD9E8;
+    background: #C4286F;
     color: #0F172A;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
   }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(181,34,106,0.30); border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(181,34,106,0.55); }
+  ::-webkit-scrollbar-track { background: rgba(0,0,0,0.10); }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.30); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.50); }
 }
 
 @layer components {
-  /* Glass: crisp white panel floating over the pink background */
+  /* Glass: crisp white panels floating over the bold pink background */
   .glass {
-    background: rgba(255,255,255,0.78);
+    background: rgba(255,255,255,0.88);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.90);
-    box-shadow: 0 4px 32px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    border: 1px solid rgba(255,255,255,0.95);
+    box-shadow: 0 4px 32px rgba(0,0,0,0.16), 0 1px 6px rgba(0,0,0,0.08);
     border-radius: 16px;
   }
   .glass-sm {
-    background: rgba(255,255,255,0.72);
+    background: rgba(255,255,255,0.82);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255,255,255,0.85);
-    box-shadow: 0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.03);
+    border: 1px solid rgba(255,255,255,0.90);
+    box-shadow: 0 2px 16px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06);
     border-radius: 12px;
   }
 
-  /* Primary button: bold pink — sharp, defined, confident */
+  /* Buttons */
   .btn-primary {
-    background: #B5226A;
+    background: #0F172A;
     color: white;
     @apply font-medium px-5 py-2.5 rounded-xl transition-all duration-150;
-    @apply hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed;
-    box-shadow: 0 2px 12px rgba(181,34,106,0.30);
+    @apply hover:opacity-85 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
   }
   .btn-secondary {
-    @apply font-medium px-5 py-2.5 rounded-xl border transition-all duration-150;
-    background: rgba(181,34,106,0.08);
-    color: #B5226A;
-    border-color: rgba(181,34,106,0.20);
-    @apply hover:bg-opacity-80 active:scale-[0.98] disabled:opacity-40;
+    background: rgba(255,255,255,0.88);
+    color: #C4286F;
+    border: 1px solid rgba(196,40,111,0.20);
+    @apply font-medium px-5 py-2.5 rounded-xl transition-all duration-150;
+    @apply hover:bg-opacity-95 active:scale-[0.98] disabled:opacity-40;
+  }
+  /* Inside glass panels, secondary button uses pink text on white bg */
+  .glass .btn-secondary, .glass-sm .btn-secondary {
+    background: rgba(196,40,111,0.07);
+    color: #C4286F;
+    border-color: rgba(196,40,111,0.18);
   }
   .btn-ghost {
-    @apply text-charcoal-soft font-medium px-4 py-2 rounded-xl transition-all duration-150;
-    @apply hover:bg-white hover:bg-opacity-60 hover:text-charcoal active:scale-[0.98];
+    color: rgba(255,255,255,0.75);
+    @apply font-medium px-4 py-2 rounded-xl transition-all duration-150;
+    @apply hover:bg-white hover:bg-opacity-15 hover:text-white active:scale-[0.98];
+  }
+  /* Ghost inside glass */
+  .glass .btn-ghost, .glass-sm .btn-ghost {
+    color: #64748B;
+  }
+  .glass .btn-ghost:hover, .glass-sm .btn-ghost:hover {
+    background: rgba(196,40,111,0.07);
+    color: #0F172A;
   }
   .btn-danger {
     @apply bg-rose text-white font-medium px-5 py-2.5 rounded-xl transition-all duration-150;
     @apply hover:opacity-90 active:scale-[0.98];
   }
 
+  /* Inputs always crisp white */
   .input {
-    @apply w-full rounded-xl px-4 py-2.5 text-sm text-charcoal outline-none transition-all;
-    background: rgba(255,255,255,0.80);
-    border: 1px solid rgba(181,34,106,0.16);
+    @apply w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid rgba(196,40,111,0.16);
+    color: #0F172A;
     @apply placeholder-charcoal-soft placeholder-opacity-40;
   }
   .input:focus {
-    border-color: #B5226A;
-    box-shadow: 0 0 0 3px rgba(181,34,106,0.10);
-    background: rgba(255,255,255,0.95);
+    background: white;
+    border-color: #C4286F;
+    box-shadow: 0 0 0 3px rgba(196,40,111,0.12);
   }
 
-  .label { @apply block text-xs font-medium text-charcoal-soft mb-1.5; }
-  .page-title { @apply text-2xl font-semibold text-charcoal tracking-tight; }
-  .section-title { @apply text-lg font-semibold text-charcoal; }
-  .caption { @apply text-sm text-charcoal-soft; }
+  /* Text utilities: white on the bold pink background by default */
+  .label       { @apply block text-xs font-medium mb-1.5; color: #64748B; }
+  .page-title  { @apply text-2xl font-semibold tracking-tight; color: white; }
+  .section-title { @apply text-lg font-semibold; color: #0F172A; }
+  .caption     { @apply text-sm; color: rgba(255,255,255,0.72); }
+
+  /* Inside glass panels: reset caption and label back to dark */
+  .glass .caption,
+  .glass-sm .caption  { color: #64748B; }
+  .glass .label,
+  .glass-sm .label    { color: #64748B; }
 }
