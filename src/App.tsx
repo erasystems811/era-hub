@@ -59,6 +59,12 @@ import { AIEngine }       from './pages/comms/AIEngine'
 import { AIClientConfig } from './pages/comms/AIClientConfig'
 import { AILogs }         from './pages/comms/AILogs'
 import { AITemplates }    from './pages/comms/AITemplates'
+import { EmailOverview }  from './pages/comms/EmailOverview'
+import { EmailTemplates } from './pages/comms/EmailTemplates'
+import { EmailCampaigns } from './pages/comms/EmailCampaigns'
+import { EmailContacts }  from './pages/comms/EmailContacts'
+import { EmailDomains }   from './pages/comms/EmailDomains'
+import { VoiceComingSoon } from './pages/comms/VoiceComingSoon'
 
 function ProtectedApp() {
   return (
@@ -103,6 +109,12 @@ function ProtectedApp() {
         <Route path="/comms/ai-config/:clientId"  element={<AIClientConfig />} />
         <Route path="/comms/ai-logs"              element={<AILogs />} />
         <Route path="/comms/ai-templates"         element={<AITemplates />} />
+        <Route path="/comms/email"               element={<EmailOverview />} />
+        <Route path="/comms/email/templates"     element={<EmailTemplates />} />
+        <Route path="/comms/email/campaigns"     element={<EmailCampaigns />} />
+        <Route path="/comms/email/contacts"      element={<EmailContacts />} />
+        <Route path="/comms/email/domains"       element={<EmailDomains />} />
+        <Route path="/comms/voice"               element={<VoiceComingSoon />} />
 
         {/* Future */}
         <Route path="/connect" element={

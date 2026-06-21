@@ -10,6 +10,7 @@ import {
   CreditCard, Settings, Star, Database, BookOpen, Radio,
   ScrollText, ShieldAlert, Search, ClipboardList,
   Bot, LayoutTemplate, GitMerge, FileSearch, Zap,
+  Mail, Send, Globe, Phone, FileText,
 } from 'lucide-react'
 import { ChangePasswordModal } from './ChangePasswordModal'
 import { NotificationPanel } from './NotificationPanel'
@@ -46,8 +47,14 @@ const COMMS_NAV = [
   { icon: GitMerge,      label: 'Onboarding',   href: '/comms/onboarding',   sub: 'Setup pipeline tracker' },
   { icon: Bot,           label: 'AI Engine',    href: '/comms/ai-engine',    sub: 'AI usage & configuration' },
   { icon: FileSearch,    label: 'AI Logs',      href: '/comms/ai-logs',      sub: 'AI conversation history' },
-  { icon: LayoutTemplate,label: 'AI Templates', href: '/comms/ai-templates', sub: 'Scenario template library' },
-  { icon: Settings,      label: 'Settings',     href: '/comms/settings',     sub: 'API & configuration' },
+  { icon: LayoutTemplate,label: 'AI Templates', href: '/comms/ai-templates',     sub: 'Scenario template library' },
+  { icon: Mail,          label: 'Email',         href: '/comms/email',            sub: 'Postal sending engine' },
+  { icon: FileText,      label: 'Templates',     href: '/comms/email/templates',  sub: 'Visual email builder' },
+  { icon: Send,          label: 'Campaigns',     href: '/comms/email/campaigns',  sub: 'Bulk email sends' },
+  { icon: Users,         label: 'Contacts',      href: '/comms/email/contacts',   sub: 'Lists & suppression' },
+  { icon: Globe,         label: 'Domains',       href: '/comms/email/domains',    sub: 'DNS & verification' },
+  { icon: Phone,         label: 'Voice',         href: '/comms/voice',            sub: 'Coming soon' },
+  { icon: Settings,      label: 'Settings',      href: '/comms/settings',         sub: 'API & configuration' },
 ]
 
 const PRODUCTS = {
