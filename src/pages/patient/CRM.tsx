@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react'
-import { Plus, Briefcase, Trash2, CheckCircle } from 'lucide-react'
-import { Glass } from '../../components/Glass'
+import { Plus, Briefcase, Trash2, CheckCircle, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
 import { patientApi, CrmLead } from '../../lib/patient-api'
 import { fmtDate } from '../../lib/utils'
 import { pageCache } from '../../lib/cache'
 
-const STAGES = ['prospect', 'demo_scheduled', 'negotiation', 'closed_won', 'closed_lost']
+const STAGES = ['prospect', 'demo_scheduled', 'negotiation', 'closed_won', 'closed_lost'] as const
 const STAGE_LABEL: Record<string, string> = {
   prospect: 'Prospect', demo_scheduled: 'Demo Booked', negotiation: 'Negotiating',
   closed_won: 'Won', closed_lost: 'Lost',
 }
-const STAGE_COLOR: Record<string, string> = {
-  prospect: 'bg-pink-light text-pink border-pink-border',
-  demo_scheduled: 'bg-amber-500/12 text-amber-400 border-amber-500/25',
-  negotiation: 'bg-blue-500/12 text-blue-400 border-blue-500/25',
-  closed_won: 'bg-teal-light text-teal border-teal-border',
-  closed_lost: 'bg-white/6 text-muted-foreground border-white/12',
+const STAGE_BADGE: Record<string, string> = {
+  prospect:       'bg-primary/10 text-primary border-primary/20',
+  demo_scheduled: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  negotiation:    'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  closed_won:     'bg-teal/10 text-teal border-teal/20',
+  closed_lost:    'bg-white/06 text-muted-foreground border-white/10',
 }
 
 function LeadCard({ lead, onUpdate, onDelete }: {
@@ -26,57 +25,65 @@ function LeadCard({ lead, onUpdate, onDelete }: {
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="glass-sm" style={{ padding: 0 }}>
-      <button className="w-full text-left px-4 py-3.5" onClick={() => setExpanded(v => !v)}>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="font-medium text-charcoal text-sm">{lead.name}</div>
-            <div className="text-xs text-charcoal-soft mt-0.5">{lead.contact_person || '—'}</div>
+    <div className="rounded-2xl border border-white/07 bg-card overflow-hidden">
+      <button className="w-full text-left px-5 py-4" onClick={() => setExpanded(v => !v)}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-white/06 text-foreground text-sm font-bold flex items-center justify-center shrink-0">
+              {lead.name[0]?.toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="font-semibold text-foreground truncate">{lead.name}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">{lead.contact_person || '—'}</p>
+            </div>
           </div>
-          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 ${STAGE_COLOR[lead.stage] ?? 'bg-gray-100'}`}>
-            {STAGE_LABEL[lead.stage] ?? lead.stage}
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${STAGE_BADGE[lead.stage] ?? 'bg-white/06 text-muted-foreground border-white/10'}`}>
+              {STAGE_LABEL[lead.stage] ?? lead.stage}
+            </span>
+            {expanded ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />}
+          </div>
         </div>
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 border-t border-pink-border pt-3 space-y-3">
-          <div>
-            <label className="label">Stage</label>
-            <select
-              className="input"
-              value={lead.stage}
-              onChange={e => onUpdate(lead.id, { stage: e.target.value })}
-            >
+        <div className="px-5 pb-5 pt-0 border-t border-white/07 space-y-4">
+          <div className="pt-4">
+            <label className="label">Update stage</label>
+            <select className="input mt-1.5" value={lead.stage}
+              onChange={e => onUpdate(lead.id, { stage: e.target.value })}>
               {STAGES.map(s => <option key={s} value={s}>{STAGE_LABEL[s]}</option>)}
             </select>
           </div>
+
           {lead.notes && (
             <div>
-              <div className="label">Notes</div>
-              <div className="text-sm text-charcoal">{lead.notes}</div>
+              <p className="label mb-1.5">Notes</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{lead.notes}</p>
             </div>
           )}
+
           {lead.crm_requests?.length > 0 && (
             <div>
-              <div className="label mb-2">Tasks</div>
-              <div className="space-y-1">
+              <p className="label mb-2">Tasks</p>
+              <div className="space-y-1.5">
                 {lead.crm_requests.map(r => (
-                  <div key={r.id} className="flex items-start gap-2 text-xs">
-                    <CheckCircle className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${r.done ? 'text-teal' : 'text-charcoal-soft opacity-30'}`} />
-                    <span className={r.done ? 'line-through text-charcoal-soft' : 'text-charcoal'}>{r.text}</span>
+                  <div key={r.id} className="flex items-start gap-2 text-sm">
+                    <CheckCircle className={`w-4 h-4 shrink-0 mt-0.5 ${r.done ? 'text-teal' : 'text-muted-foreground/25'}`} />
+                    <span className={r.done ? 'line-through text-muted-foreground' : 'text-foreground'}>{r.text}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
-          <div className="text-xs text-charcoal-soft">Added {fmtDate(lead.created_at)}</div>
-          <button
-            className="text-xs text-rose flex items-center gap-1 hover:underline"
-            onClick={() => { if (confirm(`Remove ${lead.name}?`)) onDelete(lead.id) }}
-          >
-            <Trash2 className="w-3.5 h-3.5" /> Remove lead
-          </button>
+
+          <div className="flex items-center justify-between pt-1">
+            <p className="text-xs text-muted-foreground">Added {fmtDate(lead.created_at)}</p>
+            <button className="text-xs text-red-400 flex items-center gap-1.5 hover:text-red-300 transition"
+              onClick={() => { if (confirm(`Remove ${lead.name}?`)) onDelete(lead.id) }}>
+              <Trash2 className="w-3.5 h-3.5" /> Remove lead
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -125,67 +132,72 @@ export function CRM() {
 
   const filtered = stageFilter === 'all' ? leads : leads.filter(l => l.stage === stageFilter)
   const counts = STAGES.reduce((a, s) => { a[s] = leads.filter(l => l.stage === s).length; return a }, {} as Record<string, number>)
+  const won = counts.closed_won ?? 0
 
   return (
     <div className="max-w-3xl">
-      <div className="flex items-center justify-between mb-6">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="page-title">Sales CRM</h1>
-          <p className="caption mt-0.5">{leads.length} leads · {counts.closed_won ?? 0} won</p>
+          <p className="caption mt-0.5">{leads.length} leads · {won} won</p>
         </div>
         <button className="btn-primary flex items-center gap-2" onClick={() => setShowCreate(v => !v)}>
-          <Plus className="w-4 h-4" /> Add lead
+          <Plus className="w-4 h-4" /> {showCreate ? 'Cancel' : 'Add lead'}
         </button>
       </div>
 
+      {/* Create form */}
       {showCreate && (
-        <Glass className="mb-4">
-          <h3 className="section-title mb-4">Add a lead</h3>
+        <div className="rounded-2xl border border-white/07 bg-card p-5 mb-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4">Add a lead</h3>
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div>
-              <label className="label">Hospital / organisation name</label>
-              <input className="input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="City General Hospital" />
+              <label className="label">Hospital / organisation</label>
+              <input className="input mt-1.5" value={newName} onChange={e => setNewName(e.target.value)} placeholder="City General Hospital" />
             </div>
             <div>
               <label className="label">Contact person</label>
-              <input className="input" value={newContact} onChange={e => setNewContact(e.target.value)} placeholder="Dr. Amaka Obi" />
+              <input className="input mt-1.5" value={newContact} onChange={e => setNewContact(e.target.value)} placeholder="Dr. Amaka Obi" />
             </div>
           </div>
           <div className="flex gap-2">
             <button className="btn-secondary" onClick={() => setShowCreate(false)}>Cancel</button>
-            <button className="btn-primary" disabled={!newName || creating} onClick={create}>
-              {creating ? 'Adding…' : 'Add lead'}
+            <button className="btn-primary flex items-center gap-2" disabled={!newName || creating} onClick={create}>
+              {creating ? <><Loader2 className="w-4 h-4 animate-spin" /> Adding…</> : 'Add lead'}
             </button>
           </div>
-        </Glass>
+        </div>
       )}
 
-      {/* Stage filter */}
+      {/* Stage filter pills */}
       <div className="flex flex-wrap gap-2 mb-5">
-        {['all', ...STAGES].map(s => (
-          <button
-            key={s}
-            onClick={() => setStageFilter(s)}
-            className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-all ${
+        {(['all', ...STAGES] as const).map(s => (
+          <button key={s} onClick={() => setStageFilter(s)}
+            className={`text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all ${
               stageFilter === s
                 ? 'bg-teal text-white border-teal'
-                : 'bg-white/6 border-border text-muted-foreground hover:border-teal'
-            }`}
-          >
-            {s === 'all' ? 'All leads' : STAGE_LABEL[s]}
-            <span className="ml-1.5 opacity-60">{s === 'all' ? leads.length : counts[s]}</span>
+                : 'bg-white/05 border-white/10 text-muted-foreground hover:border-teal/40 hover:text-foreground'
+            }`}>
+            {s === 'all' ? 'All' : STAGE_LABEL[s]}
+            <span className="ml-1.5 opacity-60 tabular-nums">
+              {s === 'all' ? leads.length : counts[s]}
+            </span>
           </button>
         ))}
       </div>
 
+      {/* Leads list */}
       {loading ? (
-        <div className="text-center py-12 text-charcoal-soft">Loading…</div>
+        <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
+          <Loader2 className="w-4 h-4 animate-spin" /> Loading leads…
+        </div>
       ) : filtered.length === 0 ? (
-        <Glass className="text-center py-12">
-          <Briefcase className="w-10 h-10 text-pink mx-auto mb-3 opacity-40" />
-          <p className="font-medium text-charcoal">No leads here</p>
-          <p className="caption mt-1">Add your first lead to start tracking</p>
-        </Glass>
+        <div className="rounded-2xl border border-white/07 bg-card flex flex-col items-center justify-center py-16 gap-3">
+          <Briefcase className="w-10 h-10 text-muted-foreground/20" />
+          <p className="font-semibold text-foreground">No leads here</p>
+          <p className="caption text-sm">{stageFilter === 'all' ? 'Add your first lead to start tracking' : 'No leads in this stage'}</p>
+        </div>
       ) : (
         <div className="space-y-2">
           {filtered.map(l => (

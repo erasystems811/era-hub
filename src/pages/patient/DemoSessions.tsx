@@ -63,19 +63,23 @@ export function DemoSessions() {
       )}
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-xl border border-white/07 bg-card px-5 py-4">
-          <p className="text-xs text-muted-foreground font-medium">Total Sessions</p>
-          <p className="text-3xl font-bold mt-1 text-foreground tabular-nums">{loading ? '—' : sessions.length}</p>
-        </div>
-        <div className="rounded-xl border border-white/07 bg-card px-5 py-4">
-          <p className="text-xs text-muted-foreground font-medium">Completed</p>
-          <p className="text-3xl font-bold mt-1 text-primary tabular-nums">{loading ? '—' : completed}</p>
-        </div>
-        <div className="rounded-xl border border-white/07 bg-card px-5 py-4">
-          <p className="text-xs text-muted-foreground font-medium">Dropped Off</p>
-          <p className="text-3xl font-bold mt-1 text-amber-400 tabular-nums">{loading ? '—' : dropOff}</p>
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: 'Total Sessions', value: loading ? null : sessions.length, color: 'text-foreground', sub: null },
+          { label: 'Completed',      value: loading ? null : completed,        color: 'text-primary',    sub: null },
+          { label: 'Dropped Off',    value: loading ? null : dropOff,          color: 'text-amber-400',  sub: null },
+          { label: 'Completion Rate',
+            value: loading ? null : sessions.length ? Math.round((completed / sessions.length) * 100) : 0,
+            color: completed > dropOff ? 'text-teal' : 'text-amber-400',
+            sub: '%' },
+        ].map(s => (
+          <div key={s.label} className="rounded-xl border border-white/07 bg-card px-5 py-4">
+            <p className="text-xs text-muted-foreground font-medium">{s.label}</p>
+            <p className={`text-2xl font-bold tabular-nums mt-0.5 ${s.color}`}>
+              {s.value ?? '—'}{s.sub && s.value !== null ? s.sub : ''}
+            </p>
+          </div>
+        ))}
       </div>
 
       {/* Search */}
@@ -118,7 +122,7 @@ export function DemoSessions() {
                   <td className="px-4 py-3 text-muted-foreground tabular-nums">{i + 1}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0">
                         {s.first_name[0]}{s.last_name[0]}
                       </div>
                       <div>

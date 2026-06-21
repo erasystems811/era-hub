@@ -248,6 +248,20 @@ export function Announcements() {
         </div>
       </div>
 
+      {/* Stats strip */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: 'Total',     value: loading ? null : items.length,     color: 'text-foreground' },
+          { label: 'Published', value: loading ? null : published.length, color: 'text-teal' },
+          { label: 'Drafts',    value: loading ? null : drafts.length,    color: 'text-amber-400' },
+        ].map(s => (
+          <div key={s.label} className="rounded-xl border border-white/07 bg-card px-4 py-3.5">
+            <p className="text-xs text-muted-foreground font-medium">{s.label}</p>
+            <p className={`text-2xl font-bold tabular-nums mt-0.5 ${s.color}`}>{s.value ?? '—'}</p>
+          </div>
+        ))}
+      </div>
+
       {error && (
         <div className="flex items-center gap-2 text-sm text-red-400 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
           <AlertCircle className="w-4 h-4 shrink-0" />{error}

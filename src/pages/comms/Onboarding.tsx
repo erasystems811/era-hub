@@ -1,11 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Check, Copy, Eye, EyeOff } from 'lucide-react'
-import { Glass } from '../../components/Glass'
+import { Check, Copy, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { QRModal } from '../../components/QRModal'
 import { commsApi, Plan } from '../../lib/comms-api'
 import { slugify } from '../../lib/utils'
-import { useEffect } from 'react'
 
 const SCOPES = ['messages:send', 'sessions:read', 'webhooks:manage']
 
@@ -14,27 +12,39 @@ const STEPS = [
   'Choose plan',
   'API access',
   'WhatsApp number',
-  'Scan QR code',
+  'Scan QR',
   'All done',
 ]
 
 function StepTracker({ current }: { current: number }) {
   return (
-    <div className="flex items-center gap-0 mb-8">
+    <div className="flex items-start mb-10 overflow-x-auto pb-1 gap-0">
       {STEPS.map((label, i) => (
-        <div key={i} className="flex items-center">
+        <div key={i} className="flex items-start shrink-0">
           <div className="flex flex-col items-center">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
-              i < current ? 'bg-teal text-white' : i === current ? 'bg-teal text-white ring-4 ring-teal/20' : 'bg-pink-light text-charcoal-soft border border-pink-border'
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 ${
+              i < current
+                ? 'bg-teal text-white shadow-[0_0_12px_rgba(74,168,157,0.4)]'
+                : i === current
+                ? 'bg-teal text-white ring-4 ring-teal/20'
+                : 'bg-white/06 text-muted-foreground/50 border border-white/10'
             }`}>
-              {i < current ? <Check className="w-4 h-4" /> : i + 1}
+              {i < current ? <Check className="w-3.5 h-3.5" /> : i + 1}
             </div>
-            <span className={`text-[10px] mt-1 font-medium whitespace-nowrap ${i === current ? 'text-teal' : 'text-charcoal-soft'}`}>
+            <span className={`text-[10px] mt-1.5 font-medium whitespace-nowrap text-center leading-tight ${
+              i === current
+                ? 'text-teal'
+                : i < current
+                ? 'text-muted-foreground/60'
+                : 'text-muted-foreground/30'
+            }`}>
               {label}
             </span>
           </div>
           {i < STEPS.length - 1 && (
-            <div className={`h-0.5 w-8 mx-1 mb-4 rounded ${i < current ? 'bg-teal' : 'bg-pink-border'}`} />
+            <div className={`h-0.5 w-10 mx-1 mt-4 shrink-0 rounded-full transition-all ${
+              i < current ? 'bg-teal/50' : 'bg-white/08'
+            }`} />
           )}
         </div>
       ))}
@@ -47,34 +57,28 @@ export function Onboarding() {
   const [step, setStep] = useState(0)
   const [plans, setPlans] = useState<Plan[]>([])
 
-  // Step 1 — business details
-  const [name, setName] = useState('')
-  const [slug, setSlug] = useState('')
+  const [name, setName]   = useState('')
+  const [slug, setSlug]   = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [autoSlug, setAutoSlug] = useState(true)
 
-  // Step 2 — plan
   const [planId, setPlanId] = useState('')
 
-  // Step 3 — API key
   const [clientId, setClientId] = useState('')
-  const [apiKey, setApiKey] = useState('')
-  const [showKey, setShowKey] = useState(true)
-  const [copied, setCopied] = useState(false)
+  const [apiKey, setApiKey]     = useState('')
+  const [showKey, setShowKey]   = useState(true)
+  const [copied, setCopied]     = useState(false)
 
-  // Step 4 — WhatsApp
-  const [waPhone, setWaPhone] = useState('+234')
+  const [waPhone, setWaPhone]     = useState('+234')
   const [sessionId, setSessionId] = useState('')
-  const [showQR, setShowQR] = useState(false)
+  const [showQR, setShowQR]       = useState(false)
 
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError]     = useState<string | null>(null)
 
   useEffect(() => { void commsApi.listPlans().then(setPlans).catch(() => null) }, [])
-  useEffect(() => {
-    if (autoSlug) setSlug(slugify(name))
-  }, [name, autoSlug])
+  useEffect(() => { if (autoSlug) setSlug(slugify(name)) }, [name, autoSlug])
 
   const createBusiness = async () => {
     setLoading(true); setError(null)
@@ -112,7 +116,7 @@ export function Onboarding() {
   const selectedPlan = plans.find(p => p.id === planId)
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-2xl">
       <div className="mb-8">
         <h1 className="page-title">Add a business</h1>
         <p className="caption mt-0.5">Set up a new business account in a few steps</p>
@@ -120,11 +124,13 @@ export function Onboarding() {
 
       <StepTracker current={step} />
 
-      {/* Step 0 — details */}
+      {/* Step 0 — Business details */}
       {step === 0 && (
-        <Glass>
+        <div className="rounded-2xl border border-white/10 bg-card p-6">
           <h2 className="section-title mb-5">Business details</h2>
-          {error && <p className="text-sm text-rose mb-4">{error}</p>}
+          {error && (
+            <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 mb-4">{error}</div>
+          )}
           <div className="space-y-4">
             <div>
               <label className="label">Business name</label>
@@ -155,23 +161,25 @@ export function Onboarding() {
               Next: choose plan
             </button>
           </div>
-        </Glass>
+        </div>
       )}
 
-      {/* Step 1 — plan */}
+      {/* Step 1 — Plan */}
       {step === 1 && (
-        <Glass>
+        <div className="rounded-2xl border border-white/10 bg-card p-6">
           <h2 className="section-title mb-5">Choose a plan for {name}</h2>
           <div className="space-y-3">
             {plans.map(p => (
               <label key={p.id} className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                planId === p.id ? 'border-teal bg-teal/10' : 'border-white/10 bg-white/[0.03] hover:border-teal/40'
+                planId === p.id
+                  ? 'border-teal bg-teal/08'
+                  : 'border-white/10 bg-white/[0.02] hover:border-teal/30 hover:bg-white/[0.04]'
               }`}>
                 <input type="radio" name="plan" value={p.id} checked={planId === p.id} onChange={() => setPlanId(p.id)} className="mt-1 accent-teal" />
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div className="font-semibold text-foreground">{p.displayName}</div>
-                    <div className="text-sm font-medium text-foreground">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="font-semibold text-foreground truncate">{p.displayName}</div>
+                    <div className="text-sm font-medium text-foreground shrink-0">
                       {p.monthlyFee ? `₦${p.monthlyFee.toLocaleString()}/mo` : 'Free'}
                     </div>
                   </div>
@@ -187,44 +195,49 @@ export function Onboarding() {
           <div className="flex gap-2 justify-end mt-6">
             <button className="btn-secondary" onClick={() => setStep(0)}>Back</button>
             <button className="btn-primary" disabled={!planId || loading} onClick={createBusiness}>
-              {loading ? 'Setting up…' : 'Create account'}
+              {loading
+                ? <><Loader2 className="w-4 h-4 animate-spin inline mr-1.5" />Setting up…</>
+                : 'Create account'}
             </button>
           </div>
-          {error && <p className="text-sm text-rose mt-3 text-right">{error}</p>}
-        </Glass>
+          {error && <p className="text-sm text-red-400 mt-3 text-right">{error}</p>}
+        </div>
       )}
 
       {/* Step 2 — API key */}
       {step === 2 && (
-        <Glass>
+        <div className="rounded-2xl border border-white/10 bg-card p-6">
           <div className="text-center mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-teal-light flex items-center justify-center mx-auto mb-3">
+            <div className="w-14 h-14 rounded-2xl bg-teal/10 border border-teal/20 flex items-center justify-center mx-auto mb-3">
               <Check className="w-7 h-7 text-teal" />
             </div>
             <h2 className="section-title">Account created</h2>
-            <p className="caption mt-1">{name} is set up on the <span className="font-medium text-charcoal capitalize">{selectedPlan?.name}</span> plan</p>
+            <p className="caption mt-1">
+              {name} is set up on the{' '}
+              <span className="font-semibold text-foreground capitalize">{selectedPlan?.name}</span> plan
+            </p>
           </div>
 
-          <div className="p-4 rounded-xl mb-4" style={{ background: 'rgba(74,155,168,0.06)', border: '1px solid rgba(74,155,168,0.15)' }}>
+          <div className="p-4 rounded-xl mb-4 border" style={{ background: 'rgba(74,168,157,0.05)', borderColor: 'rgba(74,168,157,0.18)' }}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-charcoal-soft uppercase tracking-wide">API key — show this once only</span>
-              <div className="flex gap-2">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">API key — shown once only</span>
+              <div className="flex gap-1.5">
                 <button className="btn-ghost py-1 px-2" onClick={() => setShowKey(v => !v)}>
                   {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                 </button>
-                <button className="btn-ghost py-1 px-2 flex items-center gap-1" onClick={copy}>
+                <button className="btn-ghost py-1 px-2 flex items-center gap-1.5" onClick={copy}>
                   {copied ? <Check className="w-3.5 h-3.5 text-teal" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span className="text-xs">{copied ? 'Copied' : 'Copy'}</span>
+                  <span className="text-xs">{copied ? 'Copied!' : 'Copy'}</span>
                 </button>
               </div>
             </div>
-            <div className="font-mono text-sm text-charcoal break-all">
+            <div className="font-mono text-sm text-foreground break-all leading-relaxed">
               {showKey ? apiKey : '•'.repeat(Math.min(apiKey.length, 40))}
             </div>
           </div>
 
-          <p className="text-xs text-charcoal-soft text-center mb-6">
-            Save this key now. You won't be able to see it again after leaving this screen.
+          <p className="text-xs text-muted-foreground text-center mb-6">
+            Save this key now. It won't be visible again after you leave this screen.
           </p>
 
           <div className="flex justify-end">
@@ -232,46 +245,50 @@ export function Onboarding() {
               Next: connect WhatsApp
             </button>
           </div>
-        </Glass>
+        </div>
       )}
 
       {/* Step 3 — WhatsApp number */}
       {step === 3 && (
-        <Glass>
+        <div className="rounded-2xl border border-white/10 bg-card p-6">
           <h2 className="section-title mb-2">Connect a WhatsApp number</h2>
           <p className="caption mb-5">
-            Enter the WhatsApp number {name} will use to send messages. You'll scan a QR code on the next screen.
+            Enter the WhatsApp number {name} will use to send messages. You'll scan a QR code next.
           </p>
-          {error && <p className="text-sm text-rose mb-4">{error}</p>}
+          {error && (
+            <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 mb-4">{error}</div>
+          )}
           <div>
             <label className="label">WhatsApp number</label>
             <input className="input" value={waPhone} onChange={e => setWaPhone(e.target.value)} placeholder="+2348012345678" />
-            <p className="text-xs text-charcoal-soft mt-1.5">Include the country code, e.g. +234 for Nigeria</p>
+            <p className="text-xs text-muted-foreground/50 mt-1.5">Include the country code, e.g. +234 for Nigeria</p>
           </div>
           <div className="flex gap-2 justify-end mt-6">
             <button className="btn-secondary" onClick={() => setStep(2)}>Back</button>
             <button className="btn-primary" disabled={!waPhone || loading} onClick={createSession}>
-              {loading ? 'Starting…' : 'Show QR code'}
+              {loading
+                ? <><Loader2 className="w-4 h-4 animate-spin inline mr-1.5" />Starting…</>
+                : 'Show QR code'}
             </button>
           </div>
-        </Glass>
+        </div>
       )}
 
-      {/* Step 4 — QR (shown as modal, we show a waiting state) */}
+      {/* Step 4 — waiting for QR */}
       {step === 4 && !showQR && (
-        <Glass className="text-center py-12">
+        <div className="rounded-2xl border border-white/10 bg-card px-6 py-14 text-center">
           <h2 className="section-title mb-2">All done</h2>
-          <p className="caption mb-5">{name} is ready. WhatsApp number is connecting.</p>
+          <p className="caption mb-6">{name} is ready. WhatsApp number is connecting.</p>
           <button className="btn-primary" onClick={() => nav('/comms/businesses')}>
             View all businesses
           </button>
-        </Glass>
+        </div>
       )}
 
-      {/* Step 5 — complete (after QR connected) */}
+      {/* Step 5 — complete */}
       {step === 5 && (
-        <Glass className="text-center py-12">
-          <div className="w-16 h-16 rounded-2xl bg-teal-light flex items-center justify-center mx-auto mb-4">
+        <div className="rounded-2xl border border-white/10 bg-card px-6 py-14 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-teal/10 border border-teal/20 flex items-center justify-center mx-auto mb-4">
             <Check className="w-8 h-8 text-teal" />
           </div>
           <h2 className="section-title mb-2">Everything is ready</h2>
@@ -280,7 +297,7 @@ export function Onboarding() {
             <button className="btn-secondary" onClick={() => nav('/comms/businesses')}>View businesses</button>
             <button className="btn-primary" onClick={() => nav('/comms/sessions')}>View sessions</button>
           </div>
-        </Glass>
+        </div>
       )}
 
       {showQR && sessionId && step === 4 && (

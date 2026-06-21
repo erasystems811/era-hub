@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Glass } from '../../components/Glass'
+import { Eye, EyeOff, Server, Key } from 'lucide-react'
 import { COMMS_API, COMMS_SECRET } from '../../lib/config'
 
 export function CommsSettings() {
@@ -16,41 +16,59 @@ export function CommsSettings() {
         <p className="caption mt-0.5">ERA Comms API connection details</p>
       </div>
 
-      <Glass>
-        <h3 className="section-title mb-5">Connection</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="label">API endpoint</label>
-            <div className="input font-mono text-sm bg-pink-light">{COMMS_API || '(not configured)'}</div>
+      <div className="space-y-4">
+        {/* Connection card */}
+        <div className="rounded-2xl border border-white/07 bg-card p-6">
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Server className="w-3.5 h-3.5 text-primary" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground">Connection</h3>
           </div>
-          <div>
-            <label className="label">Operator secret</label>
-            <div className="flex gap-2">
-              <div className="input flex-1 font-mono text-sm bg-pink-light">
-                {showSecret ? COMMS_SECRET : masked}
+
+          <div className="space-y-5">
+            <div>
+              <label className="label">API endpoint</label>
+              <div className="input font-mono text-sm bg-white/[0.02] text-foreground mt-1.5 select-all">
+                {COMMS_API || '(not configured)'}
               </div>
-              <button className="btn-secondary" onClick={() => setShowSecret(v => !v)}>
-                {showSecret ? 'Hide' : 'Reveal'}
-              </button>
+            </div>
+            <div>
+              <label className="label">Operator secret</label>
+              <div className="flex gap-2 mt-1.5">
+                <div className="input flex-1 font-mono text-sm bg-white/[0.02] text-foreground select-all">
+                  {showSecret ? COMMS_SECRET : masked}
+                </div>
+                <button className="btn-secondary flex items-center gap-1.5 text-sm shrink-0"
+                  onClick={() => setShowSecret(v => !v)}>
+                  {showSecret ? <><EyeOff className="w-3.5 h-3.5" /> Hide</> : <><Eye className="w-3.5 h-3.5" /> Reveal</>}
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 pt-5 border-t border-pink-border">
-          <h4 className="text-sm font-medium text-charcoal mb-2">Configuration</h4>
-          <p className="text-sm text-charcoal-soft">
-            Connection settings are configured through Railway environment variables on this service.
-            To update them, go to your Railway project and edit the environment variables for the ERA Hub service.
-          </p>
-          <div className="mt-3 glass-sm" style={{ padding: '12px 14px' }}>
-            <div className="font-mono text-xs text-charcoal-soft space-y-1">
-              <div><span className="text-teal">VITE_COMMS_API_URL</span>=https://era-comms-api-production.up.railway.app</div>
-              <div><span className="text-teal">VITE_COMMS_OPERATOR_SECRET</span>=your_secret_here</div>
-              <div><span className="text-teal">VITE_PATIENT_API_URL</span>=https://your-patient-api.up.railway.app</div>
+        {/* Config card */}
+        <div className="rounded-2xl border border-white/07 bg-card p-6">
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="w-8 h-8 rounded-xl bg-teal/10 flex items-center justify-center">
+              <Key className="w-3.5 h-3.5 text-teal" />
             </div>
+            <h3 className="text-sm font-semibold text-foreground">Environment variables</h3>
+          </div>
+
+          <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+            Connection settings are configured through environment variables on the ERA Hub service.
+            To update them, edit the variables in your deployment environment.
+          </p>
+
+          <div className="rounded-xl border border-white/06 bg-black/20 p-4 font-mono text-xs space-y-1.5">
+            <div><span className="text-teal">VITE_COMMS_API_URL</span><span className="text-muted-foreground">=https://era-comms-api-production.up.railway.app</span></div>
+            <div><span className="text-teal">VITE_COMMS_OPERATOR_SECRET</span><span className="text-muted-foreground">=your_secret_here</span></div>
+            <div><span className="text-teal">VITE_PATIENT_API_URL</span><span className="text-muted-foreground">=https://your-patient-api.up.railway.app</span></div>
           </div>
         </div>
-      </Glass>
+      </div>
     </div>
   )
 }
