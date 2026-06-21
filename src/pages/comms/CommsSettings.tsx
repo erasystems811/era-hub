@@ -98,25 +98,27 @@ export function CommsSettings() {
             </p>
           </div>
 
-          {/* Business login */}
+          {/* Hospital client login */}
           <div className="rounded-xl bg-white/[0.04] border border-white/07 p-4">
             <div className="flex items-center gap-2 mb-2">
               <LogIn className="w-3.5 h-3.5 text-teal" />
-              <span className="text-xs font-bold text-foreground uppercase tracking-wide">Business Login</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal/15 text-teal font-semibold">BUSINESS OWNERS use this</span>
+              <span className="text-xs font-bold text-foreground uppercase tracking-wide">Hospital Client Login</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal/15 text-teal font-semibold">NOT YOU — your clients</span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              When you approve an onboarding request on the{' '}
+              When you approve a hospital on the{' '}
               <span className="text-foreground font-medium">Requests page</span>,
-              a pop-up immediately shows you two things: the business owner's <span className="font-medium text-foreground">email</span> and
-              a <span className="font-medium text-amber-300">temporary password</span>.
+              a pop-up shows you their <span className="font-medium text-foreground">email</span> and a{' '}
+              <span className="font-medium text-amber-300">temporary password</span>.
+              That password is for <span className="font-medium text-foreground">the hospital</span> — not you.
+              You send it to them via WhatsApp or email so they can log into their own separate client area.
             </p>
             <p className="text-xs text-muted-foreground mt-1.5">
-              <span className="text-foreground font-medium">What to do:</span> Copy both and send them to the business owner via WhatsApp or email.
-              They go to <span className="font-mono text-primary/80">/biz/login</span>, sign in with those credentials, then immediately change the password to their own.
+              <span className="text-foreground font-medium">You never use this login.</span>{' '}
+              Your access to this operator panel is controlled entirely by the Operator Secret above.
             </p>
             <p className="text-xs text-red-400/80 mt-1.5">
-              The temp password is shown <span className="font-bold">once only</span>. If you close the pop-up without copying it, you'll need to reset it manually in the database.
+              The temp password is shown <span className="font-bold">once only</span>. Copy it before closing the pop-up — if you miss it, you'll need to reset it in the database.
             </p>
           </div>
 
@@ -125,14 +127,14 @@ export function CommsSettings() {
             <div className="flex items-center gap-2 mb-2">
               <Wifi className="w-3.5 h-3.5 text-blue-400" />
               <span className="text-xs font-bold text-foreground uppercase tracking-wide">WhatsApp Sessions</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 font-semibold">PHONE OWNERS scan this</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 font-semibold">HOSPITAL scans this</span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              After a business is approved and has logged into the portal, you connect their WhatsApp number on the{' '}
-              <span className="text-foreground font-medium">Sessions page</span>.
-              You click <span className="font-medium text-foreground">"Connect session"</span>, a QR code appears —
-              the business owner opens WhatsApp on their phone and scans it.
-              That's it. Their number is now live on ERA Comms.
+              After you approve a hospital, go to the{' '}
+              <span className="text-foreground font-medium">Sessions page</span> and click{' '}
+              <span className="font-medium text-foreground">"Connect session"</span>.
+              A QR code appears — the hospital opens WhatsApp on their phone and scans it.
+              That's it. Their WhatsApp number is now live on ERA Comms.
             </p>
           </div>
         </div>

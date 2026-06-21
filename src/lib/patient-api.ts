@@ -155,6 +155,8 @@ export const patientApi = {
   logout:         () => post<void>('/super-admin/auth/logout', {}),
 
   listHospitals:  () => get<Hospital[]>('/super-admin/hospitals'),
+  automationTest: (automationType: string, hospitalId: number, toEmail?: string, toPhone?: string) =>
+    post<{ ok: boolean }>('/super-admin/automation-test', { automationType, hospitalId, toEmail, toPhone }),
   getHospital:    (id: number) => get<Hospital>(`/super-admin/hospitals/${id}`),
   createHospital: (data: { name: string; username: string; subscriptionStatus?: string }) =>
     post<Hospital>('/super-admin/hospitals', data),
@@ -189,11 +191,15 @@ export const patientApi = {
     patch<{ ok: boolean }>(`/super-admin/support/tickets/${id}/reply`, { message }),
 
   listCrmLeads: () => get<CrmLead[]>('/super-admin/crm/leads'),
-  createCrmLead: (data: { name: string; contact_person?: string; stage?: string; notes?: string }) =>
+  createCrmLead: (data: { name: string; contact_person?: string; stage?: string; last_contacted?: string; notes?: string }) =>
     post<CrmLead>('/super-admin/crm/leads', data),
-  updateCrmLead: (id: string, data: Partial<CrmLead>) =>
+  updateCrmLead: (id: string, data: Partial<CrmLead & { last_contacted?: string }>) =>
     patch<CrmLead>(`/super-admin/crm/leads/${id}`, data),
   deleteCrmLead: (id: string) => del<void>(`/super-admin/crm/leads/${id}`),
+  addCrmRequest: (leadId: string, text: string) =>
+    post<CrmRequest>(`/super-admin/crm/leads/${leadId}/requests`, { text }),
+  updateCrmRequest: (id: string, data: { done: boolean; date_done: string | null }) =>
+    patch<CrmRequest>(`/super-admin/crm/requests/${id}`, data),
 
   getHospitalWallet: (id: number) => get<WalletInfo>(`/super-admin/hospitals/${id}/wallet`),
   creditHospitalWallet: (id: number, amountNaira: number, description: string) =>

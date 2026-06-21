@@ -166,6 +166,7 @@ export function KnowledgeBase() {
   const [total, setTotal]       = useState(0)
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState<string | null>(null)
+  const [unavailable, setUnavailable] = useState(false)
   const [search, setSearch]     = useState('')
   const [catFilter, setCat]     = useState('all')
   const [deleting, setDeleting] = useState<number | null>(null)
@@ -178,7 +179,14 @@ export function KnowledgeBase() {
       const res = await patientApi.listKnowledgeDocs({ category: catFilter, search: search || undefined })
       pageCache.set(`patient:knowledge:${catFilter}`, res)
       setDocs(res.documents ?? []); setTotal(res.total ?? 0)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Failed to load') }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to load'
+      if (msg.includes('404') || msg.includes('not configured')) {
+        setUnavailable(true)
+      } else {
+        setError(msg)
+      }
+    }
     finally { setLoading(false) }
   }
 
@@ -204,6 +212,21 @@ export function KnowledgeBase() {
     if (ex) { ex.chunks++; return acc }
     return [...acc, { title: d.title, category: d.category, source: d.source, id: d.id, created_at: d.created_at, chunks: 1 }]
   }, [])
+
+  if (unavailable) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-4">
+      <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+        <Database className="w-7 h-7 text-primary/60" />
+      </div>
+      <div>
+        <h2 className="text-base font-semibold text-foreground">Knowledge Base not yet active</h2>
+        <p className="text-sm text-muted-foreground mt-1.5 max-w-sm">
+          The ERA Patient backend doesn't have knowledge base endpoints built yet.
+          This tab will work once those routes are deployed.
+        </p>
+      </div>
+    </div>
+  )
 
   return (
     <div className="space-y-5 max-w-4xl">
