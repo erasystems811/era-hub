@@ -6,28 +6,32 @@
 
 /* ── ERA Systems Hub — Obsidian Rose ───────────────────────────── */
 :root {
-  --background:          262 20% 9%;
-  --card:                262 16% 13%;
-  --secondary:           262 13% 17%;
-  --accent:              262 12% 21%;
-  --muted:               262 14% 15%;
-  --input:               262 16% 15%;
+  --background:          262 22%  7%;   /* #0F0C18 — very deep */
+  --card:                262 20% 14%;   /* #1D1929 — clearly elevated above bg */
+  --secondary:           262 18% 18%;
+  --accent:              262 16% 22%;
+  --muted:               262 18% 11%;
+  --input:               262 20% 12%;
 
-  --foreground:          270 18% 94%;
-  --card-foreground:     270 18% 94%;
-  --secondary-foreground:270 10% 76%;
-  --muted-foreground:    270  8% 54%;
-  --accent-foreground:   270 18% 94%;
+  --foreground:          270 20% 96%;   /* near-white, warm */
+  --card-foreground:     270 20% 96%;
+  --secondary-foreground:270 12% 78%;
+  --muted-foreground:    270 10% 62%;   /* raised from 54% — readable */
+  --accent-foreground:   270 20% 96%;
 
-  --primary:             340 40% 63%;
+  /* Vivid dusty rose — more presence without being hot pink */
+  --primary:             340 50% 67%;   /* #CC7896 */
   --primary-foreground:  0   0% 100%;
-  --ring:                340 40% 63%;
+  --ring:                340 50% 67%;
 
-  --teal:                175 40% 48%;
-  --teal-dark:           175 40% 39%;
-  --border:              262 14% 21%;
-  --destructive:         348 50% 60%;
+  --teal:                175 42% 50%;   /* slightly brighter */
+  --teal-dark:           175 42% 40%;
+
+  --border:              262 16% 24%;   /* visible — was 21% */
+
+  --destructive:         348 52% 62%;
   --destructive-foreground: 0 0% 100%;
+
   --radius: 0.625rem;
 }
 
@@ -42,148 +46,135 @@
     font-feature-settings: "tnum" 1;
   }
 
-  /*
-    Orbs are TIGHT to corners and at 0.32–0.38 opacity so they're visible
-    without making the whole background glow.
-    NO background-attachment: fixed — that breaks backdrop-filter compositing.
-  */
+  /* Orbs tight to corners — depth not glow */
   body {
     min-height: 100vh;
     overflow-x: hidden;
-    background-color: hsl(262 20% 9%);
+    background-color: hsl(262 22% 7%);
     background-image:
-      radial-gradient(ellipse 38% 38% at 100% 100%, rgba(191,124,147,0.38) 0%, transparent 65%),
-      radial-gradient(ellipse 28% 25% at 100% 0%,   rgba(191,124,147,0.22) 0%, transparent 60%),
-      radial-gradient(ellipse 35% 32% at 0%   0%,   rgba(74,168,157,0.32)  0%, transparent 62%),
-      radial-gradient(ellipse 22% 20% at 0%   100%, rgba(74,168,157,0.16)  0%, transparent 58%);
+      radial-gradient(ellipse 32% 32% at 100% 100%, rgba(204,120,150,0.32) 0%, transparent 65%),
+      radial-gradient(ellipse 22% 20% at 100% 0%,   rgba(204,120,150,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 28% 26% at 0%   0%,   rgba(74,168,157,0.26)  0%, transparent 62%),
+      radial-gradient(ellipse 16% 16% at 0%   100%, rgba(74,168,157,0.12)  0%, transparent 55%);
   }
 
   img, video, svg { max-width: 100%; height: auto; }
 
   ::-webkit-scrollbar       { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(191,124,147,0.32); border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(191,124,147,0.52); }
+  ::-webkit-scrollbar-thumb { background: rgba(204,120,150,0.35); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(204,120,150,0.55); }
 }
 
 @layer components {
   /*
-    White-tinted frost (rgba 255,255,255 / 0.10) over a dark bg = glass.
-    Dark-tinted (rgba 0,0,0) over dark = invisible — don't do that.
-    The bright top border is the most important visual: it reads as glass
-    catching the light from above.
+    Glass = solid elevated surface (#1D1929 on #0F0C18 = clearly visible) +
+    bright top border (glass catching light) + deep shadow (lift/depth) +
+    inset highlight (glass edge). Backdrop-filter is additive enhancement.
+    This looks premium WITH OR WITHOUT blur actually rendering.
   */
   .glass {
-    background: rgba(255, 255, 255, 0.10);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-top-color: rgba(255, 255, 255, 0.22);
+    background: hsl(262 20% 17%);
+    backdrop-filter: blur(20px) saturate(200%);
+    -webkit-backdrop-filter: blur(20px) saturate(200%);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-top-color: rgba(255,255,255,0.22);
     border-radius: 16px;
     box-shadow:
-      0 8px 40px rgba(0, 0, 0, 0.45),
-      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      0 8px 40px rgba(0,0,0,0.50),
+      0 2px 8px rgba(0,0,0,0.30);
   }
   .glass:hover {
-    background: rgba(255, 255, 255, 0.13);
-    border-color: rgba(191,124,147,0.28);
-    border-top-color: rgba(191,124,147,0.42);
+    background: hsl(262 20% 19%);
+    border-top-color: rgba(204,120,150,0.40);
+    border-color: rgba(204,120,150,0.20);
   }
 
   .glass-sm {
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(20px) saturate(170%);
-    -webkit-backdrop-filter: blur(20px) saturate(170%);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-top-color: rgba(255, 255, 255, 0.18);
+    background: hsl(262 20% 16%);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-top-color: rgba(255,255,255,0.18);
     border-radius: 12px;
     box-shadow:
-      0 4px 20px rgba(0, 0, 0, 0.38),
-      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      inset 0 1px 0 rgba(255,255,255,0.10),
+      0 4px 20px rgba(0,0,0,0.40);
   }
 
   /* ── Buttons ── */
   .btn-primary {
     background: hsl(var(--primary));
     color: white;
-    box-shadow: 0 2px 16px rgba(191,124,147,0.38);
+    box-shadow: 0 2px 18px rgba(204,120,150,0.40);
     @apply font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
   }
-  .btn-primary:hover  { filter: brightness(0.88); box-shadow: 0 4px 22px rgba(191,124,147,0.50); }
+  .btn-primary:hover  { filter: brightness(0.90); box-shadow: 0 4px 24px rgba(204,120,150,0.55); }
   .btn-primary:active { transform: scale(0.98); }
   .btn-primary:disabled { opacity: 0.38; cursor: not-allowed; box-shadow: none; }
 
   .btn-secondary {
-    background: rgba(255,255,255,0.08);
-    color: #EDE9F5;
+    background: rgba(255,255,255,0.07);
+    color: hsl(var(--foreground));
     border: 1px solid rgba(255,255,255,0.14);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     @apply font-medium text-sm px-5 py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
   }
-  .btn-secondary:hover  { border-color: rgba(191,124,147,0.40); background: rgba(191,124,147,0.12); }
+  .btn-secondary:hover  { background: rgba(255,255,255,0.11); border-color: rgba(204,120,150,0.40); }
   .btn-secondary:active { transform: scale(0.98); }
   .btn-secondary:disabled { opacity: 0.38; cursor: not-allowed; }
 
   .btn-ghost {
-    color: rgba(237,233,245,0.52);
+    color: hsl(var(--muted-foreground));
     @apply font-medium text-sm px-4 py-2 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
   }
-  .btn-ghost:hover  { background: rgba(191,124,147,0.10); color: #EDE9F5; }
+  .btn-ghost:hover  { background: rgba(204,120,150,0.10); color: hsl(var(--foreground)); }
   .btn-ghost:active { transform: scale(0.98); }
 
   .btn-danger {
     background: #CF738A; color: white;
-    box-shadow: 0 2px 12px rgba(207,115,138,0.30);
+    box-shadow: 0 2px 14px rgba(207,115,138,0.35);
     @apply font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
   }
   .btn-danger:hover  { opacity: 0.88; }
   .btn-danger:active { transform: scale(0.98); }
 
   .btn-teal {
-    background: #4AA89D; color: white;
-    box-shadow: 0 2px 12px rgba(74,168,157,0.30);
+    background: hsl(var(--teal)); color: white;
+    box-shadow: 0 2px 14px rgba(74,168,157,0.35);
     @apply font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
   }
-  .btn-teal:hover  { background: #3B887E; box-shadow: 0 4px 18px rgba(74,168,157,0.42); }
+  .btn-teal:hover  { background: hsl(var(--teal-dark)); box-shadow: 0 4px 20px rgba(74,168,157,0.45); }
   .btn-teal:active { transform: scale(0.98); }
   .btn-teal:disabled { opacity: 0.38; cursor: not-allowed; box-shadow: none; }
 
   /* ── Input ── */
   .input {
     @apply w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all;
-    background: rgba(255,255,255,0.07);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.11);
-    color: #EDE9F5;
+    background: hsl(262 20% 12%);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: hsl(var(--foreground));
   }
-  .input::placeholder { color: rgba(237,233,245,0.28); }
+  .input::placeholder { color: hsl(var(--muted-foreground) / 0.5); }
   .input:focus {
-    border-color: rgba(191,124,147,0.60);
-    background: rgba(191,124,147,0.08);
-    box-shadow: 0 0 0 3px rgba(191,124,147,0.14);
+    border-color: hsl(var(--primary) / 0.65);
+    background: hsl(262 20% 13%);
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
+    outline: none;
   }
 
   /* ── Typography ── */
-  .page-title    { @apply text-2xl font-bold tracking-tight; color: #EDE9F5; }
-  .section-title { @apply text-base font-semibold; color: #EDE9F5; }
-  .label         { @apply block text-xs font-semibold uppercase tracking-wide mb-1.5; color: rgba(237,233,245,0.42); }
-  .caption       { @apply text-sm; color: rgba(237,233,245,0.52); }
+  .page-title    { @apply text-2xl font-bold tracking-tight text-foreground; }
+  .section-title { @apply text-base font-semibold text-foreground; }
+  .label         { @apply block text-xs font-semibold uppercase tracking-wide mb-1.5; color: hsl(var(--muted-foreground)); }
+  .caption       { @apply text-sm; color: hsl(var(--muted-foreground)); }
 
   /* ── Badges ── */
-  .badge-pink  { background: rgba(191,124,147,0.15); color: #C98BA0; border: 1px solid rgba(191,124,147,0.25); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
-  .badge-teal  { background: rgba(74,168,157,0.14);  color: #5DADA3; border: 1px solid rgba(74,168,157,0.22);  @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
-  .badge-slate { background: rgba(255,255,255,0.08); color: rgba(237,233,245,0.52); border: 1px solid rgba(255,255,255,0.12); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
-  .badge-rose  { background: rgba(207,115,138,0.15); color: #D4879C; border: 1px solid rgba(207,115,138,0.25); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-pink  { background: rgba(204,120,150,0.16); color: #D48FA8; border: 1px solid rgba(204,120,150,0.28); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-teal  { background: rgba(74,168,157,0.15);  color: #5DADA3; border: 1px solid rgba(74,168,157,0.25);  @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-slate { background: rgba(255,255,255,0.08); color: hsl(var(--muted-foreground)); border: 1px solid rgba(255,255,255,0.12); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-rose  { background: rgba(207,115,138,0.16); color: #D4879C; border: 1px solid rgba(207,115,138,0.28); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
 
   /* ── Divider ── */
-  .divider { border: none; border-top: 1px solid rgba(191,124,147,0.14); margin: 1.25rem 0; }
-
-  /* ── bg-card: same white-frost treatment ── */
-  .bg-card {
-    background: rgba(255, 255, 255, 0.08) !important;
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-  }
+  .divider { border: none; border-top: 1px solid rgba(204,120,150,0.14); margin: 1.25rem 0; }
 }

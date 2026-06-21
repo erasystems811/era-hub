@@ -2,7 +2,7 @@ import { useState, FormEvent } from 'react'
 import { useAuth } from '../contexts/auth'
 import { Lock, User, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
-const inputCls = "w-full pl-10 pr-10 py-2.5 rounded-xl bg-[hsl(262_16%_11%)] border border-[hsl(262_14%_18%)] text-foreground text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all duration-150 font-medium tracking-wide"
+const inputCls = "w-full pl-10 pr-10 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/[0.12] text-foreground text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/65 focus:ring-2 focus:ring-primary/20 transition-all duration-150 font-medium"
 
 export function Login() {
   const { login } = useAuth()
@@ -74,10 +74,10 @@ export function Login() {
         {/* Login card */}
         <form onSubmit={submit} className="space-y-4">
           <div
-            className="rounded-2xl border border-[hsl(262_14%_18%)] bg-card space-y-3 p-5"
-            style={{ boxShadow: '0 16px 40px rgba(0,0,0,0.55), 0 0 0 1px hsl(262 14% 22% / 0.5)' }}
+            className="rounded-2xl bg-card space-y-3 p-5"
+            style={{ border: '1px solid rgba(255,255,255,0.12)', borderTopColor: 'rgba(255,255,255,0.22)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 20px 60px rgba(0,0,0,0.60)' }}
           >
-            <div className="border-b border-[hsl(262_14%_18%)] pb-3 mb-1">
+            <div className="border-b border-white/[0.08] pb-3 mb-1">
               <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-[0.25em]">Operator Login</p>
             </div>
 
