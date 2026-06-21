@@ -118,7 +118,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
         <div className="flex items-center gap-2.5">
-          <img src="/erahub2.png" alt="ERA" className="w-8 h-8 rounded-xl shrink-0" />
+          <img src="/erahub4.png" alt="ERA" className="w-8 h-8 rounded-xl shrink-0" />
           <div>
             <div className="text-sm font-semibold text-white leading-tight">ERA Systems</div>
             <div className="text-xs" style={{ color: 'rgba(255,255,255,0.55)' }}>Operator Hub</div>

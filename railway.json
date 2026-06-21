@@ -4,7 +4,6 @@
     "builder": "DOCKERFILE"
   },
   "deploy": {
-    "startCommand": "serve -s dist -l 3000",
     "healthcheckPath": "/",
     "restartPolicyType": "ON_FAILURE"
   }

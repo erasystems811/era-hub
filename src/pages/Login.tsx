@@ -28,7 +28,7 @@ export function Login() {
         {/* Logo */}
         <div className="text-center mb-8">
           <img
-            src="/erahub.png"
+            src="/erahub4.png"
             alt="ERA Systems"
             className="w-20 h-20 mx-auto mb-4 rounded-2xl shadow-glass"
           />

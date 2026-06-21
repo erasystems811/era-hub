@@ -4,7 +4,6 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 
-# Accept env vars at build time so Vite can bake them into the bundle
 ARG VITE_PATIENT_API_URL
 ARG VITE_COMMS_API_URL
 ARG VITE_COMMS_OPERATOR_SECRET
@@ -19,4 +18,4 @@ WORKDIR /app
 RUN npm install -g serve
 COPY --from=builder /app/dist ./dist
 EXPOSE 3000
-CMD ["serve", "-s", "dist", "-l", "3000"]
+CMD ["sh", "-c", "serve -s dist -l ${PORT:-3000}"]
