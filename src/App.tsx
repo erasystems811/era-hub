@@ -19,6 +19,7 @@ import { PatientAnalytics } from './pages/patient/PatientAnalytics'
 import { KnowledgeBase }    from './pages/patient/KnowledgeBase'
 import { DemoSessions }     from './pages/patient/DemoSessions'
 import { Docs }             from './pages/patient/Docs'
+import { AutomationTests }  from './pages/patient/AutomationTests'
 
 // Public (no auth required)
 import { AIAgentSignup }   from './pages/public/AIAgentSignup'
@@ -80,6 +81,7 @@ function ProtectedApp() {
         <Route path="/patient/knowledge-base" element={<KnowledgeBase />} />
         <Route path="/patient/demo-sessions" element={<DemoSessions />} />
         <Route path="/patient/docs" element={<Docs />} />
+        <Route path="/patient/automation-tests" element={<AutomationTests />} />
 
         {/* ERA Comms */}
         <Route path="/comms"              element={<CommsHome />} />

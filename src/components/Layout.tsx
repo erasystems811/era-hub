@@ -9,7 +9,7 @@ import {
   Kanban, Activity, MonitorPlay, Smartphone, Users, Layers,
   CreditCard, Settings, Star, Database, BookOpen, Radio,
   ScrollText, ShieldAlert, Search, ClipboardList,
-  Bot, LayoutTemplate, GitMerge, FileSearch,
+  Bot, LayoutTemplate, GitMerge, FileSearch, Zap,
 } from 'lucide-react'
 import { ChangePasswordModal } from './ChangePasswordModal'
 import { NotificationPanel } from './NotificationPanel'
@@ -21,7 +21,8 @@ const PATIENT_NAV = [
   { icon: Building2,    label: 'Hospitals',         href: '/patient/hospitals',         sub: 'Account registry' },
   { icon: TrendingUp,   label: 'Usage',             href: '/patient/usage',             sub: 'Hospital consumption' },
   { icon: Bell,         label: 'Announcements',     href: '/patient/announcements',     sub: 'Push notices' },
-  { icon: FlaskConical, label: 'Automation Log',    href: '/patient/automation',        sub: 'Email & SMS workflows' },
+  { icon: Zap,          label: 'Automation Log',     href: '/patient/automation',        sub: 'Email & SMS workflows' },
+  { icon: FlaskConical, label: 'Automation Tests',   href: '/patient/automation-tests',  sub: 'Test SMS & email channels' },
   { icon: Headphones,   label: 'Support',           href: '/patient/support',           sub: 'Hospital tickets' },
   { icon: Star,         label: 'System Feedback',   href: '/patient/feedback',          sub: 'Staff ratings' },
   { icon: Kanban,       label: 'Sales CRM',         href: '/patient/crm',               sub: 'Pipeline & leads' },
