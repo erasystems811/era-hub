@@ -6,98 +6,89 @@
   * { box-sizing: border-box; }
   html { font-family: 'Inter', system-ui, sans-serif; }
   body {
-    background: #C4286F;
+    background: #F8FAFC;
     color: #0F172A;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
   }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: rgba(0,0,0,0.10); }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.30); border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.50); }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
 }
 
 @layer components {
-  /* Glass: crisp white panels floating over the bold pink background */
+  /* Cards */
   .glass {
-    background: rgba(255,255,255,0.88);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.95);
-    box-shadow: 0 4px 32px rgba(0,0,0,0.16), 0 1px 6px rgba(0,0,0,0.08);
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
     border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05);
   }
   .glass-sm {
-    background: rgba(255,255,255,0.82);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255,255,255,0.90);
-    box-shadow: 0 2px 16px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06);
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
     border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   }
 
   /* Buttons */
   .btn-primary {
-    background: #0F172A;
+    background: #C4286F;
     color: white;
-    @apply font-medium px-5 py-2.5 rounded-xl transition-all duration-150;
-    @apply hover:opacity-85 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    box-shadow: 0 2px 12px rgba(196,40,111,0.30);
+    @apply font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
+    @apply hover:bg-pink-dark active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed;
   }
   .btn-secondary {
-    background: rgba(255,255,255,0.88);
-    color: #C4286F;
-    border: 1px solid rgba(196,40,111,0.20);
-    @apply font-medium px-5 py-2.5 rounded-xl transition-all duration-150;
-    @apply hover:bg-opacity-95 active:scale-[0.98] disabled:opacity-40;
-  }
-  /* Inside glass panels, secondary button uses pink text on white bg */
-  .glass .btn-secondary, .glass-sm .btn-secondary {
-    background: rgba(196,40,111,0.07);
-    color: #C4286F;
-    border-color: rgba(196,40,111,0.18);
+    background: white;
+    color: #0F172A;
+    border: 1.5px solid #E2E8F0;
+    @apply font-medium text-sm px-5 py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
+    @apply hover:border-border-strong hover:bg-surface-2 active:scale-[0.98] disabled:opacity-40;
   }
   .btn-ghost {
-    color: rgba(255,255,255,0.75);
-    @apply font-medium px-4 py-2 rounded-xl transition-all duration-150;
-    @apply hover:bg-white hover:bg-opacity-15 hover:text-white active:scale-[0.98];
-  }
-  /* Ghost inside glass */
-  .glass .btn-ghost, .glass-sm .btn-ghost {
     color: #64748B;
-  }
-  .glass .btn-ghost:hover, .glass-sm .btn-ghost:hover {
-    background: rgba(196,40,111,0.07);
-    color: #0F172A;
+    @apply font-medium text-sm px-4 py-2 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
+    @apply hover:bg-surface-3 hover:text-charcoal active:scale-[0.98];
   }
   .btn-danger {
-    @apply bg-rose text-white font-medium px-5 py-2.5 rounded-xl transition-all duration-150;
+    @apply bg-rose text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
     @apply hover:opacity-90 active:scale-[0.98];
   }
+  .btn-teal {
+    background: #0D9488;
+    color: white;
+    box-shadow: 0 2px 12px rgba(13,148,136,0.28);
+    @apply font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
+    @apply hover:bg-teal-dark active:scale-[0.98] disabled:opacity-40;
+  }
 
-  /* Inputs always crisp white */
+  /* Input */
   .input {
     @apply w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all;
-    background: rgba(255,255,255,0.92);
-    border: 1px solid rgba(196,40,111,0.16);
-    color: #0F172A;
-    @apply placeholder-charcoal-soft placeholder-opacity-40;
-  }
-  .input:focus {
     background: white;
+    border: 1.5px solid #E2E8F0;
+    color: #0F172A;
+  }
+  .input::placeholder { color: #94A3B8; }
+  .input:focus {
     border-color: #C4286F;
-    box-shadow: 0 0 0 3px rgba(196,40,111,0.12);
+    box-shadow: 0 0 0 3px rgba(196,40,111,0.10);
   }
 
-  /* Text utilities: white on the bold pink background by default */
-  .label       { @apply block text-xs font-medium mb-1.5; color: #64748B; }
-  .page-title  { @apply text-2xl font-semibold tracking-tight; color: white; }
-  .section-title { @apply text-lg font-semibold; color: #0F172A; }
-  .caption     { @apply text-sm; color: rgba(255,255,255,0.72); }
+  /* Typography */
+  .page-title    { @apply text-2xl font-bold tracking-tight; color: #0F172A; }
+  .section-title { @apply text-base font-semibold; color: #0F172A; }
+  .label         { @apply block text-xs font-semibold uppercase tracking-wide mb-1.5; color: #64748B; }
+  .caption       { @apply text-sm; color: #64748B; }
 
-  /* Inside glass panels: reset caption and label back to dark */
-  .glass .caption,
-  .glass-sm .caption  { color: #64748B; }
-  .glass .label,
-  .glass-sm .label    { color: #64748B; }
+  /* Status badges */
+  .badge-pink  { background: rgba(196,40,111,0.09); color: #C4286F; border: 1px solid rgba(196,40,111,0.18); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-teal  { background: rgba(13,148,136,0.09); color: #0D9488; border: 1px solid rgba(13,148,136,0.18); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-slate { background: rgba(100,116,139,0.09); color: #64748B; border: 1px solid rgba(100,116,139,0.15); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-rose  { background: rgba(190,18,60,0.09); color: #BE123C; border: 1px solid rgba(190,18,60,0.18); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid #E2E8F0; margin: 1.25rem 0; }
 }
