@@ -164,7 +164,13 @@
   }
 
   /* ── Typography ── */
-  .page-title    { @apply text-2xl font-bold tracking-tight text-foreground; }
+  .page-title {
+    @apply text-2xl font-bold tracking-tight;
+    background: linear-gradient(135deg, #F2EDF9 0%, #CC7896 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
   .section-title { @apply text-base font-semibold text-foreground; }
   .label         { @apply block text-xs font-semibold uppercase tracking-wide mb-1.5; color: hsl(var(--muted-foreground)); }
   .caption       { @apply text-sm; color: hsl(var(--muted-foreground)); }
@@ -177,4 +183,12 @@
 
   /* ── Divider ── */
   .divider { border: none; border-top: 1px solid rgba(204,120,150,0.14); margin: 1.25rem 0; }
+}
+
+@layer utilities {
+  /* Boost near-invisible border utilities used across pages */
+  .border-white\/07 { border-color: rgba(255,255,255,0.12) !important; }
+  .border-white\/08 { border-color: rgba(255,255,255,0.13) !important; }
+  .divide-white\/05 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255,255,255,0.09) !important; }
+  .divide-white\/06 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255,255,255,0.11) !important; }
 }

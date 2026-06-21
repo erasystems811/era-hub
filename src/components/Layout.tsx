@@ -38,12 +38,12 @@ const COMMS_NAV = [
 ]
 
 const PRODUCTS = {
-  patient: { name: 'ERA Patient', color: '#4AA89D', accentText: 'text-teal',    activeBg: 'bg-teal/15',    nav: PATIENT_NAV },
-  comms:   { name: 'ERA Comms',   color: '#BF7C93', accentText: 'text-primary', activeBg: 'bg-primary/15', nav: COMMS_NAV   },
+  patient: { name: 'ERA Patient', color: '#4DBFB3', accentText: 'text-teal',    activeBg: 'bg-teal/[0.22]',    nav: PATIENT_NAV },
+  comms:   { name: 'ERA Comms',   color: '#CC7896', accentText: 'text-primary', activeBg: 'bg-primary/[0.22]', nav: COMMS_NAV   },
 } as const
 
-const SB_BG     = 'rgba(14, 11, 20, 0.86)'
-const SB_BORDER = 'rgba(255,255,255,0.08)'
+const SB_BG     = 'rgba(14, 11, 20, 0.88)'
+const SB_BORDER = 'rgba(255,255,255,0.12)'
 const SB_BLUR   = 'blur(28px) saturate(180%)'
 const SIDEBAR_KEY = 'era_hub_sidebar'
 
@@ -177,14 +177,14 @@ function ProductLayout({ product, children }: { product: 'patient' | 'comms'; ch
           open ? 'gap-3 px-3 py-2' : 'justify-center p-2.5'
         } ${active
             ? `${prod.activeBg} ${prod.accentText}`
-            : 'text-muted-foreground/55 hover:bg-white/5 hover:text-foreground'
+            : 'text-muted-foreground/70 hover:bg-white/[0.07] hover:text-foreground'
         }`}
       >
         <Icon className="w-4 h-4 shrink-0" />
         {open && (
           <div className="flex-1 min-w-0 text-left">
             <p className="text-sm font-medium leading-tight">{label}</p>
-            <p className="text-[11px] text-muted-foreground/38 leading-tight mt-0.5">{sub}</p>
+            <p className="text-[11px] text-muted-foreground/55 leading-tight mt-0.5">{sub}</p>
           </div>
         )}
       </button>
@@ -203,7 +203,7 @@ function ProductLayout({ product, children }: { product: 'patient' | 'comms'; ch
             <>
               <button
                 onClick={() => go('/')}
-                className="flex items-center gap-1.5 text-muted-foreground/30 hover:text-muted-foreground/55 transition mb-3 text-[10px] font-semibold tracking-[0.16em] uppercase"
+                className="flex items-center gap-1.5 text-muted-foreground/50 hover:text-muted-foreground/80 transition mb-3 text-[10px] font-semibold tracking-[0.16em] uppercase"
               >
                 <Home className="w-3 h-3" />
                 Hub

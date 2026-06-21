@@ -23,13 +23,16 @@ export function Home() {
 
       {/* Header */}
       <div className="mb-12">
-        <p className="text-[10px] font-bold text-muted-foreground/35 uppercase tracking-[0.32em] mb-3">
+        <p className="text-[10px] font-bold uppercase tracking-[0.32em] mb-3" style={{ color: 'rgba(204,120,150,0.65)' }}>
           Era Systems · Operator Hub
         </p>
-        <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight">
+        <h1
+          className="text-4xl md:text-5xl font-bold tracking-tight leading-tight"
+          style={{ background: 'linear-gradient(135deg, #F2EDF9 20%, #CC7896 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+        >
           Good day
         </h1>
-        <p className="text-muted-foreground mt-3 text-base">
+        <p className="mt-3 text-base" style={{ color: 'hsl(270 10% 62%)' }}>
           Select a product to enter its environment
         </p>
       </div>
@@ -45,12 +48,12 @@ export function Home() {
         >
           {/* Ambient top glow */}
           <div className="absolute inset-x-0 top-0 h-40 pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse 110% 100% at 50% -10%, rgba(74,168,157,0.16) 0%, transparent 75%)' }} />
+            style={{ background: 'radial-gradient(ellipse 110% 100% at 50% -10%, rgba(74,168,157,0.30) 0%, transparent 75%)' }} />
 
           <div className="relative p-6 flex flex-col h-full min-h-[220px]">
             <div className="flex items-start justify-between mb-6">
               <div className="w-11 h-11 rounded-xl flex items-center justify-center"
-                style={{ background: 'rgba(74,168,157,0.14)', border: '1px solid rgba(74,168,157,0.28)' }}>
+                style={{ background: 'rgba(74,168,157,0.22)', border: '1px solid rgba(74,168,157,0.40)' }}>
                 <Building2 className="w-5 h-5 text-teal" />
               </div>
               <ArrowRight className="w-4 h-4 text-muted-foreground/25 group-hover:text-teal group-hover:translate-x-1 transition-all duration-200 mt-1" />
@@ -91,12 +94,12 @@ export function Home() {
         >
           {/* Ambient top glow */}
           <div className="absolute inset-x-0 top-0 h-40 pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse 110% 100% at 50% -10%, rgba(191,124,147,0.14) 0%, transparent 75%)' }} />
+            style={{ background: 'radial-gradient(ellipse 110% 100% at 50% -10%, rgba(204,120,150,0.30) 0%, transparent 75%)' }} />
 
           <div className="relative p-6 flex flex-col h-full min-h-[220px]">
             <div className="flex items-start justify-between mb-6">
               <div className="w-11 h-11 rounded-xl flex items-center justify-center"
-                style={{ background: 'rgba(191,124,147,0.14)', border: '1px solid rgba(191,124,147,0.28)' }}>
+                style={{ background: 'rgba(204,120,150,0.22)', border: '1px solid rgba(204,120,150,0.40)' }}>
                 <MessageSquare className="w-5 h-5 text-primary" />
               </div>
               <ArrowRight className="w-4 h-4 text-muted-foreground/25 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200 mt-1" />
