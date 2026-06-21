@@ -198,6 +198,10 @@ export function Support() {
       if (!overlayRef.current || !vv) return
       overlayRef.current.style.height = `${vv.height}px`
       overlayRef.current.style.top    = `${vv.offsetTop}px`
+      // After resize settles, scroll the last message into view
+      requestAnimationFrame(() => {
+        endRef.current?.scrollIntoView({ behavior: 'smooth' })
+      })
     }
 
     window.visualViewport?.addEventListener('resize', update)
