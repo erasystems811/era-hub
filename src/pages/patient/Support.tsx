@@ -14,39 +14,48 @@ function statusBadge(s: string) {
   return 'bg-teal/10 text-teal border-teal/20'
 }
 
-/* ── Proper chat bubbles ────────────────────────────────────────────────── */
-function MessageList({ thread, endRef }: { thread: Thread | null; endRef: React.RefObject<HTMLDivElement> }) {
+/* ─── Chat bubbles ──────────────────────────────────────────────── */
+function MessageList({ thread, endRef }: {
+  thread: Thread | null
+  endRef: React.RefObject<HTMLDivElement>
+}) {
   if (!thread) return (
     <div className="flex-1 flex items-center justify-center gap-2 text-muted-foreground text-sm">
-      <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+      <Loader2 className="w-4 h-4 animate-spin" />Loading…
     </div>
   )
   if (thread.messages.length === 0) return (
-    <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">No messages yet</div>
+    <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+      No messages yet
+    </div>
   )
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div
+      className="flex-1 overflow-y-auto px-4 py-4"
+      style={{ WebkitOverflowScrolling: 'touch' }}
+    >
       {thread.messages.map((m, i) => {
-        const isMe   = m.sender !== 'hospital'
-        const prev   = thread.messages[i - 1]
-        const sameGroup = prev && (prev.sender !== 'hospital') === isMe
+        const isMe     = m.sender !== 'hospital'
+        const prev     = thread.messages[i - 1]
+        const newGroup = !prev || (prev.sender !== 'hospital') !== isMe
+
         return (
-          <div key={m.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} ${sameGroup ? 'mt-0.5' : 'mt-3'}`}>
-            {!sameGroup && (
-              <p className="text-[10px] text-muted-foreground/50 mb-1 px-1">
+          <div key={m.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} ${newGroup ? 'mt-4' : 'mt-1'}`}>
+            {newGroup && (
+              <p className="text-[10px] text-muted-foreground/45 mb-1 px-1">
                 {isMe ? 'You' : 'Hospital'}
               </p>
             )}
             <div
-              className={`max-w-[78%] px-4 py-2.5 text-sm leading-relaxed ${
-                isMe
-                  ? 'rounded-2xl rounded-br-sm text-white'
-                  : 'rounded-2xl rounded-bl-sm text-foreground border border-white/10'
-              }`}
+              className="max-w-[78%] px-4 py-2.5 text-sm leading-relaxed"
               style={{
-                background: isMe
-                  ? 'linear-gradient(135deg, #4DBFB3, #3AADA1)'
-                  : 'rgba(255,255,255,0.06)',
+                borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                background:   isMe
+                  ? 'linear-gradient(135deg,#4DBFB3,#3AADA1)'
+                  : 'rgba(255,255,255,0.08)',
+                border: isMe ? 'none' : '1px solid rgba(255,255,255,0.10)',
+                color:  isMe ? '#fff' : 'var(--foreground)',
+                wordBreak: 'break-word',
               }}
             >
               {m.message}
@@ -57,12 +66,12 @@ function MessageList({ thread, endRef }: { thread: Thread | null; endRef: React.
           </div>
         )
       })}
-      <div ref={endRef} />
+      <div ref={endRef} style={{ height: 1 }} />
     </div>
   )
 }
 
-/* ── Stable reply bar (solid bg — no blur, no layout thrash) ───────────── */
+/* ─── Reply bar ─────────────────────────────────────────────────── */
 function ReplyBar({ reply, sending, onChange, onSend }: {
   reply: string
   sending: boolean
@@ -71,11 +80,8 @@ function ReplyBar({ reply, sending, onChange, onSend }: {
 }) {
   return (
     <div
-      className="shrink-0 flex gap-2 px-3 py-2 border-t border-white/10"
-      style={{
-        background: 'rgb(14, 11, 20)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 8px)',
-      }}
+      className="flex gap-2 px-3 pt-2 pb-2 border-t border-white/10"
+      style={{ background: '#0e0b14', flexShrink: 0 }}
     >
       <input
         className="input flex-1 text-sm"
@@ -95,7 +101,7 @@ function ReplyBar({ reply, sending, onChange, onSend }: {
   )
 }
 
-/* ── Ticket list (shared mobile + desktop) ──────────────────────────────── */
+/* ─── Ticket list ───────────────────────────────────────────────── */
 function TicketList({ tickets, loading, selected, onOpen }: {
   tickets: SupportTicket[]
   loading: boolean
@@ -104,7 +110,7 @@ function TicketList({ tickets, loading, selected, onOpen }: {
 }) {
   if (loading) return (
     <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
-      <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+      <Loader2 className="w-4 h-4 animate-spin" />Loading…
     </div>
   )
   if (tickets.length === 0) return (
@@ -116,9 +122,13 @@ function TicketList({ tickets, loading, selected, onOpen }: {
   return (
     <div className="divide-y divide-white/06">
       {tickets.map(t => (
-        <button key={t.id} className={`w-full text-left px-4 py-4 transition-colors ${
-          selected === t.id ? 'bg-teal/10' : 'hover:bg-white/[0.03] active:bg-white/[0.06]'
-        }`} onClick={() => onOpen(t.id)}>
+        <button
+          key={t.id}
+          className={`w-full text-left px-4 py-4 transition-colors ${
+            selected === t.id ? 'bg-teal/10' : 'hover:bg-white/[0.03] active:bg-white/[0.06]'
+          }`}
+          onClick={() => onOpen(t.id)}
+        >
           <div className="flex items-start justify-between gap-2 mb-1.5">
             <p className="text-sm font-semibold text-foreground truncate">{t.hospital_name}</p>
             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border shrink-0 capitalize ${statusBadge(t.status)}`}>
@@ -136,7 +146,7 @@ function TicketList({ tickets, loading, selected, onOpen }: {
   )
 }
 
-/* ── Main Support component ─────────────────────────────────────────────── */
+/* ─── Main ──────────────────────────────────────────────────────── */
 export function Support() {
   const [tickets, setTickets]   = useState<SupportTicket[]>(() => pageCache.get<SupportTicket[]>('support:tickets') ?? [])
   const [selected, setSelected] = useState<number | null>(null)
@@ -144,7 +154,8 @@ export function Support() {
   const [reply, setReply]       = useState('')
   const [loading, setLoading]   = useState(() => !pageCache.get('support:tickets'))
   const [sending, setSending]   = useState(false)
-  const endRef                  = useRef<HTMLDivElement>(null)
+  const endRef     = useRef<HTMLDivElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
 
   const loadTickets = async () => {
     setLoading(true)
@@ -158,7 +169,7 @@ export function Support() {
   const openThread = async (id: number) => {
     setSelected(id)
     setThread(null)
-    try { setThread(await patientApi.getSupportThread(id)) } catch { /* ignore */ }
+    try { setThread(await patientApi.getSupportThread(id)) } catch { /**/ }
   }
 
   const sendReply = async () => {
@@ -173,91 +184,123 @@ export function Support() {
   }
 
   const closeThread = () => { setSelected(null); setThread(null) }
-  const overlayRef  = useRef<HTMLDivElement>(null)
 
   useEffect(() => { void loadTickets() }, [])
 
+  // Scroll to bottom whenever messages change or are first loaded
   useEffect(() => {
-    if (thread) endRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (thread?.messages.length) {
+      endRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [thread])
 
-  /* When the thread overlay is open:
-     1. Lock body so the gradient background cannot repaint (stops scatter).
-     2. Use visualViewport API to track the exact visible height including
-        keyboard — far more reliable than 100dvh on iOS Safari. */
+  /* ── iOS-stable body lock + keyboard handling ──────────────────
+     When the thread is open:
+     1. Lock body with position:fixed (the ONLY reliable iOS scroll-lock;
+        overflow:hidden alone does not stop iOS from repainting gradients).
+     2. Listen to visualViewport to sync the overlay height to the real
+        visible area (shrinks when keyboard opens).
+     3. Debounce the scroll-to-bottom so it fires once after the keyboard
+        finishes animating, not 60 times during the slide. */
   useEffect(() => {
     if (!selected) return
 
-    const body = document.body
-    const html = document.documentElement
-    body.style.overflow = 'hidden'
-    html.style.overflow = 'hidden'
+    // Save scroll, freeze body
+    const savedScroll = window.scrollY
+    Object.assign(document.body.style, {
+      position: 'fixed',
+      top:      `-${savedScroll}px`,
+      left:     '0',
+      right:    '0',
+      overflow: 'hidden',
+    })
 
-    const update = () => {
+    let debounceId = 0
+
+    const syncViewport = () => {
       const vv = window.visualViewport
-      if (!overlayRef.current || !vv) return
+      if (!vv || !overlayRef.current) return
+
+      // Snap overlay to exact visible area — no animation, just sync
       overlayRef.current.style.height = `${vv.height}px`
-      overlayRef.current.style.top    = `${vv.offsetTop}px`
-      // After resize settles, scroll the last message into view
-      requestAnimationFrame(() => {
+
+      // Scroll to last message once keyboard finishes (debounced 120ms)
+      clearTimeout(debounceId)
+      debounceId = window.setTimeout(() => {
         endRef.current?.scrollIntoView({ behavior: 'smooth' })
-      })
+      }, 120)
     }
 
-    window.visualViewport?.addEventListener('resize', update)
-    window.visualViewport?.addEventListener('scroll', update)
-    update()
+    window.visualViewport?.addEventListener('resize', syncViewport)
+    syncViewport() // initial sync
 
     return () => {
-      body.style.overflow = ''
-      html.style.overflow = ''
-      window.visualViewport?.removeEventListener('resize', update)
-      window.visualViewport?.removeEventListener('scroll', update)
+      window.visualViewport?.removeEventListener('resize', syncViewport)
+      clearTimeout(debounceId)
+
+      // Restore body and scroll position
+      Object.assign(document.body.style, {
+        position: '',
+        top:      '',
+        left:     '',
+        right:    '',
+        overflow: '',
+      })
+      window.scrollTo(0, savedScroll)
     }
   }, [selected])
 
   const selectedTicket = tickets.find(t => t.id === selected)
   const openCount      = tickets.filter(t => t.status === 'open').length
 
-  /* Mobile full-screen thread — portal at document.body.
-     Completely opaque solid background + no backdrop-filter anywhere.
-     Height/top set by visualViewport JS above. */
+  /* ── Mobile full-screen thread overlay ─────────────────────────
+     Rendered at document.body via portal so no parent overflow/z-index
+     can interfere. 100% opaque backgrounds throughout — nothing to
+     composite or repaint when keyboard moves. */
   const mobileThread = selected ? createPortal(
     <div
       ref={overlayRef}
       style={{
-        position: 'fixed',
-        top: 0, left: 0, right: 0,
-        height: '100dvh',      /* JS overrides this once vp fires */
-        zIndex: 200,
-        display: 'flex',
-        flexDirection: 'column',
-        background: '#0e0b14', /* fully opaque — nothing bleeds through */
-        overflow: 'hidden',
-        contain: 'layout style paint',  /* isolated paint layer */
+        position:        'fixed',
+        top:             0,
+        left:            0,
+        right:           0,
+        height:          '100dvh', // JS overrides immediately via syncViewport
+        zIndex:          300,
+        display:         'flex',
+        flexDirection:   'column',
+        background:      '#0e0b14',
+        overflow:        'hidden',
+        WebkitTransform: 'translateZ(0)', // own GPU layer — no bleed from page
       }}
     >
-      {/* Header — 100% opaque, no backdrop-filter */}
+      {/* Header */}
       <div
-        className="shrink-0 flex items-center gap-3 px-4 border-b"
         style={{
-          height: 56,
-          background: '#0e0b14',
-          borderBottomColor: 'rgba(255,255,255,0.10)',
+          flexShrink:      0,
+          height:          56,
+          display:         'flex',
+          alignItems:      'center',
+          gap:             12,
+          padding:         '0 16px',
+          background:      '#0e0b14',
+          borderBottom:    '1px solid rgba(255,255,255,0.10)',
         }}
       >
         <button
           onClick={closeThread}
-          className="p-2 -ml-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/06 transition"
+          style={{ padding: 8, margin: '-4px 0 -4px -4px', borderRadius: 12, color: 'rgba(255,255,255,0.5)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft size={20} />
         </button>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-foreground truncate">
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--foreground)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {selectedTicket?.hospital_name ?? 'Conversation'}
           </p>
           {selectedTicket && (
-            <p className="text-[10px] text-muted-foreground/60 truncate">{selectedTicket.subject}</p>
+            <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {selectedTicket.subject}
+            </p>
           )}
         </div>
         {selectedTicket && (
@@ -267,10 +310,10 @@ export function Support() {
         )}
       </div>
 
-      {/* Messages */}
+      {/* Messages — flex-1 so reply bar is always at bottom */}
       <MessageList thread={thread} endRef={endRef} />
 
-      {/* Reply bar */}
+      {/* Reply bar — solid background, never moves */}
       <ReplyBar
         reply={reply}
         sending={sending}
@@ -285,7 +328,7 @@ export function Support() {
     <>
       {mobileThread}
 
-      {/* ── Desktop two-pane layout ── */}
+      {/* Desktop two-pane */}
       <div className="hidden md:flex flex-col h-[calc(100vh-120px)] min-h-[500px]">
         <div className="mb-5 shrink-0">
           <h1 className="page-title">Support inbox</h1>
@@ -306,19 +349,14 @@ export function Support() {
             ) : (
               <>
                 <MessageList thread={thread} endRef={endRef} />
-                <ReplyBar
-                  reply={reply}
-                  sending={sending}
-                  onChange={setReply}
-                  onSend={() => void sendReply()}
-                />
+                <ReplyBar reply={reply} sending={sending} onChange={setReply} onSend={() => void sendReply()} />
               </>
             )}
           </div>
         </div>
       </div>
 
-      {/* ── Mobile ticket list (only shown when no thread is open) ── */}
+      {/* Mobile ticket list */}
       <div className="md:hidden flex flex-col">
         <div className="mb-4">
           <h1 className="page-title">Support inbox</h1>
