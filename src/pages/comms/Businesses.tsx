@@ -232,10 +232,9 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
                   </button>
 
                   {/* Danger zone */}
-                  <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 mt-2">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-red-400/60 mb-3">Danger zone</p>
+                  <div className="pt-2 border-t border-white/05">
                     <button
-                      className="w-full text-sm py-2.5 rounded-xl font-medium border border-red-500/30 text-red-400 hover:bg-red-500/15 transition-colors disabled:opacity-50"
+                      className="text-xs text-muted-foreground/40 hover:text-red-400/70 transition-colors disabled:opacity-30 underline underline-offset-2 decoration-dotted"
                       disabled={saving}
                       onClick={async () => {
                         if (!confirm(`Permanently delete "${detail.name}"? This cannot be undone.`)) return
