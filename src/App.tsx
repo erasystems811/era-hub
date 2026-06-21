@@ -20,6 +20,10 @@ import { KnowledgeBase }    from './pages/patient/KnowledgeBase'
 import { DemoSessions }     from './pages/patient/DemoSessions'
 import { Docs }             from './pages/patient/Docs'
 
+// Public (no auth required)
+import { AIAgentSignup }  from './pages/public/AIAgentSignup'
+import { DeveloperSignup } from './pages/public/DeveloperSignup'
+
 // ERA Comms
 import { CommsHome }      from './pages/comms/CommsHome'
 import { CommsDashboard } from './pages/comms/CommsDashboard'
@@ -33,7 +37,8 @@ import { CommsSettings }  from './pages/comms/CommsSettings'
 import { EventLog }       from './pages/comms/EventLog'
 import { Alerts }         from './pages/comms/Alerts'
 import { AuditTrail }     from './pages/comms/AuditTrail'
-import { Investigation }  from './pages/comms/Investigation'
+import { Investigation }   from './pages/comms/Investigation'
+import { ConnectSession }  from './pages/comms/ConnectSession'
 
 function ProtectedApp() {
   return (
@@ -70,7 +75,8 @@ function ProtectedApp() {
         <Route path="/comms/event-log"    element={<EventLog />} />
         <Route path="/comms/alerts"       element={<Alerts />} />
         <Route path="/comms/audit"        element={<AuditTrail />} />
-        <Route path="/comms/investigate"  element={<Investigation />} />
+        <Route path="/comms/investigate"     element={<Investigation />} />
+        <Route path="/comms/connect-session" element={<ConnectSession />} />
 
         {/* Future */}
         <Route path="/connect" element={
@@ -89,5 +95,11 @@ function ProtectedApp() {
 
 export default function App() {
   const { isAuthenticated } = useAuth()
+
+  // Public routes — accessible without login
+  const path = window.location.pathname
+  if (path === '/apply/ai-agent')  return <AIAgentSignup />
+  if (path === '/apply/developer') return <DeveloperSignup />
+
   return isAuthenticated ? <ProtectedApp /> : <Login />
 }

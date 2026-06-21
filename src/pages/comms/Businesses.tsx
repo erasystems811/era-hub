@@ -331,15 +331,71 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
               {/* ── KEYS TAB ── */}
               {tab === 'keys' && (
                 <div className="space-y-4">
-                  {freshKey && (
-                    <div className="rounded-xl border border-teal/20 bg-teal/05 p-4">
-                      <p className="text-xs font-semibold text-teal mb-2">New key generated — copy now, won't be shown again</p>
-                      <p className="font-mono text-xs text-foreground break-all mb-3 leading-relaxed">{freshKey}</p>
-                      <button className="text-xs flex items-center gap-1.5 text-muted-foreground hover:text-teal transition"
-                        onClick={() => void copyText(freshKey)}>
-                        {copied ? <Check className="w-3.5 h-3.5 text-teal" /> : <Copy className="w-3.5 h-3.5" />}
-                        {copied ? 'Copied!' : 'Copy to clipboard'}
-                      </button>
+                  {freshKey && freshKeyId && (
+                    <div className="rounded-xl border border-primary/20 bg-primary/05 p-4 space-y-3">
+                      <p className="text-xs font-bold text-primary">Key generated — how do you want to deliver it?</p>
+
+                      {/* Option 1 — Secure email link */}
+                      {!secureSent ? (
+                        <div className="space-y-2">
+                          {detail.contactEmail ? (
+                            <button
+                              className="w-full flex items-center gap-3 rounded-xl border border-primary/25 bg-primary/08 px-4 py-3 text-left hover:bg-primary/15 transition group"
+                              onClick={async () => {
+                                if (!detail) return
+                                setSaving(true)
+                                try {
+                                  await commsApi.sendSecureKeyLink(detail.id, freshKeyId)
+                                  setSecureSent(true)
+                                } catch (e) {
+                                  alert(e instanceof Error ? e.message : 'Failed to send secure link')
+                                } finally { setSaving(false) }
+                              }}
+                              disabled={saving}
+                            >
+                              <KeyRound className="w-4 h-4 text-primary shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold text-foreground">Send secure link to email</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{detail.contactEmail}</p>
+                              </div>
+                            </button>
+                          ) : (
+                            <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/06 px-4 py-3">
+                              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                              <p className="text-xs text-amber-300/80">No contact email on file. Add one in the Edit tab first.</p>
+                            </div>
+                          )}
+
+                          {/* Option 2 — Show inline */}
+                          {!showFreshKey ? (
+                            <button
+                              className="w-full flex items-center gap-3 rounded-xl border border-white/08 bg-white/03 px-4 py-3 text-left hover:bg-white/06 transition"
+                              onClick={() => setShowFreshKey(true)}
+                            >
+                              <Eye className="w-4 h-4 text-muted-foreground shrink-0" />
+                              <div>
+                                <p className="text-xs font-semibold text-foreground">Show key here (once)</p>
+                                <p className="text-[10px] text-muted-foreground">Only if you are physically with the client</p>
+                              </div>
+                            </button>
+                          ) : (
+                            <div className="rounded-xl border border-amber-500/20 bg-amber-500/05 p-3 space-y-2">
+                              <p className="text-[10px] text-amber-400 font-semibold">Only share this in person — never over chat or email</p>
+                              <p className="font-mono text-xs text-foreground break-all leading-relaxed">{freshKey}</p>
+                              <button className="text-xs flex items-center gap-1.5 text-muted-foreground hover:text-teal transition"
+                                onClick={() => void copyText(freshKey)}>
+                                {copied ? <Check className="w-3.5 h-3.5 text-teal" /> : <Copy className="w-3.5 h-3.5" />}
+                                {copied ? 'Copied!' : 'Copy'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 rounded-xl border border-teal/20 bg-teal/06 px-4 py-3">
+                          <Check className="w-4 h-4 text-teal shrink-0" />
+                          <p className="text-xs text-teal">Secure link sent to {detail.contactEmail}. Expires after one view or 24 hours.</p>
+                        </div>
+                      )}
                     </div>
                   )}
 
