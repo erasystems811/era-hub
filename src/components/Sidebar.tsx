@@ -114,8 +114,8 @@ export function Sidebar() {
     <aside
       className="fixed left-0 top-0 h-full w-56 flex flex-col z-20"
       style={{
-        background: 'linear-gradient(180deg, #F9E8F4 0%, #F2D4EE 100%)',
-        borderRight: '1px solid rgba(233,145,200,0.22)',
+        background: 'linear-gradient(180deg, #FBF0F8 0%, #F4E0EE 100%)',
+        borderRight: '1px solid rgba(196,40,111,0.12)',
       }}
     >
       {/* Logo */}
@@ -123,7 +123,7 @@ export function Sidebar() {
         <div className="flex items-center gap-2.5">
           <div
             className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0"
-            style={{ background: 'linear-gradient(135deg, #E991C8, #4A9BA8)' }}
+            style={{ background: 'linear-gradient(135deg, #C4286F, #8B1A4A)' }}
           >
             E
           </div>

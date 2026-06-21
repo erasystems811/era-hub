@@ -6,54 +6,56 @@
   * { box-sizing: border-box; }
   html { font-family: 'Inter', system-ui, sans-serif; }
   body {
-    background: #F9E8F4;
-    color: #2D2D2D;
+    background: #FBF0F8;
+    color: #111827;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
   }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(233,145,200,0.35); border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(233,145,200,0.6); }
+  ::-webkit-scrollbar-thumb { background: rgba(196,40,111,0.25); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(196,40,111,0.45); }
 }
 
 @layer components {
   .glass {
-    background: rgba(255,255,255,0.62);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(233,145,200,0.22);
-    box-shadow: 0 4px 24px rgba(233,145,200,0.10), 0 1px 4px rgba(0,0,0,0.05);
+    background: rgba(255,255,255,0.70);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(196,40,111,0.12);
+    box-shadow: 0 2px 24px rgba(196,40,111,0.07), 0 1px 4px rgba(0,0,0,0.04);
     border-radius: 16px;
   }
   .glass-sm {
-    background: rgba(255,255,255,0.55);
+    background: rgba(255,255,255,0.65);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(233,145,200,0.18);
-    box-shadow: 0 2px 12px rgba(233,145,200,0.08), 0 1px 3px rgba(0,0,0,0.04);
+    border: 1px solid rgba(196,40,111,0.10);
+    box-shadow: 0 1px 12px rgba(196,40,111,0.05), 0 1px 3px rgba(0,0,0,0.03);
     border-radius: 12px;
   }
+
+  /* Primary = bold pink — same role as teal in ERA Patient */
   .btn-primary {
-    @apply bg-teal text-white font-medium px-5 py-2.5 rounded-xl transition-all duration-150;
-    @apply hover:bg-opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-pink text-white font-medium px-5 py-2.5 rounded-xl transition-all duration-150;
+    @apply hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed;
   }
   .btn-secondary {
-    @apply bg-pink-light text-teal font-medium px-5 py-2.5 rounded-xl border border-pink-border transition-all duration-150;
-    @apply hover:bg-opacity-80 active:scale-[0.98] disabled:opacity-50;
+    @apply font-medium px-5 py-2.5 rounded-xl border transition-all duration-150;
+    @apply bg-pink-light text-pink border-pink-border hover:bg-opacity-80 active:scale-[0.98] disabled:opacity-40;
   }
   .btn-ghost {
     @apply text-charcoal-soft font-medium px-4 py-2 rounded-xl transition-all duration-150;
-    @apply hover:bg-pink-light active:scale-[0.98];
+    @apply hover:bg-pink-light hover:text-charcoal active:scale-[0.98];
   }
   .btn-danger {
     @apply bg-rose text-white font-medium px-5 py-2.5 rounded-xl transition-all duration-150;
-    @apply hover:bg-opacity-90 active:scale-[0.98];
+    @apply hover:opacity-90 active:scale-[0.98];
   }
   .input {
-    @apply w-full bg-white bg-opacity-70 border border-pink-border rounded-xl px-4 py-2.5 text-sm text-charcoal;
-    @apply placeholder-charcoal-soft placeholder-opacity-50 outline-none;
-    @apply focus:border-teal focus:ring-2 focus:ring-teal focus:ring-opacity-15 transition-all;
+    @apply w-full bg-white border border-pink-border rounded-xl px-4 py-2.5 text-sm text-charcoal outline-none;
+    @apply placeholder-charcoal-soft placeholder-opacity-40;
+    @apply focus:border-pink focus:ring-2 focus:ring-pink focus:ring-opacity-10 transition-all;
   }
   .label { @apply block text-xs font-medium text-charcoal-soft mb-1.5; }
   .page-title { @apply text-2xl font-semibold text-charcoal tracking-tight; }

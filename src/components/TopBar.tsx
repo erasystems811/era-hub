@@ -45,9 +45,9 @@ export function TopBar() {
     <header
       className="fixed top-0 left-56 right-0 h-14 z-10 flex items-center justify-between px-6"
       style={{
-        background: 'rgba(249,232,244,0.85)',
+        background: 'rgba(251,240,248,0.88)',
         backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(233,145,200,0.2)',
+        borderBottom: '1px solid rgba(196,40,111,0.10)',
       }}
     >
       <h1 className="font-semibold text-charcoal text-base">{title}</h1>

@@ -1,6 +1,7 @@
 import { COMMS_API, COMMS_SECRET } from './config'
 
 async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
+  if (!COMMS_API) throw new Error('ERA Comms API is not configured. Contact your administrator.')
   const res = await fetch(`${COMMS_API}/v1/admin${path}`, {
     ...opts,
     headers: {
@@ -9,11 +10,18 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
       ...opts.headers,
     },
   })
+  const contentType = res.headers.get('content-type') ?? ''
   if (!res.ok) {
+    if (!contentType.includes('application/json')) {
+      throw new Error(`Could not reach ERA Comms (${res.status}). Check your connection and try again.`)
+    }
     const err = await res.json().catch(() => ({ error: res.statusText }))
     throw new Error((err as { message?: string; error?: string }).message ?? (err as { error?: string }).error ?? res.statusText)
   }
   if (res.status === 204) return undefined as T
+  if (!contentType.includes('application/json')) {
+    throw new Error('ERA Comms returned an unexpected response. Check the API URL in your settings.')
+  }
   return res.json() as T
 }
 
