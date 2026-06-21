@@ -121,12 +121,11 @@ export function Sidebar() {
       {/* Logo */}
       <div className="px-5 py-5 border-b border-pink-border">
         <div className="flex items-center gap-2.5">
-          <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0"
-            style={{ background: 'linear-gradient(135deg, #C4286F, #8B1A4A)' }}
-          >
-            E
-          </div>
+          <img
+            src="/erahub2.png"
+            alt="ERA"
+            className="w-8 h-8 rounded-xl shrink-0"
+          />
           <div>
             <div className="text-sm font-semibold text-charcoal leading-tight">ERA Systems</div>
             <div className="text-xs text-charcoal-soft">Operator Hub</div>

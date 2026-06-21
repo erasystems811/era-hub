@@ -27,12 +27,11 @@ export function Login() {
       <div className="relative w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-bold mx-auto mb-4 shadow-glass"
-            style={{ background: 'linear-gradient(135deg, #B5226A 0%, #7A1248 100%)' }}
-          >
-            E
-          </div>
+          <img
+            src="/erahub.png"
+            alt="ERA Systems"
+            className="w-20 h-20 mx-auto mb-4 rounded-2xl shadow-glass"
+          />
           <h1 className="text-2xl font-semibold text-charcoal">ERA Systems</h1>
           <p className="text-sm text-charcoal-soft mt-1">Operator Hub</p>
         </div>
