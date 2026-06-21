@@ -17,25 +17,25 @@ function ProductCard({
   return (
     <Glass
       hover={available}
-      className={!available ? 'opacity-60' : ''}
+      className={!available ? 'opacity-50' : ''}
       onClick={() => available && nav(path)}
     >
       <div className="flex items-start gap-4">
-        <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-white"
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-white"
           style={{ background: color }}>
           {icon}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-charcoal">{title}</h3>
+            <h3 className="font-semibold text-foreground">{title}</h3>
             {!available && (
-              <span className="text-[10px] bg-pink text-white rounded-full px-1.5 py-0.5 font-medium">Coming soon</span>
+              <span className="text-[10px] bg-primary/15 text-primary rounded-full px-2 py-0.5 font-semibold">Soon</span>
             )}
           </div>
-          <p className="text-sm text-charcoal-soft mt-0.5">{subtitle}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
           {children && <div className="mt-3">{children}</div>}
         </div>
-        {available && <ArrowRight className="w-4 h-4 text-charcoal-soft mt-1 shrink-0" />}
+        {available && <ArrowRight className="w-4 h-4 text-muted-foreground/40 mt-1 shrink-0" />}
       </div>
     </Glass>
   )
@@ -44,10 +44,20 @@ function ProductCard({
 function StatusRow({ label, value, ok }: { label: string; value: string; ok?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-xs text-charcoal-soft">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
       <span className="flex items-center gap-1 text-xs font-medium"
-        style={{ color: ok === true ? '#4A9BA8' : ok === false ? '#D05080' : '#5A5A5A' }}>
-        {ok === true ? <CheckCircle className="w-3 h-3" /> : ok === false ? <AlertTriangle className="w-3 h-3" /> : <Circle className="w-3 h-3 opacity-40" />}
+        style={{
+          color: ok === true
+            ? 'hsl(175 40% 55%)'
+            : ok === false
+            ? 'hsl(340 35% 65%)'
+            : 'rgba(237,233,245,0.35)',
+        }}>
+        {ok === true
+          ? <CheckCircle className="w-3 h-3" />
+          : ok === false
+          ? <AlertTriangle className="w-3 h-3" />
+          : <Circle className="w-3 h-3 opacity-40" />}
         {value}
       </span>
     </div>
@@ -71,16 +81,16 @@ export function Home() {
     <div className="max-w-4xl">
       <div className="mb-8">
         <h1 className="page-title">Good day</h1>
-        <p className="caption mt-1">Here's a live status of all ERA Systems products</p>
+        <p className="caption mt-1">Live status of all ERA Systems products</p>
       </div>
 
       <div className="grid gap-4">
         <ProductCard
           title="ERA Patient"
           subtitle="Hospital management, patient pipelines, and clinical automation"
-          icon={<Building2 className="w-6 h-6" />}
-          color="linear-gradient(135deg, #E991C8, #c860a0)"
-          path="/patient/hospitals"
+          icon={<Building2 className="w-5 h-5" />}
+          color="linear-gradient(135deg, #5AADA2, #38877C)"
+          path="/patient"
         >
           <div className="space-y-1.5">
             <StatusRow
@@ -97,9 +107,9 @@ export function Home() {
         <ProductCard
           title="ERA Comms"
           subtitle="WhatsApp messaging infrastructure, session management, and delivery"
-          icon={<MessageSquare className="w-6 h-6" />}
-          color="linear-gradient(135deg, #4A9BA8, #2d7a87)"
-          path="/comms/sessions"
+          icon={<MessageSquare className="w-5 h-5" />}
+          color="linear-gradient(135deg, #BF7C93, #9E6278)"
+          path="/comms"
         >
           <div className="space-y-1.5">
             <StatusRow
@@ -123,7 +133,7 @@ export function Home() {
         <ProductCard
           title="ERA Connect"
           subtitle="Patient-facing booking portal and telehealth integrations"
-          icon={<Zap className="w-6 h-6" />}
+          icon={<Zap className="w-5 h-5" />}
           color="linear-gradient(135deg, #9b8ae9, #7b6ac9)"
           path="/connect"
           available={false}

@@ -5,6 +5,7 @@ import { Login } from './pages/Login'
 import { Home } from './pages/Home'
 
 // ERA Patient
+import { PatientHome }      from './pages/patient/PatientHome'
 import { Hospitals }        from './pages/patient/Hospitals'
 import { HospitalDetail }   from './pages/patient/HospitalDetail'
 import { Analytics }        from './pages/patient/Analytics'
@@ -20,6 +21,7 @@ import { DemoSessions }     from './pages/patient/DemoSessions'
 import { Docs }             from './pages/patient/Docs'
 
 // ERA Comms
+import { CommsHome }   from './pages/comms/CommsHome'
 import { Sessions }    from './pages/comms/Sessions'
 import { Businesses }  from './pages/comms/Businesses'
 import { Onboarding }  from './pages/comms/Onboarding'
@@ -34,7 +36,7 @@ function ProtectedApp() {
         <Route path="/" element={<Home />} />
 
         {/* ERA Patient */}
-        <Route path="/patient" element={<Navigate to="/patient/hospitals" replace />} />
+        <Route path="/patient" element={<PatientHome />} />
         <Route path="/patient/hospitals" element={<Hospitals />} />
         <Route path="/patient/hospitals/:id" element={<HospitalDetail />} />
         <Route path="/patient/analytics" element={<Analytics />} />
@@ -50,7 +52,7 @@ function ProtectedApp() {
         <Route path="/patient/docs" element={<Docs />} />
 
         {/* ERA Comms */}
-        <Route path="/comms" element={<Navigate to="/comms/sessions" replace />} />
+        <Route path="/comms" element={<CommsHome />} />
         <Route path="/comms/sessions" element={<Sessions />} />
         <Route path="/comms/businesses" element={<Businesses />} />
         <Route path="/comms/onboarding" element={<Onboarding />} />

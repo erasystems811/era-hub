@@ -44,6 +44,8 @@ const COMMS_NAV = [
 
 const BREADCRUMB_MAP: Record<string, { label: string; href?: string }[]> = {
   '/':                            [],
+  '/patient':                     [{ label: 'ERA Patient' }],
+  '/comms':                       [{ label: 'ERA Comms' }],
   '/patient/analytics':           [{ label: 'ERA Patient' }, { label: 'Analytics' }],
   '/patient/hospitals':           [{ label: 'ERA Patient' }, { label: 'Hospitals' }],
   '/patient/usage':               [{ label: 'ERA Patient' }, { label: 'Usage' }],
@@ -64,8 +66,8 @@ const BREADCRUMB_MAP: Record<string, { label: string; href?: string }[]> = {
 }
 
 const SIDEBAR_KEY = 'era_hub_sidebar'
-const sbBg     = 'hsl(222 55% 5%)'
-const sbBorder = 'hsl(222 40% 14%)'
+const sbBg     = 'hsl(262 22% 7%)'
+const sbBorder = 'hsl(262 14% 18%)'
 
 export function Layout({ children, breadcrumb: breadcrumbProp }: LayoutProps) {
   const { logout } = useAuth()
@@ -121,9 +123,12 @@ export function Layout({ children, breadcrumb: breadcrumbProp }: LayoutProps) {
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(href + '/')
 
-  const productCtx = pathname.startsWith('/patient/')
+  const inPatient = pathname.startsWith('/patient')
+  const inComms   = pathname.startsWith('/comms')
+
+  const productCtx = inPatient
     ? { name: 'ERA Patient', color: '#4AA89D', borderColor: 'rgba(74,168,157,0.35)', bg: 'rgba(74,168,157,0.08)' }
-    : pathname.startsWith('/comms/')
+    : inComms
     ? { name: 'ERA Comms', color: '#BF7C93', borderColor: 'rgba(191,124,147,0.35)', bg: 'rgba(191,124,147,0.08)' }
     : null
 
@@ -191,67 +196,146 @@ export function Layout({ children, breadcrumb: breadcrumbProp }: LayoutProps) {
         {/* Nav */}
         <nav className={`flex-1 overflow-y-auto overflow-x-hidden ${expanded ? 'px-3 pt-3 pb-2 space-y-0.5' : 'px-2 py-3 space-y-1'}`}>
 
-          {/* Home */}
-          <button
-            onClick={() => go('/')}
-            className={`w-full flex items-center transition-all duration-150 group rounded-lg ${
-              expanded ? 'gap-3 px-3 py-2.5' : 'justify-center p-2.5'
-            } ${isActive('/') ? 'bg-primary/15 text-primary' : 'text-muted-foreground/70 hover:bg-white/5 hover:text-foreground'}`}
-            title={!expanded ? 'Home' : undefined}
-          >
-            <Home className={`w-4 h-4 shrink-0 ${isActive('/') ? 'text-primary' : ''}`} />
-            {expanded && (
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-sm font-medium leading-tight">Home</p>
-                <p className="text-xs text-muted-foreground/50 leading-tight mt-0.5">Platform command</p>
-              </div>
-            )}
-          </button>
+          {/* ── HOME context: Hub overview + product entry points ── */}
+          {!inPatient && !inComms && (
+            <>
+              <button
+                onClick={() => go('/')}
+                className={`w-full flex items-center transition-all duration-150 group rounded-lg ${
+                  expanded ? 'gap-3 px-3 py-2.5' : 'justify-center p-2.5'
+                } ${isActive('/') ? 'bg-primary/15 text-primary' : 'text-muted-foreground/70 hover:bg-white/5 hover:text-foreground'}`}
+                title={!expanded ? 'Home' : undefined}
+              >
+                <Home className={`w-4 h-4 shrink-0 ${isActive('/') ? 'text-primary' : ''}`} />
+                {expanded && (
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-sm font-medium leading-tight">Home</p>
+                    <p className="text-xs text-muted-foreground/50 leading-tight mt-0.5">Platform overview</p>
+                  </div>
+                )}
+              </button>
 
-          {/* ERA Patient section */}
-          {expanded && (
-            <p className="text-[9px] font-bold text-muted-foreground/30 uppercase tracking-[0.2em] px-3 pt-3 pb-1">
-              ERA Patient
-            </p>
-          )}
-          {!expanded && <div className="my-1 mx-2 border-t" style={{ borderColor: sbBorder }} />}
-          {PATIENT_NAV.map(item => (
-            <NavItem key={item.href} {...item} accent="teal" />
-          ))}
+              <div className="my-1 mx-2 border-t" style={{ borderColor: sbBorder }} />
 
-          {/* ERA Comms section */}
-          {expanded && (
-            <p className="text-[9px] font-bold text-muted-foreground/30 uppercase tracking-[0.2em] px-3 pt-3 pb-1">
-              ERA Comms
-            </p>
-          )}
-          {!expanded && <div className="my-1 mx-2 border-t" style={{ borderColor: sbBorder }} />}
-          {COMMS_NAV.map(item => (
-            <NavItem key={item.href} {...item} accent="pink" />
-          ))}
+              {/* ERA Patient entry card */}
+              <button
+                onClick={() => go('/patient')}
+                className={`w-full flex items-center transition-all duration-150 rounded-lg ${
+                  expanded ? 'gap-3 px-3 py-2.5' : 'justify-center p-2.5'
+                } text-muted-foreground/70 hover:bg-[rgba(74,168,157,0.08)] hover:text-[#4AA89D]`}
+                title={!expanded ? 'ERA Patient' : undefined}
+              >
+                <Building2 className="w-4 h-4 shrink-0" />
+                {expanded && (
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-sm font-medium leading-tight">ERA Patient</p>
+                    <p className="text-xs text-muted-foreground/50 leading-tight mt-0.5">Hospital platform</p>
+                  </div>
+                )}
+              </button>
 
-          {/* Coming soon */}
-          {expanded && (
-            <p className="text-[9px] font-bold text-muted-foreground/30 uppercase tracking-[0.2em] px-3 pt-3 pb-1">
-              Coming Soon
-            </p>
+              {/* ERA Comms entry card */}
+              <button
+                onClick={() => go('/comms')}
+                className={`w-full flex items-center transition-all duration-150 rounded-lg ${
+                  expanded ? 'gap-3 px-3 py-2.5' : 'justify-center p-2.5'
+                } text-muted-foreground/70 hover:bg-[rgba(191,124,147,0.08)] hover:text-[#BF7C93]`}
+                title={!expanded ? 'ERA Comms' : undefined}
+              >
+                <Smartphone className="w-4 h-4 shrink-0" />
+                {expanded && (
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-sm font-medium leading-tight">ERA Comms</p>
+                    <p className="text-xs text-muted-foreground/50 leading-tight mt-0.5">WhatsApp infrastructure</p>
+                  </div>
+                )}
+              </button>
+
+              <div className="my-1 mx-2 border-t" style={{ borderColor: sbBorder }} />
+
+              <button
+                disabled
+                className={`w-full flex items-center opacity-30 cursor-not-allowed rounded-lg ${
+                  expanded ? 'gap-3 px-3 py-2.5' : 'justify-center p-2.5'
+                } text-muted-foreground/50`}
+                title={!expanded ? 'ERA Connect — Coming soon' : undefined}
+              >
+                <MonitorPlay className="w-4 h-4 shrink-0" />
+                {expanded && (
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-sm font-medium leading-tight">ERA Connect</p>
+                    <p className="text-xs text-muted-foreground/50 leading-tight mt-0.5">Coming soon</p>
+                  </div>
+                )}
+              </button>
+            </>
           )}
-          {!expanded && <div className="my-1 mx-2 border-t" style={{ borderColor: sbBorder }} />}
-          <button
-            disabled
-            className={`w-full flex items-center opacity-30 cursor-not-allowed rounded-lg ${
-              expanded ? 'gap-3 px-3 py-2.5' : 'justify-center p-2.5'
-            } text-muted-foreground/50`}
-            title={!expanded ? 'ERA Connect — Coming soon' : undefined}
-          >
-            <MonitorPlay className="w-4 h-4 shrink-0" />
-            {expanded && (
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-sm font-medium leading-tight">ERA Connect</p>
-                <p className="text-xs text-muted-foreground/50 leading-tight mt-0.5">Video & voice platform</p>
-              </div>
-            )}
-          </button>
+
+          {/* ── ERA PATIENT context: teal nav only ── */}
+          {inPatient && (
+            <>
+              {/* Back to hub */}
+              <button
+                onClick={() => go('/')}
+                className={`w-full flex items-center transition-all duration-150 rounded-lg text-muted-foreground/40 hover:text-muted-foreground hover:bg-white/5 ${
+                  expanded ? 'gap-3 px-3 py-2' : 'justify-center p-2.5'
+                }`}
+                title={!expanded ? 'Back to ERA Hub' : undefined}
+              >
+                <Home className="w-3.5 h-3.5 shrink-0" />
+                {expanded && <span className="text-xs font-medium">ERA Hub</span>}
+              </button>
+
+              {expanded && (
+                <div className="px-3 pt-2 pb-1">
+                  <div className="flex items-center gap-2 py-2 px-3 rounded-xl" style={{ background: 'rgba(74,168,157,0.08)', border: '1px solid rgba(74,168,157,0.15)' }}>
+                    <Building2 className="w-3.5 h-3.5 shrink-0" style={{ color: '#4AA89D' }} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] leading-none" style={{ color: '#4AA89D' }}>ERA Patient</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {!expanded && <div className="my-1 mx-2 border-t" style={{ borderColor: 'rgba(74,168,157,0.2)' }} />}
+
+              {PATIENT_NAV.map(item => (
+                <NavItem key={item.href} {...item} accent="teal" />
+              ))}
+            </>
+          )}
+
+          {/* ── ERA COMMS context: pink nav only ── */}
+          {inComms && (
+            <>
+              {/* Back to hub */}
+              <button
+                onClick={() => go('/')}
+                className={`w-full flex items-center transition-all duration-150 rounded-lg text-muted-foreground/40 hover:text-muted-foreground hover:bg-white/5 ${
+                  expanded ? 'gap-3 px-3 py-2' : 'justify-center p-2.5'
+                }`}
+                title={!expanded ? 'Back to ERA Hub' : undefined}
+              >
+                <Home className="w-3.5 h-3.5 shrink-0" />
+                {expanded && <span className="text-xs font-medium">ERA Hub</span>}
+              </button>
+
+              {expanded && (
+                <div className="px-3 pt-2 pb-1">
+                  <div className="flex items-center gap-2 py-2 px-3 rounded-xl" style={{ background: 'rgba(191,124,147,0.08)', border: '1px solid rgba(191,124,147,0.15)' }}>
+                    <Smartphone className="w-3.5 h-3.5 shrink-0" style={{ color: '#BF7C93' }} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] leading-none" style={{ color: '#BF7C93' }}>ERA Comms</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {!expanded && <div className="my-1 mx-2 border-t" style={{ borderColor: 'rgba(191,124,147,0.2)' }} />}
+
+              {COMMS_NAV.map(item => (
+                <NavItem key={item.href} {...item} accent="pink" />
+              ))}
+            </>
+          )}
         </nav>
 
         {/* Deploy */}
@@ -362,7 +446,7 @@ export function Layout({ children, breadcrumb: breadcrumbProp }: LayoutProps) {
         {/* Topbar */}
         <header
           className="shrink-0 h-12 border-b flex items-center px-4 md:px-6 gap-2"
-          style={{ borderBottomColor: productCtx?.borderColor ?? 'hsl(222 40% 14%)', background: 'hsl(222 47% 7%)' }}
+          style={{ borderBottomColor: productCtx?.borderColor ?? 'hsl(262 14% 18%)', background: 'hsl(262 20% 9%)' }}
         >
           <button
             className="md:hidden shrink-0 p-1 -ml-1 rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-white/5 transition"
