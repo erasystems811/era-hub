@@ -171,8 +171,8 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
                   } finally { setSaving(false) }
                 }}
               >
-                {plans.filter(p => p.active).map(p => (
-                  <option key={p.id} value={p.id}>{p.name} — {p.priceMonthly === 0 ? 'Free' : `₦${p.priceMonthly.toLocaleString()}/mo`}</option>
+                {plans.map(p => (
+                  <option key={p.id} value={p.id}>{p.displayName} — {p.monthlyFee ? `₦${p.monthlyFee.toLocaleString()}/mo` : 'Free'}</option>
                 ))}
               </select>
             </div>

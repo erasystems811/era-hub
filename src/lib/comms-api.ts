@@ -59,9 +59,30 @@ export interface ClientDetail extends Client {
 }
 
 export interface Plan {
-  id: string; name: string; monthlyMessageLimit: number | null
-  maxSessions: number | null; priceMonthly: number
-  features: Record<string, boolean>; active: boolean
+  id: string
+  name: string           // slug e.g. "starter"
+  displayName: string
+  aiEnabled: boolean
+  voiceEnabled: boolean
+  analyticsEnabled: boolean
+  billingModel: 'none' | 'usage_based' | 'plan_based'
+  monthlyFee: number | null
+  limits: {
+    monthlyMessages: number | null
+    dailyMessages: number | null
+    hourlyMessages: number | null
+    maxSessions: number | null
+  }
+  clientCount: number
+}
+
+export interface CreatePlanData {
+  name: string; displayName: string
+  aiEnabled: boolean; voiceEnabled: boolean; analyticsEnabled: boolean
+  billingModel: 'none' | 'usage_based' | 'plan_based'
+  monthlyFee: number | null
+  monthlyMessageCap: number | null; dailyMessageCap: number | null
+  hourlyMessageCap: number | null; maxSessions: number | null
 }
 
 export interface ApiKey {
@@ -85,6 +106,9 @@ export interface MonitoringSnapshot {
 
 export const commsApi = {
   listPlans:    () => get<Plan[]>('/plans'),
+  createPlan:   (data: CreatePlanData) => post<Plan>('/plans', data),
+  updatePlan:   (id: string, data: Omit<CreatePlanData, 'name'>) => patch<void>(`/plans/${id}`, data),
+  deletePlan:   (id: string) => del<void>(`/plans/${id}`),
   listClients:  () => get<Client[]>('/clients'),
   getClient:    (id: string) => get<ClientDetail>(`/clients/${id}`),
   createClient: (data: { name: string; slug: string; planId: string; contactEmail?: string; contactPhone?: string }) =>

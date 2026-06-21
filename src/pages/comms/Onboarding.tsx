@@ -163,22 +163,22 @@ export function Onboarding() {
         <Glass>
           <h2 className="section-title mb-5">Choose a plan for {name}</h2>
           <div className="space-y-3">
-            {plans.filter(p => p.active).map(p => (
+            {plans.map(p => (
               <label key={p.id} className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                planId === p.id ? 'border-teal bg-teal-light' : 'border-pink-border bg-white/40 hover:border-teal/50'
+                planId === p.id ? 'border-teal bg-teal/10' : 'border-white/10 bg-white/[0.03] hover:border-teal/40'
               }`}>
                 <input type="radio" name="plan" value={p.id} checked={planId === p.id} onChange={() => setPlanId(p.id)} className="mt-1 accent-teal" />
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <div className="font-semibold text-charcoal capitalize">{p.name}</div>
-                    <div className="text-sm font-medium text-charcoal">
-                      {p.priceMonthly === 0 ? 'Free' : `₦${p.priceMonthly.toLocaleString()}/mo`}
+                    <div className="font-semibold text-foreground">{p.displayName}</div>
+                    <div className="text-sm font-medium text-foreground">
+                      {p.monthlyFee ? `₦${p.monthlyFee.toLocaleString()}/mo` : 'Free'}
                     </div>
                   </div>
-                  <div className="text-xs text-charcoal-soft mt-1">
-                    {p.monthlyMessageLimit ? `${p.monthlyMessageLimit.toLocaleString()} messages/month` : 'Unlimited messages'}
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {p.limits.monthlyMessages ? `${p.limits.monthlyMessages.toLocaleString()} messages/month` : 'Unlimited messages'}
                     {' · '}
-                    {p.maxSessions ? `${p.maxSessions} session${p.maxSessions !== 1 ? 's' : ''}` : 'Unlimited sessions'}
+                    {p.limits.maxSessions ? `${p.limits.maxSessions} session${p.limits.maxSessions !== 1 ? 's' : ''}` : 'Unlimited sessions'}
                   </div>
                 </div>
               </label>
