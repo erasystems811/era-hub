@@ -249,7 +249,7 @@ export function Announcements() {
       </div>
 
       {/* Stats strip */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[
           { label: 'Total',     value: loading ? null : items.length,     color: 'text-foreground' },
           { label: 'Published', value: loading ? null : published.length, color: 'text-teal' },

@@ -189,7 +189,7 @@ export function HospitalDetail() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 mb-5 rounded-xl border border-white/07 bg-card p-1 w-fit">
+      <div className="flex gap-1 mb-5 rounded-xl border border-white/07 bg-card p-1 overflow-x-auto">
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${

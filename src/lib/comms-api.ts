@@ -133,8 +133,9 @@ export const commsApi = {
 
   createApiKey: (clientId: string, label: string, scopes: string[]) =>
     post<{ id: string; key: string; label: string; scopes: string[] }>(`/clients/${clientId}/api-keys`, { label, scopes }),
-  listApiKeys:  (clientId: string) => get<ApiKey[]>(`/clients/${clientId}/api-keys`),
-  revokeApiKey: (keyId: string) => del<void>(`/api-keys/${keyId}`),
+  listApiKeys:      (clientId: string) => get<ApiKey[]>(`/clients/${clientId}/api-keys`),
+  revokeApiKey:     (keyId: string) => del<void>(`/api-keys/${keyId}`),
+  sendSecureKeyLink:(clientId: string, keyId: string) => post<void>(`/clients/${clientId}/api-keys/${keyId}/send-secure-link`, {}),
 
   listSessions:   () => get<Session[]>('/sessions'),
   createSession:  (data: { clientId: string; phoneNumber: string; role?: 'primary' | 'backup' }) =>

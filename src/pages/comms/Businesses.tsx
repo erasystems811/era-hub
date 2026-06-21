@@ -33,10 +33,13 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
   const [editPlan,  setEditPlan]  = useState('')
 
   // API keys state
-  const [newLabel,  setNewLabel]  = useState('')
-  const [freshKey,  setFreshKey]  = useState<string | null>(null)
-  const [showKey,   setShowKey]   = useState<Record<string, boolean>>({})
-  const [copied,    setCopied]    = useState(false)
+  const [newLabel,     setNewLabel]     = useState('')
+  const [freshKey,     setFreshKey]     = useState<string | null>(null)
+  const [freshKeyId,   setFreshKeyId]   = useState<string | null>(null)
+  const [showFreshKey, setShowFreshKey] = useState(false)
+  const [secureSent,   setSecureSent]   = useState(false)
+  const [showKey,      setShowKey]      = useState<Record<string, boolean>>({})
+  const [copied,       setCopied]       = useState(false)
 
   const reload = (id: string) => {
     setLoading(true); setDrawerError(null)
@@ -94,7 +97,9 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
     setSaving(true)
     try {
       const k = await commsApi.createApiKey(detail.id, newLabel, ['messages:send', 'sessions:read'])
-      setFreshKey(k.key); setNewLabel('')
+      setFreshKey(k.key); setFreshKeyId(k.id)
+      setShowFreshKey(false); setSecureSent(false)
+      setNewLabel('')
       reload(detail.id)
     } finally { setSaving(false) }
   }
@@ -119,7 +124,7 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
   return (
     <div className="fixed inset-0 z-40 flex">
       <div className="flex-1 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="w-[500px] flex flex-col" style={{ background: 'hsl(262 20% 8%)', borderLeft: '1px solid rgba(255,255,255,0.09)' }}>
+      <div className="w-full sm:w-[500px] flex flex-col" style={{ background: 'hsl(262 20% 8%)', borderLeft: '1px solid rgba(255,255,255,0.09)' }}>
 
         {/* Header */}
         <div className="px-6 pt-6 pb-4 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
@@ -481,7 +486,8 @@ export function Businesses() {
         </div>
       ) : (
         <div className="rounded-2xl border border-white/07 bg-card overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm" style={{ minWidth: 640 }}>
             <thead>
               <tr className="border-b border-white/07">
                 {['Business', 'Plan', 'Status', 'Sessions', 'Messages / mo', 'Added', ''].map(h => (
@@ -518,6 +524,7 @@ export function Businesses() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

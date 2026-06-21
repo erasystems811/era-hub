@@ -143,7 +143,7 @@ export function Sessions() {
             {issues > 0 && <span className="text-red-400 ml-2">· {issues} need attention</span>}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button className="btn-secondary flex items-center gap-2 text-sm" onClick={load} disabled={loading}>
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
           </button>
@@ -182,7 +182,8 @@ export function Sessions() {
         </div>
       ) : (
         <div className="rounded-2xl border border-white/07 bg-card overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm" style={{ minWidth: 680 }}>
             <thead>
               <tr className="border-b border-white/07">
                 {['Number', 'Business', 'Status', 'Messages sent', 'Last seen', 'Warmup', ''].map(h => (
@@ -231,6 +232,7 @@ export function Sessions() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

@@ -191,7 +191,7 @@ export function Analytics() {
   return (
     <div className="max-w-5xl">
       {/* Page header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
         <div>
           <p className="text-xs font-semibold text-teal/70 mb-1">ERA Patient</p>
           <h1 className="page-title">Platform Overview</h1>
@@ -210,10 +210,10 @@ export function Analytics() {
       </div>
 
       {/* System status banner */}
-      <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border mb-6 ${statusCfg.border} ${statusCfg.bg}`}>
+      <div className={`flex flex-wrap items-center gap-3 px-4 py-3 rounded-xl border mb-6 ${statusCfg.border} ${statusCfg.bg}`}>
         <span className={`w-2 h-2 rounded-full shrink-0 ${statusCfg.dot}`} />
         <p className={`text-sm font-semibold ${statusCfg.color}`}>{statusCfg.label}</p>
-        <div className="ml-auto flex items-center gap-4">
+        <div className="ml-auto flex flex-wrap items-center gap-3">
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Zap className="w-3 h-3 text-teal/60" />
             {logsLoading ? '…' : sentToday} sent today

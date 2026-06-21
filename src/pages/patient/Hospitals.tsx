@@ -177,9 +177,6 @@ export function Hospitals() {
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-
           </div>
         </div>
       )}

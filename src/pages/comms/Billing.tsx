@@ -27,7 +27,7 @@ export function Billing() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
         {[
           { label: 'Active businesses',          value: loading ? '—' : active.toString(),              color: 'text-teal' },
           { label: 'Messages this month',         value: loading ? '—' : fmtNumber(totalMessages),       color: 'text-foreground' },
@@ -52,7 +52,8 @@ export function Billing() {
         </div>
       ) : (
         <div className="rounded-2xl border border-white/07 bg-card overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm" style={{ minWidth: 540 }}>
             <thead>
               <tr className="border-b border-white/07">
                 {['Business', 'Plan', 'Status', 'Messages this month', 'Share'].map(h => (
@@ -95,6 +96,7 @@ export function Billing() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>
