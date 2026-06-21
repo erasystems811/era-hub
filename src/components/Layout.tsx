@@ -9,6 +9,7 @@ import {
   Kanban, Activity, MonitorPlay, Smartphone, Users, Layers,
   CreditCard, Settings, Star, Database, BookOpen, Radio,
   ScrollText, ShieldAlert, Search, ClipboardList,
+  Bot, LayoutTemplate, GitMerge, FileSearch,
 } from 'lucide-react'
 import { ChangePasswordModal } from './ChangePasswordModal'
 import { NotificationPanel } from './NotificationPanel'
@@ -41,6 +42,10 @@ const COMMS_NAV = [
   { icon: ShieldAlert,   label: 'Alerts',       href: '/comms/alerts',       sub: 'Issues & notifications' },
   { icon: BookOpen,      label: 'Audit Trail',  href: '/comms/audit',        sub: 'Who did what & when' },
   { icon: Search,        label: 'Investigate',  href: '/comms/investigate',  sub: 'Search any business' },
+  { icon: GitMerge,      label: 'Onboarding',   href: '/comms/onboarding',   sub: 'Setup pipeline tracker' },
+  { icon: Bot,           label: 'AI Engine',    href: '/comms/ai-engine',    sub: 'AI usage & configuration' },
+  { icon: FileSearch,    label: 'AI Logs',      href: '/comms/ai-logs',      sub: 'AI conversation history' },
+  { icon: LayoutTemplate,label: 'AI Templates', href: '/comms/ai-templates', sub: 'Scenario template library' },
   { icon: Settings,      label: 'Settings',     href: '/comms/settings',     sub: 'API & configuration' },
 ]
 
