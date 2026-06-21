@@ -167,7 +167,7 @@ export const commsApi = {
 
   // Business onboarding requests
   listRequests:   () => get<OnboardingRequest[]>('/requests'),
-  approveRequest: (id: string) => post<void>(`/requests/${id}/approve`, {}),
+  approveRequest: (id: string) => post<{ clientId: string; tempPassword: string }>(`/requests/${id}/approve`, {}),
   rejectRequest:  (id: string, reason?: string) => post<void>(`/requests/${id}/reject`, { reason }),
 
   monitoring: () => get<MonitoringSnapshot>('/monitoring'),

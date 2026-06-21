@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Eye, EyeOff, Server, Bell, Globe, AlertTriangle, Copy, Check, RefreshCw } from 'lucide-react'
+import { Eye, EyeOff, Server, Bell, Globe, AlertTriangle, Copy, Check, RefreshCw, BookOpen, Key, LogIn, Wifi } from 'lucide-react'
 import { COMMS_API, COMMS_SECRET } from '../../lib/config'
 
 function Toast({ msg }: { msg: string }) {
@@ -66,6 +66,76 @@ export function CommsSettings() {
       <div className="mb-6">
         <h1 className="page-title">Settings</h1>
         <p className="caption mt-0.5">ERA Comms platform configuration</p>
+      </div>
+
+      {/* Credential Guide */}
+      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
+        <div className="flex items-center gap-2.5 mb-5">
+          <div className="w-8 h-8 rounded-xl bg-primary/15 flex items-center justify-center">
+            <BookOpen className="w-3.5 h-3.5 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Credentials quick-reference</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Everything you need to know — all in one place</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {/* Operator */}
+          <div className="rounded-xl bg-white/[0.04] border border-white/07 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Key className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-bold text-foreground uppercase tracking-wide">Operator Secret</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-semibold">YOU use this</span>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              This is your master admin key. It unlocks the entire ERA Comms operator panel — all the pages you're looking at now.
+              It is stored in the <span className="font-mono text-primary/80">VITE_COMMS_OPERATOR_SECRET</span> environment variable.
+              Never share it with business clients.
+            </p>
+            <p className="text-xs text-muted-foreground mt-1.5">
+              <span className="text-foreground font-medium">Where to enter it:</span> You don't — it's baked into this app at build time. If you ever change it, redeploy era-hub on Railway.
+            </p>
+          </div>
+
+          {/* Business login */}
+          <div className="rounded-xl bg-white/[0.04] border border-white/07 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <LogIn className="w-3.5 h-3.5 text-teal" />
+              <span className="text-xs font-bold text-foreground uppercase tracking-wide">Business Login</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal/15 text-teal font-semibold">BUSINESS OWNERS use this</span>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              When you approve an onboarding request on the{' '}
+              <span className="text-foreground font-medium">Requests page</span>,
+              a pop-up immediately shows you two things: the business owner's <span className="font-medium text-foreground">email</span> and
+              a <span className="font-medium text-amber-300">temporary password</span>.
+            </p>
+            <p className="text-xs text-muted-foreground mt-1.5">
+              <span className="text-foreground font-medium">What to do:</span> Copy both and send them to the business owner via WhatsApp or email.
+              They go to <span className="font-mono text-primary/80">/biz/login</span>, sign in with those credentials, then immediately change the password to their own.
+            </p>
+            <p className="text-xs text-red-400/80 mt-1.5">
+              The temp password is shown <span className="font-bold">once only</span>. If you close the pop-up without copying it, you'll need to reset it manually in the database.
+            </p>
+          </div>
+
+          {/* WhatsApp sessions */}
+          <div className="rounded-xl bg-white/[0.04] border border-white/07 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Wifi className="w-3.5 h-3.5 text-blue-400" />
+              <span className="text-xs font-bold text-foreground uppercase tracking-wide">WhatsApp Sessions</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 font-semibold">PHONE OWNERS scan this</span>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              After a business is approved and has logged into the portal, you connect their WhatsApp number on the{' '}
+              <span className="text-foreground font-medium">Sessions page</span>.
+              You click <span className="font-medium text-foreground">"Connect session"</span>, a QR code appears —
+              the business owner opens WhatsApp on their phone and scans it.
+              That's it. Their number is now live on ERA Comms.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Platform Configuration */}

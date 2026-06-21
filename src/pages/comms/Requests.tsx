@@ -1,10 +1,101 @@
 import { useEffect, useState, useRef } from 'react'
 import {
   Loader2, Search, CheckCircle2, XCircle, Clock, Users,
-  Smartphone, Code2, Mail, Phone, FileText, AlertCircle,
+  Smartphone, Code2, Mail, Phone, FileText, AlertCircle, Copy, Check, Key,
 } from 'lucide-react'
 import { commsApi, OnboardingRequest } from '../../lib/comms-api'
 import { pageCache } from '../../lib/cache'
+
+// ── Temp-password modal ────────────────────────────────────────────────────
+function TempPasswordModal({
+  businessName,
+  email,
+  tempPassword,
+  onClose,
+}: {
+  businessName: string
+  email: string
+  tempPassword: string
+  onClose: () => void
+}) {
+  const [copied, setCopied] = useState<'email' | 'pwd' | null>(null)
+
+  function copy(text: string, key: 'email' | 'pwd') {
+    void navigator.clipboard.writeText(text).then(() => {
+      setCopied(key)
+      setTimeout(() => setCopied(null), 2000)
+    })
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-card shadow-card-lg p-6 space-y-5">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-teal/15 flex items-center justify-center shrink-0">
+            <Key className="w-4.5 h-4.5 text-teal" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-foreground">Business account created</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">{businessName} is approved and ready to log in</p>
+          </div>
+        </div>
+
+        {/* Instructions */}
+        <div className="rounded-xl bg-teal/8 border border-teal/15 px-4 py-3 text-xs text-teal/90 leading-relaxed">
+          Share these two things with the business owner. They use them to log in at{' '}
+          <span className="font-mono font-semibold">/biz/login</span>.
+          The password is shown <span className="font-semibold">once only</span> — copy it now.
+        </div>
+
+        {/* Email */}
+        <div>
+          <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-1.5 block">
+            Login email (their contact email)
+          </label>
+          <div className="flex gap-2">
+            <div className="flex-1 px-3 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/06 text-sm font-mono text-foreground select-all truncate">
+              {email}
+            </div>
+            <button
+              onClick={() => copy(email, 'email')}
+              className="btn-secondary shrink-0 flex items-center gap-1.5 text-xs"
+            >
+              {copied === 'email' ? <Check className="w-3.5 h-3.5 text-teal" /> : <Copy className="w-3.5 h-3.5" />}
+              Copy
+            </button>
+          </div>
+        </div>
+
+        {/* Temp password */}
+        <div>
+          <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-1.5 block">
+            Temporary password <span className="text-red-400 normal-case font-normal">(only shown once)</span>
+          </label>
+          <div className="flex gap-2">
+            <div className="flex-1 px-3 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-amber-500/30 text-sm font-mono text-amber-300 select-all tracking-widest">
+              {tempPassword}
+            </div>
+            <button
+              onClick={() => copy(tempPassword, 'pwd')}
+              className="btn-secondary shrink-0 flex items-center gap-1.5 text-xs"
+            >
+              {copied === 'pwd' ? <Check className="w-3.5 h-3.5 text-teal" /> : <Copy className="w-3.5 h-3.5" />}
+              Copy
+            </button>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1.5">
+            The business owner logs in and immediately changes this to their own password.
+          </p>
+        </div>
+
+        <button onClick={onClose} className="btn-primary w-full">
+          Done — I've shared these credentials
+        </button>
+      </div>
+    </div>
+  )
+}
 
 type Tab = 'pending' | 'all'
 
@@ -190,12 +281,15 @@ function RequestCard({
   )
 }
 
+type ApprovalResult = { businessName: string; email: string; tempPassword: string }
+
 export function Requests() {
   const [requests, setRequests] = useState<OnboardingRequest[]>(() => pageCache.get<OnboardingRequest[]>('comms:requests') ?? [])
   const [loading, setLoading]   = useState(() => !pageCache.get('comms:requests'))
   const [tab, setTab]           = useState<Tab>('pending')
   const [search, setSearch]     = useState('')
   const [tierFilter, setTierFilter] = useState<'all' | 'ai_agent' | 'developer'>('all')
+  const [approvalResult, setApprovalResult] = useState<ApprovalResult | null>(null)
 
   const load = async () => {
     try {
@@ -216,9 +310,17 @@ export function Requests() {
   }, [tab])
 
   const handleApprove = async (id: string) => {
-    await commsApi.approveRequest(id)
+    const req = requests.find(r => r.id === id)
+    const result = await commsApi.approveRequest(id)
     setRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'approved' as const } : r))
     pageCache.bust('comms:requests')
+    if (result && req) {
+      setApprovalResult({
+        businessName: req.businessName,
+        email: req.contactEmail,
+        tempPassword: result.tempPassword,
+      })
+    }
   }
 
   const handleReject = async (id: string, reason: string) => {
@@ -242,6 +344,16 @@ export function Requests() {
 
   return (
     <div className="max-w-3xl">
+      {/* Temp-password modal — appears immediately after approving */}
+      {approvalResult && (
+        <TempPasswordModal
+          businessName={approvalResult.businessName}
+          email={approvalResult.email}
+          tempPassword={approvalResult.tempPassword}
+          onClose={() => setApprovalResult(null)}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
