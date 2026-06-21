@@ -63,7 +63,12 @@ export function AuditTrail() {
       const data = await eventsApi.listAudit({ limit: 500 })
       setEntries(data)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load audit trail')
+      const msg = e instanceof Error ? e.message : ''
+      if (msg.toLowerCase().includes('not found') || msg.includes('404')) {
+        setEntries([])
+      } else {
+        setError(msg || 'Failed to load audit trail')
+      }
     } finally { setLoading(false) }
   }
 

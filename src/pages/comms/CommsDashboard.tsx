@@ -103,7 +103,10 @@ export function CommsDashboard() {
       if (e.status === 'fulfilled') setEvents(e.value ?? [])
       setLastUpdated(new Date())
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard')
+      const msg = err instanceof Error ? err.message : ''
+      if (!msg.toLowerCase().includes('not found') && !msg.includes('404')) {
+        setError(msg || 'Failed to load dashboard')
+      }
     } finally {
       setLoading(false)
       setRefreshing(false)

@@ -101,7 +101,13 @@ export function EventLog() {
       setEvents(data ?? [])
       setPage(0)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load events')
+      const msg = e instanceof Error ? e.message : ''
+      // 404 = endpoint not yet live — show empty state, not error
+      if (msg.toLowerCase().includes('not found') || msg.includes('404')) {
+        setEvents([])
+      } else {
+        setError(msg || 'Failed to load events')
+      }
     } finally { setLoading(false) }
   }, [severity, fromDate, toDate])
 
