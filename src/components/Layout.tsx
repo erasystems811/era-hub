@@ -42,8 +42,9 @@ const PRODUCTS = {
   comms:   { name: 'ERA Comms',   color: '#BF7C93', accentText: 'text-primary', activeBg: 'bg-primary/15', nav: COMMS_NAV   },
 } as const
 
-const SB_BG     = 'hsl(262 22% 7%)'
-const SB_BORDER = 'hsl(262 14% 18%)'
+const SB_BG     = 'rgba(15, 12, 22, 0.82)'
+const SB_BORDER = 'rgba(255,255,255,0.07)'
+const SB_BLUR   = 'blur(28px) saturate(160%)'
 const SIDEBAR_KEY = 'era_hub_sidebar'
 
 /* ─── Hub Layout (home page — no sidebar) ─────────────────────── */
@@ -66,7 +67,7 @@ function HubLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex flex-col bg-background">
       <header
         className="shrink-0 h-12 border-b flex items-center px-6 gap-3"
-        style={{ borderBottomColor: SB_BORDER, background: SB_BG }}
+        style={{ borderBottomColor: SB_BORDER, background: SB_BG, backdropFilter: SB_BLUR, WebkitBackdropFilter: SB_BLUR }}
       >
         <img src="/erahub4.png" alt="ERA" className="w-6 h-6 object-contain opacity-75" />
         <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-foreground/40">
@@ -265,7 +266,7 @@ function ProductLayout({ product, children }: { product: 'patient' | 'comms'; ch
               )}
             </button>
           ) : (
-            <div className="p-3 space-y-2 rounded-lg border border-border bg-card/60">
+            <div className="p-3 space-y-2 rounded-lg border border-white/10 bg-white/[0.05]">
               <p className="text-sm text-muted-foreground">Trigger Railway deploy?</p>
               <div className="flex gap-2">
                 <button onClick={handleDeploy}
@@ -306,7 +307,7 @@ function ProductLayout({ product, children }: { product: 'patient' | 'comms'; ch
       {/* Desktop sidebar */}
       <aside
         className="hidden md:flex shrink-0 flex-col transition-all duration-200"
-        style={{ width: open ? 216 : 52, background: SB_BG, borderRight: `1px solid ${SB_BORDER}` }}
+        style={{ width: open ? 216 : 52, background: SB_BG, backdropFilter: SB_BLUR, WebkitBackdropFilter: SB_BLUR, borderRight: `1px solid ${SB_BORDER}` }}
       >
         <SidebarContent expanded={open} />
       </aside>
@@ -316,7 +317,7 @@ function ProductLayout({ product, children }: { product: 'patient' | 'comms'; ch
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-64 flex flex-col"
-            style={{ background: SB_BG, borderRight: `1px solid ${SB_BORDER}` }}>
+            style={{ background: SB_BG, backdropFilter: SB_BLUR, WebkitBackdropFilter: SB_BLUR, borderRight: `1px solid ${SB_BORDER}` }}>
             <button onClick={() => setMobileOpen(false)}
               className="absolute top-2 right-2 p-1.5 rounded-lg text-muted-foreground/50 hover:text-muted-foreground hover:bg-white/5 transition z-10">
               <X className="w-4 h-4" />
@@ -332,7 +333,7 @@ function ProductLayout({ product, children }: { product: 'patient' | 'comms'; ch
         {/* Topbar */}
         <header
           className="shrink-0 h-12 border-b flex items-center px-4 md:px-6 gap-3"
-          style={{ borderBottomColor: SB_BORDER, background: 'hsl(262 20% 9%)' }}
+          style={{ borderBottomColor: SB_BORDER, background: 'rgba(15,12,22,0.75)', backdropFilter: SB_BLUR, WebkitBackdropFilter: SB_BLUR }}
         >
           <button className="md:hidden shrink-0 p-1.5 rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-white/5 transition"
             onClick={() => setMobileOpen(true)}>

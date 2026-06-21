@@ -41,7 +41,7 @@ export function Home() {
         <button
           onClick={() => nav('/patient/analytics')}
           className="group relative text-left rounded-2xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(74,168,157,0.16)]"
-          style={{ background: 'hsl(var(--card))', borderColor: 'rgba(74,168,157,0.20)' }}
+          style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderColor: 'rgba(74,168,157,0.20)' }}
         >
           {/* Ambient top glow */}
           <div className="absolute inset-x-0 top-0 h-40 pointer-events-none"
@@ -87,7 +87,7 @@ export function Home() {
         <button
           onClick={() => nav('/comms/sessions')}
           className="group relative text-left rounded-2xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(191,124,147,0.16)]"
-          style={{ background: 'hsl(var(--card))', borderColor: 'rgba(191,124,147,0.20)' }}
+          style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderColor: 'rgba(191,124,147,0.20)' }}
         >
           {/* Ambient top glow */}
           <div className="absolute inset-x-0 top-0 h-40 pointer-events-none"
@@ -131,7 +131,7 @@ export function Home() {
       {/* ERA Connect — coming soon */}
       <div
         className="rounded-2xl border overflow-hidden opacity-40"
-        style={{ background: 'hsl(var(--card))', borderColor: 'rgba(255,255,255,0.07)' }}
+        style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.07)' }}
       >
         <div className="p-5 flex items-center gap-4">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"

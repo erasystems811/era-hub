@@ -71,8 +71,8 @@ export function Support() {
             tickets.map(t => (
               <button
                 key={t.id}
-                className={`w-full text-left px-4 py-3 border-b border-pink-border last:border-0 transition-colors ${
-                  selected === t.id ? 'bg-teal-light' : 'hover:bg-pink-light'
+                className={`w-full text-left px-4 py-3 border-b border-white/[0.06] last:border-0 transition-colors ${
+                  selected === t.id ? 'bg-teal/10' : 'hover:bg-white/[0.04]'
                 }`}
                 onClick={() => void openThread(t.id)}
               >
@@ -132,7 +132,7 @@ export function Support() {
                   )
                 })}
               </div>
-              <div className="p-4 border-t border-pink-border flex gap-2">
+              <div className="p-4 border-t border-white/[0.07] flex gap-2">
                 <input
                   className="input flex-1"
                   placeholder="Type a reply…"
