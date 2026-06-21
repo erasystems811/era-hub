@@ -6,30 +6,31 @@
 
 /* ── ERA Systems Hub — Obsidian Rose ───────────────────────────── */
 :root {
-  --background:          310 18% 8%;    /* very dark warm rose-purple base */
-  --card:                320 16% 12%;
-  --secondary:           310 13% 16%;
-  --accent:              310 12% 20%;
-  --muted:               310 14% 13%;
-  --input:               310 16% 14%;
+  /* Original warm obsidian base — kept exactly as user liked */
+  --background:          262 20% 9%;
+  --card:                262 16% 13%;
+  --secondary:           262 13% 17%;
+  --accent:              262 12% 21%;
+  --muted:               262 14% 15%;
+  --input:               262 16% 15%;
 
-  --foreground:          340 22% 95%;   /* warm near-white, slight rose tint */
-  --card-foreground:     340 22% 95%;
-  --secondary-foreground:340 10% 76%;
-  --muted-foreground:    340  8% 54%;
-  --accent-foreground:   340 22% 95%;
+  --foreground:          270 18% 94%;
+  --card-foreground:     270 18% 94%;
+  --secondary-foreground:270 10% 76%;
+  --muted-foreground:    270  8% 54%;
+  --accent-foreground:   270 18% 94%;
 
-  /* Rose — richer and more vivid, still sophisticated not garish */
-  --primary:             340 48% 65%;   /* #CB7A95 — richer dusty rose */
+  /* Slightly richer rose — more present, still not hot pink */
+  --primary:             340 40% 63%;
   --primary-foreground:  0   0% 100%;
-  --ring:                340 48% 65%;
+  --ring:                340 40% 63%;
 
   --teal:                175 40% 48%;
   --teal-dark:           175 40% 39%;
 
-  --border:              340 14% 20%;   /* warm rose-tinted border */
+  --border:              262 14% 21%;
 
-  --destructive:         348 52% 62%;
+  --destructive:         348 50% 60%;
   --destructive-foreground: 0 0% 100%;
 
   --radius: 0.625rem;
@@ -50,22 +51,26 @@
     font-feature-settings: "tnum" 1;
   }
 
-  /* ── Ambient gradient field — warm rose dominates, balanced by teal ── */
+  /*
+    Glass only shows if there is visible colour BEHIND the glass to blur.
+    These orbs need to be bright enough to actually see — 0.40–0.55 opacity.
+    Think of it as an aurora you're looking at through frosted glass.
+  */
   body {
     min-height: 100vh;
     overflow-x: hidden;
-    background-color: hsl(310 18% 8%);
+    background-color: hsl(262 20% 9%);
     background-image:
-      /* Strong rose glow — bottom right */
-      radial-gradient(ellipse 65% 55% at 88% 95%,  rgba(203,122,149,0.20) 0%, transparent 60%),
-      /* Warm rose bloom — top right corner */
-      radial-gradient(ellipse 45% 40% at 82% 8%,   rgba(203,122,149,0.14) 0%, transparent 55%),
-      /* Teal counter-glow — top left */
-      radial-gradient(ellipse 60% 50% at 12% 6%,   rgba(74,168,157,0.09)  0%, transparent 60%),
-      /* Teal wash — bottom left */
-      radial-gradient(ellipse 40% 35% at 15% 88%,  rgba(74,168,157,0.06)  0%, transparent 55%),
-      /* Centre deep rose bloom */
-      radial-gradient(ellipse 50% 40% at 50% 52%,  rgba(203,122,149,0.07) 0%, transparent 65%);
+      /* Strong rose bloom — bottom right, this is the main glow */
+      radial-gradient(ellipse 60% 55% at 85% 92%,  rgba(191,124,147,0.48) 0%, transparent 62%),
+      /* Secondary rose touch — top right */
+      radial-gradient(ellipse 40% 35% at 88% 6%,   rgba(191,124,147,0.28) 0%, transparent 55%),
+      /* Teal anchor — top left */
+      radial-gradient(ellipse 55% 45% at 12% 8%,   rgba(74,168,157,0.30)  0%, transparent 60%),
+      /* Soft teal wash — bottom left */
+      radial-gradient(ellipse 35% 30% at 10% 90%,  rgba(74,168,157,0.15)  0%, transparent 55%),
+      /* Deep rose centre bloom — subtle */
+      radial-gradient(ellipse 40% 35% at 50% 50%,  rgba(191,124,147,0.10) 0%, transparent 68%);
     background-attachment: fixed;
   }
 
@@ -73,72 +78,74 @@
 
   ::-webkit-scrollbar       { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(203,122,149,0.30); border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(203,122,149,0.50); }
+  ::-webkit-scrollbar-thumb { background: rgba(191,124,147,0.35); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(191,124,147,0.55); }
 }
 
 @layer components {
-  /* ── Glass cards — rose-tinted frosted glass ─────────────────── */
+  /* ── Glass — needs transparent bg so aurora shows through ──────── */
   .glass {
-    background: rgba(255,255,255,0.04);
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid rgba(203,122,149,0.18);
+    background: rgba(18, 14, 26, 0.55);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-top-color: rgba(255,255,255,0.16);
     border-radius: 16px;
     box-shadow:
-      0 4px 24px rgba(0,0,0,0.30),
-      0 1px 0 rgba(203,122,149,0.08) inset;
+      0 4px 32px rgba(0,0,0,0.35),
+      0 1px 0 rgba(255,255,255,0.08) inset;
   }
   .glass:hover {
-    background: rgba(255,255,255,0.055);
-    border-color: rgba(203,122,149,0.28);
+    border-color: rgba(191,124,147,0.28);
+    border-top-color: rgba(191,124,147,0.38);
   }
 
   .glass-sm {
-    background: rgba(255,255,255,0.04);
-    backdrop-filter: blur(16px) saturate(150%);
-    -webkit-backdrop-filter: blur(16px) saturate(150%);
-    border: 1px solid rgba(203,122,149,0.14);
+    background: rgba(18, 14, 26, 0.55);
+    backdrop-filter: blur(20px) saturate(170%);
+    -webkit-backdrop-filter: blur(20px) saturate(170%);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-top-color: rgba(255,255,255,0.13);
     border-radius: 12px;
     box-shadow:
-      0 2px 12px rgba(0,0,0,0.25),
-      0 1px 0 rgba(203,122,149,0.06) inset;
+      0 2px 16px rgba(0,0,0,0.28),
+      0 1px 0 rgba(255,255,255,0.07) inset;
   }
 
   /* ── Buttons ── */
   .btn-primary {
-    background: #CB7A95;
+    background: hsl(var(--primary));
     color: white;
-    box-shadow: 0 2px 16px rgba(203,122,149,0.42);
+    box-shadow: 0 2px 16px rgba(191,124,147,0.38);
     @apply font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
   }
-  .btn-primary:hover  { background: #B5647E; box-shadow: 0 4px 24px rgba(203,122,149,0.55); }
+  .btn-primary:hover  { filter: brightness(0.88); box-shadow: 0 4px 22px rgba(191,124,147,0.50); }
   .btn-primary:active { transform: scale(0.98); }
   .btn-primary:disabled { opacity: 0.38; cursor: not-allowed; box-shadow: none; }
 
   .btn-secondary {
-    background: rgba(203,122,149,0.07);
-    color: #F5E9EF;
-    border: 1px solid rgba(203,122,149,0.20);
+    background: rgba(255,255,255,0.06);
+    color: #EDE9F5;
+    border: 1px solid rgba(255,255,255,0.11);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     @apply font-medium text-sm px-5 py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
   }
-  .btn-secondary:hover  { border-color: rgba(203,122,149,0.35); background: rgba(203,122,149,0.12); }
+  .btn-secondary:hover  { border-color: rgba(191,124,147,0.35); background: rgba(191,124,147,0.08); }
   .btn-secondary:active { transform: scale(0.98); }
   .btn-secondary:disabled { opacity: 0.38; cursor: not-allowed; }
 
   .btn-ghost {
-    color: rgba(245,233,239,0.50);
+    color: rgba(237,233,245,0.52);
     @apply font-medium text-sm px-4 py-2 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
   }
-  .btn-ghost:hover  { background: rgba(203,122,149,0.08); color: #F5E9EF; }
+  .btn-ghost:hover  { background: rgba(191,124,147,0.09); color: #EDE9F5; }
   .btn-ghost:active { transform: scale(0.98); }
 
   .btn-danger {
     background: #CF738A;
     color: white;
-    box-shadow: 0 2px 12px rgba(207,115,138,0.32);
+    box-shadow: 0 2px 12px rgba(207,115,138,0.30);
     @apply font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
   }
   .btn-danger:hover  { opacity: 0.88; }
@@ -147,48 +154,48 @@
   .btn-teal {
     background: #4AA89D;
     color: white;
-    box-shadow: 0 2px 12px rgba(74,168,157,0.32);
+    box-shadow: 0 2px 12px rgba(74,168,157,0.30);
     @apply font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2;
   }
   .btn-teal:hover  { background: #3B887E; box-shadow: 0 4px 18px rgba(74,168,157,0.42); }
   .btn-teal:active { transform: scale(0.98); }
   .btn-teal:disabled { opacity: 0.38; cursor: not-allowed; box-shadow: none; }
 
-  /* ── Input ── */
+  /* ── Input — pink focus touch ── */
   .input {
     @apply w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all;
-    background: rgba(203,122,149,0.06);
+    background: rgba(255,255,255,0.05);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(203,122,149,0.18);
-    color: #F5E9EF;
+    border: 1px solid rgba(255,255,255,0.09);
+    color: #EDE9F5;
   }
-  .input::placeholder { color: rgba(245,233,239,0.28); }
+  .input::placeholder { color: rgba(237,233,245,0.28); }
   .input:focus {
-    border-color: rgba(203,122,149,0.55);
-    background: rgba(203,122,149,0.09);
-    box-shadow: 0 0 0 3px rgba(203,122,149,0.14);
+    border-color: rgba(191,124,147,0.60);
+    background: rgba(191,124,147,0.06);
+    box-shadow: 0 0 0 3px rgba(191,124,147,0.14);
   }
 
   /* ── Typography ── */
-  .page-title    { @apply text-2xl font-bold tracking-tight; color: #F5E9EF; }
-  .section-title { @apply text-base font-semibold; color: #F5E9EF; }
-  .label         { @apply block text-xs font-semibold uppercase tracking-wide mb-1.5; color: rgba(245,233,239,0.40); }
-  .caption       { @apply text-sm; color: rgba(245,233,239,0.50); }
+  .page-title    { @apply text-2xl font-bold tracking-tight; color: #EDE9F5; }
+  .section-title { @apply text-base font-semibold; color: #EDE9F5; }
+  .label         { @apply block text-xs font-semibold uppercase tracking-wide mb-1.5; color: rgba(237,233,245,0.42); }
+  .caption       { @apply text-sm; color: rgba(237,233,245,0.52); }
 
   /* ── Badges ── */
-  .badge-pink  { background: rgba(203,122,149,0.16); color: #D48FA8; border: 1px solid rgba(203,122,149,0.26); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-pink  { background: rgba(191,124,147,0.15); color: #C98BA0; border: 1px solid rgba(191,124,147,0.25); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
   .badge-teal  { background: rgba(74,168,157,0.14);  color: #5DADA3; border: 1px solid rgba(74,168,157,0.22);  @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
-  .badge-slate { background: rgba(203,122,149,0.07); color: rgba(245,233,239,0.50); border: 1px solid rgba(203,122,149,0.14); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
-  .badge-rose  { background: rgba(207,115,138,0.16); color: #DA8DA0; border: 1px solid rgba(207,115,138,0.26); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-slate { background: rgba(255,255,255,0.07); color: rgba(237,233,245,0.52); border: 1px solid rgba(255,255,255,0.10); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-rose  { background: rgba(207,115,138,0.15); color: #D4879C; border: 1px solid rgba(207,115,138,0.25); @apply text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
 
-  /* ── Divider ── */
-  .divider { border: none; border-top: 1px solid rgba(203,122,149,0.12); margin: 1.25rem 0; }
+  /* ── Divider — subtle pink tint ── */
+  .divider { border: none; border-top: 1px solid rgba(191,124,147,0.14); margin: 1.25rem 0; }
 
-  /* ── Every bg-card surface becomes rose-frosted glass ── */
+  /* ── bg-card — semi-transparent so aurora bleeds through ── */
   .bg-card {
-    background: rgba(50, 22, 36, 0.50) !important;
-    backdrop-filter: blur(18px) saturate(140%);
-    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    background: rgba(18, 14, 26, 0.60) !important;
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
   }
 }
