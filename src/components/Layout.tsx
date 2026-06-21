@@ -60,15 +60,6 @@ function HubLayout({ children }: { children: ReactNode }) {
   const { unreadCount } = useNotifications()
   const [showNotif, setShowNotif]       = useState(false)
   const [showSecurity, setShowSecurity] = useState(false)
-  const notifRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const h = (e: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotif(false)
-    }
-    document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
-  }, [])
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -81,7 +72,7 @@ function HubLayout({ children }: { children: ReactNode }) {
           Era Systems
         </span>
 
-        <div className="ml-auto flex items-center gap-1" ref={notifRef}>
+        <div className="ml-auto flex items-center gap-1">
           <div className="relative">
             <button
               onClick={() => setShowNotif(v => !v)}
@@ -94,12 +85,8 @@ function HubLayout({ children }: { children: ReactNode }) {
                 </span>
               )}
             </button>
-            {showNotif && (
-              <div className="absolute right-0 top-10 z-50">
-                <NotificationPanel onClose={() => setShowNotif(false)} />
-              </div>
-            )}
           </div>
+          {showNotif && <NotificationPanel onClose={() => setShowNotif(false)} />}
           <button onClick={() => setShowSecurity(true)}
             className="p-2 rounded-lg text-muted-foreground/50 hover:text-foreground hover:bg-white/5 transition">
             <ShieldCheck className="w-4 h-4" />
@@ -136,8 +123,6 @@ function ProductLayout({ product, children }: { product: 'patient' | 'comms'; ch
   const [deployMsg,     setDeployMsg]     = useState('')
   const [confirmDeploy, setConfirmDeploy] = useState(false)
   const deployRef = useRef<HTMLDivElement>(null)
-  const notifRef  = useRef<HTMLDivElement>(null)
-
   const toggleOpen = () => setOpen(v => {
     const next = !v
     try { localStorage.setItem(SIDEBAR_KEY, next ? '1' : '0') } catch { /**/ }
@@ -147,7 +132,6 @@ function ProductLayout({ product, children }: { product: 'patient' | 'comms'; ch
   useEffect(() => {
     const h = (e: MouseEvent) => {
       if (deployRef.current && !deployRef.current.contains(e.target as Node)) setConfirmDeploy(false)
-      if (notifRef.current  && !notifRef.current.contains(e.target as Node))  setShowNotif(false)
     }
     document.addEventListener('mousedown', h)
     return () => document.removeEventListener('mousedown', h)
@@ -363,26 +347,20 @@ function ProductLayout({ product, children }: { product: 'patient' | 'comms'; ch
             </span>
           )}
 
-          <div className="ml-auto flex items-center gap-1" ref={notifRef}>
+          <div className="ml-auto flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-[#CC7896]/60 mr-1 hidden sm:block" />
-            <div className="relative">
-              <button
-                onClick={() => setShowNotif(v => !v)}
-                className="p-2 rounded-lg text-muted-foreground/50 hover:text-foreground hover:bg-white/5 transition relative"
-              >
-                <Bell className="w-4 h-4" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-3 h-3 rounded-full bg-primary text-primary-foreground text-[8px] font-bold flex items-center justify-center">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </button>
-              {showNotif && (
-                <div className="absolute right-0 top-10 z-50">
-                  <NotificationPanel onClose={() => setShowNotif(false)} />
-                </div>
+            <button
+              onClick={() => setShowNotif(v => !v)}
+              className="p-2 rounded-lg text-muted-foreground/50 hover:text-foreground hover:bg-white/5 transition relative"
+            >
+              <Bell className="w-4 h-4" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-3 h-3 rounded-full bg-primary text-primary-foreground text-[8px] font-bold flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
               )}
-            </div>
+            </button>
+            {showNotif && <NotificationPanel onClose={() => setShowNotif(false)} />}
           </div>
         </header>
 

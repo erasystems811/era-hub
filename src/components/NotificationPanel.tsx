@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { Bell, CheckCheck, AlertTriangle, Info, X } from 'lucide-react'
 import { useNotifications, Notification } from '../contexts/notifications'
@@ -17,9 +18,9 @@ function Item({ n, onClose }: { n: Notification; onClose: () => void }) {
   const { markRead } = useNotifications()
 
   return (
-    <div
+    <button
       className={cn(
-        'flex gap-3 px-4 py-3.5 border-b border-pink-border last:border-0',
+        'w-full text-left flex gap-3 px-4 py-3.5 border-b border-pink-border last:border-0 transition-colors active:opacity-60',
         !n.read && 'bg-pink-light',
       )}
       onClick={() => {
@@ -36,46 +37,57 @@ function Item({ n, onClose }: { n: Notification; onClose: () => void }) {
         )}
       </div>
       {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-pink shrink-0 mt-1.5" />}
-    </div>
+    </button>
   )
 }
 
 export function NotificationPanel({ onClose }: Props) {
   const { notifications, unreadCount, markAllRead } = useNotifications()
 
-  return (
-    <div className="glass shadow-glass-lg w-80 overflow-hidden" style={{ padding: 0 }}>
-      <div className="flex items-center justify-between px-4 py-3 border-b border-pink-border">
-        <div className="flex items-center gap-2">
-          <Bell className="w-4 h-4 text-pink" />
-          <span className="font-semibold text-sm text-charcoal">Notifications</span>
-          {unreadCount > 0 && (
-            <span className="bg-pink text-white text-xs font-semibold rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
-              {unreadCount}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1">
-          {unreadCount > 0 && (
-            <button className="btn-ghost text-xs py-1 px-2" onClick={markAllRead}>
-              <CheckCheck className="w-3.5 h-3.5" />
-            </button>
-          )}
-          <button className="btn-ghost py-1 px-2" onClick={onClose}>
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-      <div className="max-h-96 overflow-y-auto">
-        {notifications.length === 0 ? (
-          <div className="px-4 py-8 text-center">
-            <Bell className="w-8 h-8 text-pink mx-auto mb-2 opacity-40" />
-            <p className="text-sm text-charcoal-soft">You're all caught up</p>
+  return createPortal(
+    <>
+      {/* Tap-outside backdrop */}
+      <div className="fixed inset-0 z-[199]" onClick={onClose} />
+
+      {/* Panel — fixed below the topbar, clamped to viewport width */}
+      <div
+        className="fixed right-2 z-[200] glass shadow-glass-lg overflow-hidden rounded-2xl"
+        style={{ top: '3rem', width: 'min(20rem, calc(100vw - 1rem))', padding: 0 }}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-pink-border">
+          <div className="flex items-center gap-2">
+            <Bell className="w-4 h-4 text-pink" />
+            <span className="font-semibold text-sm text-charcoal">Notifications</span>
+            {unreadCount > 0 && (
+              <span className="bg-pink text-white text-xs font-semibold rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                {unreadCount}
+              </span>
+            )}
           </div>
-        ) : (
-          notifications.map(n => <Item key={n.id} n={n} onClose={onClose} />)
-        )}
+          <div className="flex items-center gap-1">
+            {unreadCount > 0 && (
+              <button className="btn-ghost text-xs py-1 px-2" onClick={markAllRead}>
+                <CheckCheck className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <button className="btn-ghost py-1 px-2" onClick={onClose}>
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-y-auto" style={{ maxHeight: 'min(24rem, calc(100dvh - 4rem))' }}>
+          {notifications.length === 0 ? (
+            <div className="px-4 py-8 text-center">
+              <Bell className="w-8 h-8 text-pink mx-auto mb-2 opacity-40" />
+              <p className="text-sm text-charcoal-soft">You're all caught up</p>
+            </div>
+          ) : (
+            notifications.map(n => <Item key={n.id} n={n} onClose={onClose} />)
+          )}
+        </div>
       </div>
-    </div>
+    </>,
+    document.body,
   )
 }
