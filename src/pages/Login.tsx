@@ -2,7 +2,7 @@ import { useState, FormEvent } from 'react'
 import { useAuth } from '../contexts/auth'
 import { Lock, User, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
-const inputCls = "w-full pl-10 pr-10 py-2.5 bg-[hsl(262_16%_11%)] border border-[hsl(262_14%_18%)] text-foreground text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all duration-150 font-medium tracking-wide"
+const inputCls = "w-full pl-10 pr-10 py-2.5 rounded-xl bg-[hsl(262_16%_11%)] border border-[hsl(262_14%_18%)] text-foreground text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all duration-150 font-medium tracking-wide"
 
 export function Login() {
   const { login } = useAuth()
@@ -74,7 +74,7 @@ export function Login() {
         {/* Login card */}
         <form onSubmit={submit} className="space-y-4">
           <div
-            className="border border-[hsl(262_14%_18%)] bg-card space-y-3 p-4"
+            className="rounded-2xl border border-[hsl(262_14%_18%)] bg-card space-y-3 p-5"
             style={{ boxShadow: '0 16px 40px rgba(0,0,0,0.55), 0 0 0 1px hsl(262 14% 22% / 0.5)' }}
           >
             <div className="border-b border-[hsl(262_14%_18%)] pb-3 mb-1">
@@ -122,7 +122,7 @@ export function Login() {
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 text-[11px] text-destructive bg-destructive/8 border border-destructive/15 px-3 py-2">
+              <div className="flex items-center gap-2 text-[11px] text-destructive bg-destructive/8 border border-destructive/15 rounded-lg px-3 py-2">
                 <AlertCircle className="w-3 h-3 shrink-0" />
                 {error}
               </div>
@@ -132,7 +132,7 @@ export function Login() {
           <button
             type="submit"
             disabled={loading || !username || !password}
-            className="w-full py-2.5 bg-primary text-primary-foreground text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
+            className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
             style={{ boxShadow: '0 4px 20px hsl(340 35% 61% / 0.22)' }}
           >
             {loading ? 'Signing in…' : 'Sign In'}
