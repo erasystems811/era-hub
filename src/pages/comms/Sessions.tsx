@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { Plus, Smartphone, RefreshCw, X, Loader2 } from 'lucide-react'
 import { StatusDot } from '../../components/StatusDot'
 import { QRModal } from '../../components/QRModal'
@@ -40,7 +40,7 @@ function AddSessionModal({ clients, onClose, onCreated }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md bg-[hsl(262,20%,9%)] border border-white/10 rounded-2xl shadow-2xl">
+      <div className="relative z-10 w-full max-w-md bg-[rgba(255,255,255,0.09)] backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl">
         <div className="px-6 py-5 border-b border-white/08">
           <h2 className="font-semibold text-foreground">Connect a WhatsApp number</h2>
           <p className="text-xs text-muted-foreground mt-0.5">Link a phone number to a business account</p>
@@ -87,7 +87,7 @@ function ConfirmStopModal({ session, onClose, onStopped }: { session: Session; o
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 bg-[hsl(262,20%,9%)] border border-white/10 rounded-2xl shadow-2xl w-full max-w-sm p-6">
+      <div className="relative z-10 bg-[rgba(255,255,255,0.09)] backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl w-full max-w-sm p-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-9 h-9 rounded-xl bg-red-500/10 flex items-center justify-center">
             <X className="w-4 h-4 text-red-400" />

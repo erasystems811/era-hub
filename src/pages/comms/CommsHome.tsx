@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+﻿import { useNavigate } from 'react-router-dom'
 import { Smartphone, Users, Layers, CreditCard, Settings, ArrowRight, MessageSquare } from 'lucide-react'
 
 const FEATURES = [
@@ -94,7 +94,7 @@ export function CommsHome() {
                 {badge && (
                   <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full flex items-center gap-1"
                     style={{ background: 'rgba(191,124,147,0.12)', color: '#BF7C93' }}>
-                    <span className="w-1 h-1 rounded-full bg-emerald-400 inline-block" />
+                    <span className="w-1 h-1 rounded-full bg-[#CC7896] inline-block" />
                     {badge}
                   </span>
                 )}

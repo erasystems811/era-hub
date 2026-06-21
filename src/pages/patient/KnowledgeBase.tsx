@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { Search, Upload, Trash2, Loader2, AlertCircle, Database, Play, FileText, X } from 'lucide-react'
 import { patientApi, RagDocument } from '../../lib/patient-api'
 import { pageCache } from '../../lib/cache'
@@ -48,8 +48,8 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
         </div>
         {result ? (
           <div className="px-6 py-8 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 flex items-center justify-center mx-auto mb-3">
-              <FileText className="w-6 h-6 text-emerald-400" />
+            <div className="w-12 h-12 rounded-2xl bg-[#CC7896]/15 flex items-center justify-center mx-auto mb-3">
+              <FileText className="w-6 h-6 text-[#CC7896]" />
             </div>
             <h3 className="font-semibold text-foreground mb-1">Uploaded successfully</h3>
             <p className="text-sm text-muted-foreground">"{result.title}" — {result.chunks} chunk{result.chunks !== 1 ? 's' : ''} indexed</p>

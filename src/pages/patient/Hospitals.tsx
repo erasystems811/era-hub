@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Search, Building2, CheckCircle2, XCircle, ChevronRight, Loader2 } from 'lucide-react'
 import { patientApi, Hospital } from '../../lib/patient-api'
@@ -22,7 +22,7 @@ function CreateHospitalModal({ onClose, onCreated }: { onClose: () => void; onCr
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md bg-[hsl(262,20%,9%)] border border-white/10 rounded-2xl shadow-2xl">
+      <div className="relative z-10 w-full max-w-md bg-[rgba(255,255,255,0.09)] backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl">
         <div className="px-6 py-5 border-b border-white/08">
           <h2 className="font-semibold text-foreground text-base">Register hospital</h2>
           <p className="text-xs text-muted-foreground mt-0.5">Add a new hospital account to ERA Patient</p>

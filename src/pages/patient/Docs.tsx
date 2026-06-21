@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
 function Tab({ label, emoji, active, onClick }: { label: string; emoji: string; active: boolean; onClick: () => void }) {
@@ -48,7 +48,7 @@ function InfoBox({ children, type = 'info' }: { children: React.ReactNode; type?
   const s = {
     info:    { box: 'border-blue-500/30 bg-blue-500/8 text-blue-300',       icon: 'ℹ️' },
     warning: { box: 'border-amber-500/30 bg-amber-500/8 text-amber-300',    icon: '⚠️' },
-    tip:     { box: 'border-emerald-500/30 bg-emerald-500/8 text-emerald-300', icon: '✅' },
+    tip:     { box: 'border-[#CC7896]/30 bg-[#CC7896]/8 text-[#D4A0B3]', icon: '✅' },
   }[type]
   return (
     <div className={`border rounded-xl px-4 py-3 text-sm flex gap-3 my-3 ${s.box}`}>
@@ -87,7 +87,7 @@ function CodeBlock({ children }: { children: string }) {
   const [copied, setCopied] = useState(false)
   return (
     <div className="relative group my-3">
-      <pre className="bg-black/40 border border-white/08 rounded-xl px-4 py-3 text-xs text-emerald-300 overflow-x-auto whitespace-pre-wrap leading-relaxed font-mono">{children}</pre>
+      <pre className="bg-black/40 border border-white/08 rounded-xl px-4 py-3 text-xs text-[#D4A0B3] overflow-x-auto whitespace-pre-wrap leading-relaxed font-mono">{children}</pre>
       <button onClick={() => { void navigator.clipboard.writeText(children); setCopied(true); setTimeout(() => setCopied(false), 1500) }}
         className="absolute top-2 right-2 text-[10px] px-2 py-1 rounded-lg bg-white/10 text-muted-foreground opacity-0 group-hover:opacity-100 transition">
         {copied ? '✓ Copied' : 'Copy'}
@@ -103,14 +103,14 @@ function H3({ children }: { children: React.ReactNode }) { return <h3 className=
 const STAGE_CARDS = [
   { name: '💊 In Care', color: 'border-blue-500/30 bg-blue-500/8', nameColor: 'text-blue-400', desc: 'Patient has an active care plan. Primary treatment stage.', enters: 'Nurse saves a care plan from the nurse station', automations: 'SMS notification instantly → AI care plan email 20 min later → hourly in-care reminders timed to treatment type', exits: 'Manual stage update or when all care plan dates pass' },
   { name: '🔄 Post Treatment', color: 'border-violet-500/30 bg-violet-500/8', nameColor: 'text-violet-400', desc: 'Treatment ended. Era sends 3 warm check-in emails to support recovery.', enters: 'Daily 7 AM — care plan end date has passed', automations: 'AI check-in email: Day 1 → Day 4 → Day 7 after treatment end', exits: 'Automatically moves to Active after the Day 7 email' },
-  { name: '✅ Active', color: 'border-emerald-500/30 bg-emerald-500/8', nameColor: 'text-emerald-400', desc: 'Engaged patient — no active treatment. Stays connected via automation.', enters: 'After Post-Treatment completes, or manually set', automations: 'Birthday emails, wellness newsletter, appointment reminders, feedback requests. 30-day wellness nudge if no check-in for 30+ days.', exits: 'Moves to Dormant after configured days without a queue check-in (default 30)' },
+  { name: '✅ Active', color: 'border-[#CC7896]/30 bg-[#CC7896]/8', nameColor: 'text-[#CC7896]', desc: 'Engaged patient — no active treatment. Stays connected via automation.', enters: 'After Post-Treatment completes, or manually set', automations: 'Birthday emails, wellness newsletter, appointment reminders, feedback requests. 30-day wellness nudge if no check-in for 30+ days.', exits: 'Moves to Dormant after configured days without a queue check-in (default 30)' },
   { name: '😴 Dormant', color: 'border-zinc-500/30 bg-zinc-500/8', nameColor: 'text-zinc-400', desc: 'Patient gone quiet. Nothing targets dormant patients — the wellness nudge fires while still Active, before this stage.', enters: 'Daily 7 AM — Active patient with no check-in for the hospital\'s dormant threshold', automations: 'None. The 30-day wellness nudge (from Active stage) fires before this point.', exits: 'Returns to Active when manually moved or re-books' },
 ]
 
 const SERVICES = [
   { name: 'Resend', emoji: '📧', border: 'border-blue-500/20', bg: 'bg-blue-500/8', label: 'text-blue-400', purpose: 'Email delivery', detail: 'All automated patient emails. Free up to 3,000/month, then auto-switches to AWS SES.', env: 'RESEND_API_KEY' },
   { name: 'AWS SES', emoji: '📧', border: 'border-sky-500/20', bg: 'bg-sky-500/8', label: 'text-sky-400', purpose: 'High-volume email', detail: 'Auto-used when Resend is near monthly limit. Backup email provider.', env: 'AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY + AWS_REGION' },
-  { name: 'Termii', emoji: '💬', border: 'border-emerald-500/20', bg: 'bg-emerald-500/8', label: 'text-emerald-400', purpose: 'SMS & WhatsApp', detail: 'Queue messages, care plan notifications, appointment SMS reminders. ₦7 per SMS charged to hospital wallet.', env: 'TERMII_API_KEY' },
+  { name: 'Termii', emoji: '💬', border: 'border-[#CC7896]/20', bg: 'bg-[#CC7896]/8', label: 'text-[#CC7896]', purpose: 'SMS & WhatsApp', detail: 'Queue messages, care plan notifications, appointment SMS reminders. ₦7 per SMS charged to hospital wallet.', env: 'TERMII_API_KEY' },
   { name: 'Anthropic (Claude)', emoji: '🤖', border: 'border-orange-500/20', bg: 'bg-orange-500/8', label: 'text-orange-400', purpose: 'All AI generation', detail: 'All AI-written messages — care plans, reminders, newsletters, birthdays. Model: claude-haiku-4-5-20251001.', env: 'ANTHROPIC_API_KEY' },
   { name: 'OpenAI', emoji: '🤖', border: 'border-violet-500/20', bg: 'bg-violet-500/8', label: 'text-violet-400', purpose: 'Key held — not active', detail: 'Key is validated in health checks but all AI calls currently route through Anthropic.', env: 'OPENAI_API_KEY' },
   { name: 'Supabase', emoji: '🗄️', border: 'border-teal-500/20', bg: 'bg-teal-500/8', label: 'text-teal-400', purpose: 'Database', detail: 'All hospital data — patients, care plans, queue, appointments, automations, support tickets, wallet.', env: 'SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY' },
@@ -131,12 +131,12 @@ const SCHEDULE_ROWS = [
 
 const CHANNEL_BADGE: Record<string, string> = {
   email:          'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  'sms/whatsapp': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  'sms/whatsapp': 'bg-[#CC7896]/10 text-[#CC7896] border-[#CC7896]/20',
   both:           'bg-purple-500/10 text-purple-400 border-purple-500/20',
 }
 
 const AUTOMATION_GROUPS = [
-  { label: 'Immediate', emoji: '⚡', timing: 'Fires instantly', desc: 'No scheduler. Sends the exact moment a staff action or system event occurs.', accent: 'border-l-emerald-500 bg-emerald-500/5', badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25', items: [
+  { label: 'Immediate', emoji: '⚡', timing: 'Fires instantly', desc: 'No scheduler. Sends the exact moment a staff action or system event occurs.', accent: 'border-l-[#CC7896] bg-[#CC7896]/5', badge: 'bg-[#CC7896]/10 text-[#CC7896] border-[#CC7896]/25', items: [
     { name: 'Queue Check-In Confirmation', channel: 'sms/whatsapp', trigger: 'Receptionist checks patient into queue', purpose: 'Tells patient they are registered and shows their queue position' },
     { name: 'Next In Line Alert', channel: 'sms/whatsapp', trigger: 'Patient moves to position 2 in queue', purpose: 'Warns patient their turn is coming so they are ready' },
     { name: 'It\'s Your Turn', channel: 'sms/whatsapp', trigger: 'Receptionist taps \'Call Patient\' on queue screen', purpose: 'Calls patient in the moment the doctor is ready' },

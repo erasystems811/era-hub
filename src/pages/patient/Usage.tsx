@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { RefreshCw, Radio, Users, Mail, MessageSquare, History, Zap, ChevronLeft, ChevronRight } from 'lucide-react'
 import { patientApi, HospitalUsageStat } from '../../lib/patient-api'
 import { pageCache } from '../../lib/cache'
@@ -10,7 +10,7 @@ function getTier(avg: number) {
   if (avg >= 100) return { label: 'Large', color: 'text-purple-400' }
   if (avg >= 41)  return { label: 'Big',   color: 'text-orange-400' }
   if (avg >= 21)  return { label: 'Mid',   color: 'text-blue-400' }
-  if (avg >= 1)   return { label: 'Small', color: 'text-emerald-400' }
+  if (avg >= 1)   return { label: 'Small', color: 'text-[#CC7896]' }
   return               { label: '—',     color: 'text-muted-foreground/25' }
 }
 
@@ -35,7 +35,7 @@ const TIER_DEFS = [
   { label: 'Large', range: '100+/d',  color: 'text-purple-400',  bg: 'bg-purple-500/10 border-purple-500/20' },
   { label: 'Big',   range: '41–99/d', color: 'text-orange-400',  bg: 'bg-orange-500/10 border-orange-500/20' },
   { label: 'Mid',   range: '21–40/d', color: 'text-blue-400',    bg: 'bg-blue-500/10 border-blue-500/20' },
-  { label: 'Small', range: '1–20/d',  color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+  { label: 'Small', range: '1–20/d',  color: 'text-[#CC7896]', bg: 'bg-[#CC7896]/10 border-[#CC7896]/20' },
   { label: '—',     range: 'no data', color: 'text-muted-foreground/40', bg: 'bg-white/5 border-border' },
 ]
 
@@ -104,7 +104,7 @@ export function Usage() {
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="page-title">Hospital Usage</h1>
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-semibold text-emerald-400 uppercase tracking-wide">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#CC7896]/10 border border-[#CC7896]/20 text-[10px] font-semibold text-[#CC7896] uppercase tracking-wide">
               <Radio className="w-2.5 h-2.5" /> Live
             </span>
           </div>
@@ -178,7 +178,7 @@ export function Usage() {
                     <tr key={h.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', backgroundColor: rowBg }}>
                       <td style={{ padding: '10px 14px', background: hi % 2 === 0 ? 'rgb(24,24,24)' : 'rgb(26,26,26)', overflow: 'hidden' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${h.active ? 'bg-emerald-500' : 'bg-muted-foreground/25'}`} />
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${h.active ? 'bg-[#CC7896]' : 'bg-muted-foreground/25'}`} />
                           <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.88)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.name}</span>
                         </div>
                       </td>
@@ -260,7 +260,7 @@ export function Usage() {
                     <tr key={h.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', backgroundColor: rowBg }}>
                       <td style={{ padding: '9px 14px', width: 180, background: hi % 2 === 0 ? 'rgb(24,24,24)' : 'rgb(26,26,26)', borderRight: '3px solid rgba(255,255,255,0.22)', overflow: 'hidden' }}>
                         <div className="flex items-center gap-1.5" style={{ overflow: 'hidden' }}>
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${h.active ? 'bg-emerald-500' : 'bg-muted-foreground/25'}`} />
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${h.active ? 'bg-[#CC7896]' : 'bg-muted-foreground/25'}`} />
                           <span className="font-semibold text-foreground" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.name}</span>
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5 pl-3">

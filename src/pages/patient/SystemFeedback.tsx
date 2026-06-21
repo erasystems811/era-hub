@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { RefreshCw, Send, Loader2, AlertCircle, MessageSquare } from 'lucide-react'
 import { patientApi, SystemFeedbackEntry } from '../../lib/patient-api'
 import { pageCache } from '../../lib/cache'
@@ -111,7 +111,7 @@ export function SystemFeedback() {
           ) : (
             <button onClick={() => broadcastState === 'idle' && setBroadcastState('confirming')} disabled={broadcastState === 'sending'}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all disabled:opacity-50 ${
-                broadcastState === 'sent'  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                broadcastState === 'sent'  ? 'border-[#CC7896]/30 bg-[#CC7896]/10 text-[#CC7896]'
               : broadcastState === 'error' ? 'border-red-500/30 bg-red-500/10 text-red-400'
               : 'border-primary/30 bg-primary/10 text-primary hover:bg-primary/15'}`}>
               {broadcastState === 'sending' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
@@ -122,7 +122,7 @@ export function SystemFeedback() {
       </div>
 
       {broadcastMsg && (
-        <div className={`flex items-center gap-2 text-sm p-3 rounded-lg border ${broadcastState === 'error' ? 'text-red-400 bg-red-500/10 border-red-500/20' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'}`}>
+        <div className={`flex items-center gap-2 text-sm p-3 rounded-lg border ${broadcastState === 'error' ? 'text-red-400 bg-red-500/10 border-red-500/20' : 'text-[#CC7896] bg-[#CC7896]/10 border-[#CC7896]/20'}`}>
           <AlertCircle className="w-4 h-4 shrink-0" />{broadcastMsg}
         </div>
       )}

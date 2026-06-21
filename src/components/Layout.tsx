@@ -1,4 +1,4 @@
-import { ReactNode, useState, useRef, useEffect } from 'react'
+﻿import { ReactNode, useState, useRef, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/auth'
 import { useNotifications } from '../contexts/notifications'
@@ -246,7 +246,7 @@ function ProductLayout({ product, children }: { product: 'patient' | 'comms'; ch
               title={!expanded ? 'Deploy' : undefined}
               className={`w-full flex items-center transition-all duration-150 rounded-lg disabled:opacity-50 ${
                 expanded ? 'gap-3 px-3 py-2' : 'justify-center p-2.5'
-              } ${deployState === 'done'  ? 'text-emerald-400' :
+              } ${deployState === 'done'  ? 'text-[#CC7896]' :
                  deployState === 'error' ? 'text-destructive'  :
                  'text-muted-foreground/55 hover:bg-white/5 hover:text-foreground'}`}
             >
@@ -357,7 +357,7 @@ function ProductLayout({ product, children }: { product: 'patient' | 'comms'; ch
           )}
 
           <div className="ml-auto flex items-center gap-1" ref={notifRef}>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/60 mr-1 hidden sm:block" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#CC7896]/60 mr-1 hidden sm:block" />
             <div className="relative">
               <button
                 onClick={() => setShowNotif(v => !v)}

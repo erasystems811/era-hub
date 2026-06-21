@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { Search, Phone, CheckCircle2, Clock, Loader2, AlertCircle } from 'lucide-react'
 import { patientApi, DemoSession } from '../../lib/patient-api'
 import { pageCache } from '../../lib/cache'
@@ -149,7 +149,7 @@ export function DemoSessions() {
                   </td>
                   <td className="px-4 py-3">
                     {s.completed ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400">
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#CC7896]">
                         <CheckCircle2 className="w-3.5 h-3.5" />Completed
                       </span>
                     ) : (

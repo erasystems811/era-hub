@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Users, Search, Eye, EyeOff, Copy, Check, Trash2, X, Loader2, ChevronRight } from 'lucide-react'
 import { StatusDot } from '../../components/StatusDot'
@@ -60,7 +60,7 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
   return (
     <div className="fixed inset-0 z-40 flex">
       <div className="flex-1 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="w-[480px] bg-[hsl(262,20%,9%)] border-l border-white/08 overflow-y-auto flex flex-col">
+      <div className="w-[480px] bg-[rgba(255,255,255,0.07)] backdrop-blur-xl border-l border-white/13 overflow-y-auto flex flex-col">
         {/* Drawer header */}
         <div className="px-6 py-5 border-b border-white/07 flex items-start justify-between gap-4 shrink-0">
           <div className="min-w-0">

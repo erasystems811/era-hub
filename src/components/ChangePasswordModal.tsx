@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { KeyRound, X, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { PATIENT_API } from '../lib/config'
 
@@ -65,8 +65,8 @@ export function ChangePasswordModal({ onClose }: Props) {
 
         {done ? (
           <div className="p-8 flex flex-col items-center gap-4 text-center">
-            <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
-              <ShieldCheck className="w-6 h-6 text-emerald-400" />
+            <div className="w-12 h-12 rounded-full bg-[#CC7896]/10 flex items-center justify-center">
+              <ShieldCheck className="w-6 h-6 text-[#CC7896]" />
             </div>
             <div>
               <p className="font-semibold text-foreground">Password updated</p>

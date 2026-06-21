@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+﻿import { useNavigate } from 'react-router-dom'
 import {
   BarChart2, Building2, TrendingUp, Bell, FlaskConical,
   Headphones, Star, Kanban, Activity, Database, MonitorPlay, BookOpen,
@@ -147,7 +147,7 @@ export function PatientHome() {
                 {badge && (
                   <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full flex items-center gap-1"
                     style={{ background: 'rgba(74,168,157,0.12)', color: '#4AA89D' }}>
-                    <span className="w-1 h-1 rounded-full bg-emerald-400 inline-block" />
+                    <span className="w-1 h-1 rounded-full bg-[#CC7896] inline-block" />
                     {badge}
                   </span>
                 )}

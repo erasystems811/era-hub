@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+﻿import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Building2, CheckCircle2, XCircle, AlertCircle, CalendarClock,
@@ -21,7 +21,7 @@ function timeAgo(iso: string) {
 
 function channelIcon(channel: string) {
   if (channel === 'email') return <Mail className="w-3.5 h-3.5 shrink-0 text-blue-400/70" />
-  if (channel.includes('whatsapp')) return <MessageCircle className="w-3.5 h-3.5 shrink-0 text-emerald-400/70" />
+  if (channel.includes('whatsapp')) return <MessageCircle className="w-3.5 h-3.5 shrink-0 text-[#CC7896]/70" />
   return <MessageSquare className="w-3.5 h-3.5 shrink-0 text-muted-foreground/50" />
 }
 
@@ -29,13 +29,22 @@ function StatCard({ label, value, icon: Icon, color, gold, loading, sub }: {
   label: string; value: number; icon: React.ComponentType<{ className?: string }>
   color: string; gold?: boolean; loading: boolean; sub?: string
 }) {
+  const iconBg = gold ? 'bg-amber-500/[0.18]'
+    : color.includes('teal')       ? 'bg-teal/[0.20]'
+    : color.includes('CC7896')     ? 'bg-[#CC7896]/[0.20]'
+    : color.includes('amber')      ? 'bg-amber-500/[0.18]'
+    : color.includes('red')        ? 'bg-red-500/[0.16]'
+    : 'bg-white/[0.10]'
   return (
-    <div className={`relative flex flex-col justify-between p-5 rounded-xl border transition-all ${
-      gold ? 'border-amber-500/25 bg-amber-500/5' : 'border-white/08 bg-card'
-    }`}>
+    <div
+      className={`relative flex flex-col justify-between p-5 rounded-xl border transition-all ${
+        gold ? 'border-amber-500/25 bg-amber-500/5' : 'border-white/08 bg-card'
+      }`}
+      style={!gold ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07)' } : undefined}
+    >
       <div className="flex items-start justify-between mb-4">
-        <p className="text-xs font-semibold text-muted-foreground">{label}</p>
-        <div className={`p-1.5 rounded-lg ${gold ? 'bg-amber-500/10' : 'bg-teal/10'}`}>
+        <p className="text-xs font-semibold text-muted-foreground/80 uppercase tracking-wide">{label}</p>
+        <div className={`p-1.5 rounded-lg ${iconBg}`}>
           <Icon className={`w-3.5 h-3.5 ${color}`} />
         </div>
       </div>
@@ -63,10 +72,10 @@ function HealthCard({ check }: { check: { name: string; ok: boolean; warning?: b
         fail ? 'border-red-500/25 bg-red-500/8' : warn ? 'border-amber-500/20 bg-amber-500/6' : 'border-white/08 bg-card'
       }`}>
       <div className="flex items-center justify-between">
-        <div className={`p-1.5 rounded-lg ${fail ? 'bg-red-500/10' : warn ? 'bg-amber-500/10' : 'bg-emerald-500/10'}`}>
-          <Icon className={`w-3.5 h-3.5 ${fail ? 'text-red-400' : warn ? 'text-amber-400' : 'text-emerald-400'}`} />
+        <div className={`p-1.5 rounded-lg ${fail ? 'bg-red-500/10' : warn ? 'bg-amber-500/10' : 'bg-[#CC7896]/10'}`}>
+          <Icon className={`w-3.5 h-3.5 ${fail ? 'text-red-400' : warn ? 'text-amber-400' : 'text-[#CC7896]'}`} />
         </div>
-        <span className={`w-2 h-2 rounded-full ${fail ? 'bg-red-400' : warn ? 'bg-amber-400' : 'bg-emerald-400 shadow-[0_0_6px_hsl(134_61%_51%/0.6)]'}`} />
+        <span className={`w-2 h-2 rounded-full ${fail ? 'bg-red-400' : warn ? 'bg-amber-400' : 'bg-[#CC7896] shadow-[0_0_6px_rgba(204,120,150,0.6)]'}`} />
       </div>
       <div>
         <p className="text-sm font-semibold text-foreground">{check.name}</p>
@@ -83,7 +92,7 @@ function LogRow({ log }: { log: AutomationLog }) {
   const pending = log.status === 'pending' || log.status === 'queued'
   return (
     <div className="flex items-center gap-3 py-3 border-b border-white/06 last:border-0">
-      <div className={`p-1.5 rounded-lg shrink-0 ${ok ? 'bg-emerald-500/10' : pending ? 'bg-amber-500/10' : 'bg-red-500/10'}`}>
+      <div className={`p-1.5 rounded-lg shrink-0 ${ok ? 'bg-[#CC7896]/10' : pending ? 'bg-amber-500/10' : 'bg-red-500/10'}`}>
         {channelIcon(log.channel)}
       </div>
       <div className="flex-1 min-w-0">
@@ -97,7 +106,7 @@ function LogRow({ log }: { log: AutomationLog }) {
       <div className="shrink-0 text-right">
         <p className="text-xs text-muted-foreground tabular-nums">{timeAgo(log.createdAt)}</p>
         <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1 ${
-          ok ? 'bg-emerald-500/12 text-emerald-400' :
+          ok ? 'bg-[#CC7896]/12 text-[#CC7896]' :
           pending ? 'bg-amber-500/12 text-amber-400' :
           'bg-red-500/12 text-red-400'
         }`}>{log.status}</span>
@@ -170,7 +179,7 @@ export function Analytics() {
   const healthChecks = health?.checks ?? []
   const overallStatus = !health ? 'unknown' : !health.ok ? 'degraded' : health.anyWarning ? 'warning' : 'operational'
   const statusCfg = {
-    operational: { label: 'All Systems Running',       color: 'text-emerald-400', dot: 'bg-emerald-400 shadow-[0_0_8px_hsl(134_61%_51%/0.7)]', border: 'border-emerald-500/20', bg: 'bg-emerald-500/6' },
+    operational: { label: 'All Systems Running',       color: 'text-[#CC7896]', dot: 'bg-[#CC7896] shadow-[0_0_8px_rgba(204,120,150,0.7)]', border: 'border-[#CC7896]/20', bg: 'bg-[#CC7896]/6' },
     warning:     { label: 'Service Warning Detected',  color: 'text-amber-400',   dot: 'bg-amber-400',   border: 'border-amber-500/20',  bg: 'bg-amber-500/6'  },
     degraded:    { label: 'Service Disruption Active', color: 'text-red-400',     dot: 'bg-red-400',     border: 'border-red-500/20',    bg: 'bg-red-500/6'    },
     unknown:     { label: 'Status Unknown',            color: 'text-muted-foreground', dot: 'bg-muted-foreground/40', border: 'border-white/08', bg: 'bg-white/03' },
@@ -226,7 +235,7 @@ export function Analytics() {
         <h2 className="text-sm font-semibold text-muted-foreground mb-3">Account Registry</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           <StatCard label="Total"          value={stats.total}        icon={Building2}     color="text-teal"                                                          loading={hospitalsLoading} />
-          <StatCard label="Active"         value={stats.active}       icon={CheckCircle2}  color="text-emerald-400"                                                   loading={hospitalsLoading} sub="subscribed" />
+          <StatCard label="Active"         value={stats.active}       icon={CheckCircle2}  color="text-[#CC7896]"                                                   loading={hospitalsLoading} sub="subscribed" />
           <StatCard label="Trial"          value={stats.trial}        icon={AlertCircle}   color="text-amber-400"                                                     loading={hospitalsLoading} sub="on trial" />
           <StatCard label="Suspended"      value={stats.suspended}    icon={XCircle}       color="text-red-400"                                                       loading={hospitalsLoading} />
           <StatCard label="Expiring ≤5d"  value={stats.expiringSoon} icon={CalendarClock} color={stats.expiringSoon > 0 ? 'text-amber-400' : 'text-muted-foreground/40'} loading={hospitalsLoading} gold={stats.expiringSoon > 0} sub={stats.expiringSoon > 0 ? 'needs action' : 'all clear'} />
@@ -279,7 +288,7 @@ export function Analytics() {
             </div>
           ) : needsAttention.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-2">
-              <CheckCircle2 className="w-6 h-6 text-emerald-400/40" />
+              <CheckCircle2 className="w-6 h-6 text-[#CC7896]/40" />
               <p className="text-sm text-muted-foreground">All accounts in good standing</p>
             </div>
           ) : (
@@ -328,7 +337,7 @@ export function Analytics() {
               <p className="text-sm font-semibold text-foreground">Automation Activity</p>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_hsl(134_61%_51%/0.6)]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#CC7896] shadow-[0_0_5px_rgba(204,120,150,0.6)]" />
               <span className="text-xs text-muted-foreground">Live</span>
             </div>
           </div>
@@ -350,7 +359,7 @@ export function Analytics() {
             <div className="border-t border-white/06 px-5 py-3 flex items-center justify-between">
               <p className="text-xs text-muted-foreground">{logs.length} most recent events</p>
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60" />{logs.filter(l => l.status === 'sent').length} sent</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#CC7896]/60" />{logs.filter(l => l.status === 'sent').length} sent</span>
                 {failedLogs > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-400/60" />{failedLogs} failed</span>}
               </div>
             </div>
