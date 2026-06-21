@@ -63,7 +63,7 @@ function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded:
                 <label className="label">Title</label>
                 <input className="input" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Post-surgery Care Instructions" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="label">Category</label>
                   <select className="input" value={category} onChange={e => setCategory(e.target.value)}>
@@ -277,7 +277,7 @@ export function KnowledgeBase() {
             <button className="btn-primary text-sm mt-1" onClick={() => setShowUpload(true)}>Upload your first document</button>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full text-sm" style={{ minWidth: 580 }}>
             <thead>
               <tr className="border-b border-white/07">
                 {['Title', 'Category', 'Source', 'Chunks', 'Indexed', ''].map(h => (
@@ -304,7 +304,7 @@ export function KnowledgeBase() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
 

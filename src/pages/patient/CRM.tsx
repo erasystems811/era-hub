@@ -151,7 +151,7 @@ export function CRM() {
       {showCreate && (
         <div className="rounded-2xl border border-white/07 bg-card p-5 mb-5">
           <h3 className="text-sm font-semibold text-foreground mb-4">Add a lead</h3>
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
             <div>
               <label className="label">Hospital / organisation</label>
               <input className="input mt-1.5" value={newName} onChange={e => setNewName(e.target.value)} placeholder="City General Hospital" />

@@ -170,7 +170,7 @@ export function SystemFeedback() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm" style={{ minWidth: 560 }}>
               <thead>
                 <tr className="border-b border-white/07">
                   {['Hospital', 'Role', 'Rating', 'Comment', 'When'].map(h => (

@@ -13,7 +13,7 @@ const PERIOD_LABELS: Record<Period, string> = {
 }
 
 function StatCard({ icon: Icon, label, value, sub, color }: {
-  icon: React.ComponentType<{ className?: string }>
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>
   label: string; value: string; sub?: string; color?: string
 }) {
   return (

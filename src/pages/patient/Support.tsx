@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ArrowLeft, Headphones, Send, Loader2 } from 'lucide-react'
 import { patientApi, SupportTicket } from '../../lib/patient-api'
 import { fmtDateTime, timeAgo } from '../../lib/utils'
@@ -114,44 +115,43 @@ export function Support() {
     </div>
   )
 
+  const mobileOverlay = (
+    <div
+      className="flex flex-col"
+      style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'hsl(262 22% 6%)' }}
+    >
+      <div
+        className="shrink-0 h-14 flex items-center gap-3 px-4 border-b"
+        style={{ borderColor: 'rgba(255,255,255,0.10)', background: 'rgba(14,11,20,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
+      >
+        <button
+          onClick={closeThread}
+          className="p-2 -ml-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/06 transition"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-foreground truncate">
+            {selectedTicket?.hospital_name ?? 'Conversation'}
+          </p>
+          {selectedTicket && (
+            <p className="text-[10px] text-muted-foreground truncate">{selectedTicket.subject}</p>
+          )}
+        </div>
+        {selectedTicket && (
+          <span className={`ml-auto shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full border capitalize ${statusBadge(selectedTicket.status)}`}>
+            {selectedTicket.status}
+          </span>
+        )}
+      </div>
+      <MessageList />
+      <ReplyBar />
+    </div>
+  )
+
   return (
     <>
-      {/* ── Mobile full-screen thread overlay ── */}
-      {selected && (
-        <div className="md:hidden fixed inset-0 z-50 flex flex-col bg-background">
-          {/* Header */}
-          <div
-            className="shrink-0 h-14 flex items-center gap-3 px-4 border-b"
-            style={{ borderColor: 'rgba(255,255,255,0.10)', background: 'rgba(14,11,20,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
-          >
-            <button
-              onClick={closeThread}
-              className="p-2 -ml-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/06 transition"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">
-                {selectedTicket?.hospital_name ?? 'Conversation'}
-              </p>
-              {selectedTicket && (
-                <p className="text-[10px] text-muted-foreground truncate">{selectedTicket.subject}</p>
-              )}
-            </div>
-            {selectedTicket && (
-              <span className={`ml-auto shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full border capitalize ${statusBadge(selectedTicket.status)}`}>
-                {selectedTicket.status}
-              </span>
-            )}
-          </div>
-
-          {/* Messages */}
-          <MessageList />
-
-          {/* Reply */}
-          <ReplyBar />
-        </div>
-      )}
+      {selected && createPortal(mobileOverlay, document.body)}
 
       {/* ── Desktop layout ── */}
       <div className="hidden md:flex flex-col h-[calc(100vh-120px)] min-h-[500px]">
@@ -160,11 +160,9 @@ export function Support() {
           <p className="caption mt-0.5">{openCount} open conversation{openCount !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex gap-4 flex-1 min-h-0">
-          {/* Ticket list */}
           <div className="w-72 shrink-0 rounded-2xl border border-white/07 bg-card overflow-y-auto flex flex-col">
             <TicketList tickets={tickets} loading={loading} selected={selected} onOpen={openThread} />
           </div>
-          {/* Thread panel */}
           <div className="flex-1 rounded-2xl border border-white/07 bg-card flex flex-col min-w-0">
             {!selected ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">

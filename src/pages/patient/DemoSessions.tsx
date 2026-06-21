@@ -95,7 +95,7 @@ export function DemoSessions() {
 
       {/* Table */}
       <div className="rounded-xl border border-white/07 bg-card overflow-hidden overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm" style={{ minWidth: 640 }}>
           <thead>
             <tr className="border-b border-white/07 text-left text-xs text-muted-foreground font-semibold uppercase tracking-wide">
               <th className="px-4 py-3 w-8">#</th>

@@ -21,8 +21,22 @@ import { DemoSessions }     from './pages/patient/DemoSessions'
 import { Docs }             from './pages/patient/Docs'
 
 // Public (no auth required)
-import { AIAgentSignup }  from './pages/public/AIAgentSignup'
+import { AIAgentSignup }   from './pages/public/AIAgentSignup'
 import { DeveloperSignup } from './pages/public/DeveloperSignup'
+
+// Business Owner Panel
+import { BizLogin }           from './pages/business-panel/BizLogin'
+import { BizLayout }          from './pages/business-panel/BizLayout'
+import { BizDashboard }       from './pages/business-panel/BizDashboard'
+import { KnowledgeBaseModule } from './pages/business-panel/KnowledgeBaseModule'
+import { AutoGreetModule }    from './pages/business-panel/AutoGreetModule'
+import { BusinessHoursModule } from './pages/business-panel/BusinessHoursModule'
+import { ScenariosModule }    from './pages/business-panel/ScenariosModule'
+import { HandoffModule }      from './pages/business-panel/HandoffModule'
+import { VoiceNotesModule }   from './pages/business-panel/VoiceNotesModule'
+import { InboxModule }        from './pages/business-panel/InboxModule'
+import { AnalyticsModule }    from './pages/business-panel/AnalyticsModule'
+import { BizSettingsPage }    from './pages/business-panel/BizSettingsPage'
 
 // ERA Comms
 import { CommsHome }      from './pages/comms/CommsHome'
@@ -93,13 +107,38 @@ function ProtectedApp() {
   )
 }
 
+function BizApp() {
+  return (
+    <BizLayout>
+      <Routes>
+        <Route path="/biz/dashboard"      element={<BizDashboard />} />
+        <Route path="/biz/knowledge-base" element={<KnowledgeBaseModule />} />
+        <Route path="/biz/auto-greet"     element={<AutoGreetModule />} />
+        <Route path="/biz/hours"          element={<BusinessHoursModule />} />
+        <Route path="/biz/scenarios"      element={<ScenariosModule />} />
+        <Route path="/biz/handoff"        element={<HandoffModule />} />
+        <Route path="/biz/voice-notes"    element={<VoiceNotesModule />} />
+        <Route path="/biz/inbox"          element={<InboxModule />} />
+        <Route path="/biz/analytics"      element={<AnalyticsModule />} />
+        <Route path="/biz/settings"       element={<BizSettingsPage />} />
+        <Route path="*"                   element={<Navigate to="/biz/dashboard" replace />} />
+      </Routes>
+    </BizLayout>
+  )
+}
+
 export default function App() {
   const { isAuthenticated } = useAuth()
 
-  // Public routes — accessible without login
   const path = window.location.pathname
+
+  // Public routes — no auth required
   if (path === '/apply/ai-agent')  return <AIAgentSignup />
   if (path === '/apply/developer') return <DeveloperSignup />
+
+  // Business owner panel — has its own auth
+  if (path === '/biz/login') return <BizLogin />
+  if (path.startsWith('/biz/'))   return <BizApp />
 
   return isAuthenticated ? <ProtectedApp /> : <Login />
 }

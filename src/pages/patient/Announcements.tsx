@@ -69,7 +69,7 @@ function AnnouncementModal({ ann, hospitals, onClose, onSave }: {
             <label className="label">Message</label>
             <textarea className="input resize-none" rows={4} value={message} onChange={e => setMessage(e.target.value)} placeholder="Write the announcement body…" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="label">Type</label>
               <select className="input" value={type} onChange={e => setType(e.target.value)}>
