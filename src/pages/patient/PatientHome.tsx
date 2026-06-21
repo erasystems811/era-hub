@@ -1,7 +1,7 @@
 ﻿import { useNavigate } from 'react-router-dom'
 import {
   BarChart2, Building2, TrendingUp, Bell, FlaskConical,
-  Headphones, Star, Kanban, Activity, Database, MonitorPlay, BookOpen,
+  Headphones, Star, Kanban, Activity, MonitorPlay, BookOpen,
   ArrowRight,
 } from 'lucide-react'
 
@@ -67,13 +67,6 @@ const FEATURES = [
     label: 'Patient Analytics',
     sub: 'ERA Patient app metrics',
     href: '/patient/patient-analytics',
-    badge: null,
-  },
-  {
-    icon: Database,
-    label: 'Knowledge Base',
-    sub: 'RAG document management',
-    href: '/patient/knowledge-base',
     badge: null,
   },
   {

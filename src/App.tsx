@@ -16,7 +16,6 @@ import { Usage }            from './pages/patient/Usage'
 import { Announcements }    from './pages/patient/Announcements'
 import { SystemFeedback }   from './pages/patient/SystemFeedback'
 import { PatientAnalytics } from './pages/patient/PatientAnalytics'
-import { KnowledgeBase }    from './pages/patient/KnowledgeBase'
 import { DemoSessions }     from './pages/patient/DemoSessions'
 import { Docs }             from './pages/patient/Docs'
 import { AutomationTests }  from './pages/patient/AutomationTests'
@@ -84,7 +83,6 @@ function ProtectedApp() {
         <Route path="/patient/announcements" element={<Announcements />} />
         <Route path="/patient/feedback" element={<SystemFeedback />} />
         <Route path="/patient/patient-analytics" element={<PatientAnalytics />} />
-        <Route path="/patient/knowledge-base" element={<KnowledgeBase />} />
         <Route path="/patient/demo-sessions" element={<DemoSessions />} />
         <Route path="/patient/docs" element={<Docs />} />
         <Route path="/patient/automation-tests" element={<AutomationTests />} />

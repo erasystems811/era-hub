@@ -7,7 +7,7 @@ import {
   BarChart2, Building2, Rocket, AlertCircle, PanelLeftClose, PanelLeftOpen,
   Menu, X, FlaskConical, TrendingUp, Headphones, Bell, Home,
   Kanban, Activity, MonitorPlay, Smartphone, Users, Layers,
-  CreditCard, Settings, Star, Database, BookOpen, Radio,
+  CreditCard, Settings, Star, BookOpen, Radio,
   ScrollText, ShieldAlert, Search, ClipboardList,
   Bot, LayoutTemplate, GitMerge, FileSearch, Zap,
   Mail, Send, Globe, Phone, FileText,
@@ -28,7 +28,6 @@ const PATIENT_NAV = [
   { icon: Star,         label: 'System Feedback',   href: '/patient/feedback',          sub: 'Staff ratings' },
   { icon: Kanban,       label: 'Sales CRM',         href: '/patient/crm',               sub: 'Pipeline & leads' },
   { icon: Activity,     label: 'Patient Analytics', href: '/patient/patient-analytics', sub: 'ERA patient app metrics' },
-  { icon: Database,     label: 'Knowledge Base',    href: '/patient/knowledge-base',    sub: 'RAG document management' },
   { icon: MonitorPlay,  label: 'Demo Sessions',     href: '/patient/demo-sessions',     sub: 'Prospect demo tracking' },
   { icon: BookOpen,     label: 'Docs & Settings',   href: '/patient/docs',              sub: 'Platform documentation' },
 ]
