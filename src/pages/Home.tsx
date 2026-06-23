@@ -1,22 +1,31 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Building2, MessageSquare, Zap, ArrowRight, CheckCircle, AlertTriangle } from 'lucide-react'
+import { Building2, MessageSquare, Wifi, ArrowRight, CheckCircle, AlertTriangle } from 'lucide-react'
 import { patientApi, HealthCheck } from '../lib/patient-api'
 import { commsApi, MonitoringSnapshot } from '../lib/comms-api'
+import { connectApi, ConnectStats } from '../lib/connect-api'
 
 export function Home() {
   const nav = useNavigate()
-  const [health, setHealth] = useState<HealthCheck | null>(null)
-  const [comms,  setComms]  = useState<MonitoringSnapshot | null>(null)
+  const [health,  setHealth]  = useState<HealthCheck | null>(null)
+  const [comms,   setComms]   = useState<MonitoringSnapshot | null>(null)
+  const [connect, setConnect] = useState<ConnectStats | null>(null)
 
   useEffect(() => {
     void patientApi.getHealth().then(setHealth).catch(() => null)
     void commsApi.monitoring().then(setComms).catch(() => null)
+    void connectApi.getStats().then(setConnect).catch(() => null)
   }, [])
 
   const commsActive  = comms?.sessions.connected ?? 0
   const commsTotal   = comms?.sessions.total ?? 0
   const commsHealthy = comms ? commsActive === commsTotal && commsTotal > 0 : null
+
+  const connectOnline = connect?.instances.online ?? 0
+  const connectTotal  = connect?.instances.total ?? 0
+  const connectHealthy = connect
+    ? connectOnline === connectTotal && connectTotal > 0
+    : null
 
   return (
     <div className="min-h-[calc(100vh-3rem)] flex flex-col justify-center px-6 md:px-12 py-12 max-w-4xl mx-auto w-full">
@@ -46,7 +55,6 @@ export function Home() {
           className="group relative text-left rounded-2xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(74,168,157,0.16)]"
           style={{ background: 'rgba(255,255,255,0.10)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderColor: 'rgba(74,168,157,0.22)', borderTopColor: 'rgba(255,255,255,0.22)', boxShadow: '0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.18)' }}
         >
-          {/* Ambient top glow */}
           <div className="absolute inset-x-0 top-0 h-40 pointer-events-none"
             style={{ background: 'radial-gradient(ellipse 110% 100% at 50% -10%, rgba(74,168,157,0.30) 0%, transparent 75%)' }} />
 
@@ -92,7 +100,6 @@ export function Home() {
           className="group relative text-left rounded-2xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(191,124,147,0.16)]"
           style={{ background: 'rgba(255,255,255,0.10)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderColor: 'rgba(191,124,147,0.22)', borderTopColor: 'rgba(255,255,255,0.22)', boxShadow: '0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.18)' }}
         >
-          {/* Ambient top glow */}
           <div className="absolute inset-x-0 top-0 h-40 pointer-events-none"
             style={{ background: 'radial-gradient(ellipse 110% 100% at 50% -10%, rgba(204,120,150,0.30) 0%, transparent 75%)' }} />
 
@@ -131,26 +138,43 @@ export function Home() {
         </button>
       </div>
 
-      {/* ERA Connect — coming soon */}
-      <div
-        className="rounded-2xl border overflow-hidden opacity-40"
-        style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderColor: 'rgba(255,255,255,0.10)', borderTopColor: 'rgba(255,255,255,0.16)' }}
+      {/* ERA Connect */}
+      <button
+        onClick={() => nav('/connect')}
+        className="group relative text-left rounded-2xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(52,211,153,0.16)]"
+        style={{ background: 'rgba(255,255,255,0.10)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderColor: 'rgba(52,211,153,0.22)', borderTopColor: 'rgba(255,255,255,0.22)', boxShadow: '0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.18)' }}
       >
-        <div className="p-5 flex items-center gap-4">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: 'rgba(155,138,233,0.12)', border: '1px solid rgba(155,138,233,0.22)' }}>
-            <Zap className="w-4 h-4" style={{ color: '#9b8ae9' }} />
+        <div className="absolute inset-x-0 top-0 h-40 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse 110% 100% at 50% -10%, rgba(52,211,153,0.20) 0%, transparent 75%)' }} />
+
+        <div className="relative p-5 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: 'rgba(52,211,153,0.18)', border: '1px solid rgba(52,211,153,0.35)' }}>
+            <Wifi className="w-5 h-5" style={{ color: '#34D399' }} />
           </div>
-          <div className="min-w-0">
+
+          <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground">ERA Connect</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Patient-facing booking portal and telehealth integrations</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {connect === null
+                ? 'EMR bridge — checking status…'
+                : `${connectOnline} of ${connectTotal} hospitals online`}
+            </p>
           </div>
-          <span className="ml-auto shrink-0 text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full"
-            style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(237,233,245,0.30)' }}>
-            Coming Soon
-          </span>
+
+          <div className="flex items-center gap-3 shrink-0">
+            {connectHealthy === true
+              ? <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+              : connectHealthy === false
+              ? <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
+              : <div className="w-3.5 h-3.5 rounded-full border border-muted-foreground/20" />}
+            <ArrowRight className="w-4 h-4 text-muted-foreground/25 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all duration-200" />
+          </div>
         </div>
-      </div>
+
+        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(52,211,153,0.35), transparent)' }} />
+      </button>
+
     </div>
   )
 }
