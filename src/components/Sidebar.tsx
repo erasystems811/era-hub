@@ -4,7 +4,7 @@ import {
   Zap, Briefcase, Smartphone, CreditCard, Settings,
   ChevronDown, ChevronRight, Layers, LayoutDashboard,
   GitPullRequest, Mail, Activity, Bot, Phone,
-  Brain, Upload,
+  Brain, Upload, Link,
 } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { useState, useEffect } from 'react'
@@ -27,9 +27,10 @@ const NAV: NavItem[] = [
     icon: <Brain className="w-4 h-4" />,
     accent: 'pink',
     children: [
-      { path: '/core/chat',   label: 'Chat',   icon: <MessageSquare className="w-4 h-4" />, accent: 'pink' },
-      { path: '/core/memory', label: 'Memory', icon: <Brain className="w-4 h-4" />,         accent: 'pink' },
-      { path: '/core/import', label: 'Import',  icon: <Upload className="w-4 h-4" />,        accent: 'pink' },
+      { path: '/core/chat',     label: 'Chat',     icon: <MessageSquare className="w-4 h-4" />, accent: 'pink' },
+      { path: '/core/memory',   label: 'Memory',   icon: <Brain className="w-4 h-4" />,         accent: 'pink' },
+      { path: '/core/import',   label: 'Import',   icon: <Upload className="w-4 h-4" />,         accent: 'pink' },
+      { path: '/core/settings', label: 'Settings', icon: <Link className="w-4 h-4" />,           accent: 'pink' },
     ],
   },
 

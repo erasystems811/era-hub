@@ -28,12 +28,12 @@ function loadMessages(id: string): Message[] {
 function saveMessages(id: string, msgs: Message[]) { localStorage.setItem(msgKey(id), JSON.stringify(msgs)) }
 function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36) }
 
-import { CORE_API, CORE_SECRET } from '../../lib/config'
+import { getCoreApi, getCoreSecret } from '../../lib/config'
 
 async function coreChat(sessionId: string | null, mode: 'business' | 'personal', message: string): Promise<{ session_id: string; response: string }> {
-  const res = await fetch(`${CORE_API}/v1/chat`, {
+  const res = await fetch(`${getCoreApi()}/v1/chat`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-core-secret': CORE_SECRET },
+    headers: { 'Content-Type': 'application/json', 'x-core-secret': getCoreSecret() },
     body: JSON.stringify({ session_id: sessionId, mode, message }),
   })
   if (!res.ok) throw new Error(`ERA Core error: ${res.status}`)

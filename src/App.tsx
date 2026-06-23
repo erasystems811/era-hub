@@ -41,9 +41,10 @@ import { BizSettingsPage }    from './pages/business-panel/BizSettingsPage'
 import { BizEmailPage }      from './pages/business-panel/BizEmailPage'
 
 // ERA Core
-import { CoreChat }   from './pages/core/CoreChat'
-import { CoreMemory } from './pages/core/CoreMemory'
-import { CoreImport } from './pages/core/CoreImport'
+import { CoreChat }     from './pages/core/CoreChat'
+import { CoreMemory }   from './pages/core/CoreMemory'
+import { CoreImport }   from './pages/core/CoreImport'
+import { CoreSettings } from './pages/core/CoreSettings'
 
 // ERA Connect
 import { ConnectHome }           from './pages/connect/ConnectHome'
@@ -128,7 +129,8 @@ function ProtectedApp() {
         <Route path="/core" element={<Navigate to="/core/chat" replace />} />
         <Route path="/core/chat"   element={<CoreChat />} />
         <Route path="/core/memory" element={<CoreMemory />} />
-        <Route path="/core/import" element={<CoreImport />} />
+        <Route path="/core/import"    element={<CoreImport />} />
+        <Route path="/core/settings"  element={<CoreSettings />} />
 
         {/* ERA Connect */}
         <Route path="/connect"                    element={<ConnectHome />} />

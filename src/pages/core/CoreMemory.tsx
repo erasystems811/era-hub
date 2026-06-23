@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Brain, RefreshCw, Trash2 } from 'lucide-react'
-import { CORE_API, CORE_SECRET } from '../../lib/config'
+import { getCoreApi, getCoreSecret } from '../../lib/config'
 
 type Category = 'principle' | 'preference' | 'weakness' | 'style' | 'blindspot' | 'decision'
 type Mode = 'business' | 'personal' | 'both'
@@ -51,8 +51,8 @@ export function CoreMemory() {
     setLoading(true)
     setError(null)
     try {
-      const url = filter === 'all' ? `${CORE_API}/v1/memories` : `${CORE_API}/v1/memories?mode=${filter}`
-      const res = await fetch(url, { headers: { 'x-core-secret': CORE_SECRET } })
+      const url = filter === 'all' ? `${getCoreApi()}/v1/memories` : `${getCoreApi()}/v1/memories?mode=${filter}`
+      const res = await fetch(url, { headers: { 'x-core-secret': getCoreSecret() } })
       if (!res.ok) throw new Error(`${res.status}`)
       setMemories(await res.json() as Memory[])
     } catch (e) {
@@ -65,9 +65,9 @@ export function CoreMemory() {
   async function deleteMemory(id: string) {
     setDeleting(id)
     try {
-      await fetch(`${CORE_API}/v1/memories/${id}`, {
+      await fetch(`${getCoreApi()}/v1/memories/${id}`, {
         method: 'DELETE',
-        headers: { 'x-core-secret': CORE_SECRET },
+        headers: { 'x-core-secret': getCoreSecret() },
       })
       setMemories(prev => prev.filter(m => m.id !== id))
     } finally {
