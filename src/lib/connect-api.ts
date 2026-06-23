@@ -79,6 +79,12 @@ export interface ConnectStats {
   totals: { patientsSynced: number; carePlansSynced: number; errorsTotal: number }
 }
 
+export interface ConnectRelease {
+  version: string
+  downloadUrl: string
+  updatedAt: string | null
+}
+
 // ── API calls ─────────────────────────────────────────────────
 
 export const connectApi = {
@@ -102,6 +108,13 @@ export const connectApi = {
     paused?: boolean
     notifyEmail?: string | null
   }) => patch<ConnectConfig>(`/instances/${id}/config`, body),
+
+  triggerRestart: (id: string) => post<void>(`/instances/${id}/restart`, {}),
+
+  getRelease: () => get<ConnectRelease>('/release'),
+
+  updateRelease: (body: { version: string; downloadUrl: string }) =>
+    patch<ConnectRelease>('/release', body),
 
   listEvents: (params?: {
     instanceId?: string

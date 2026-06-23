@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, RefreshCw, Loader2, AlertTriangle, CheckCircle2,
   XCircle, AlertCircle, Wifi, WifiOff, Heart, Users, Activity,
-  Settings, Power, PowerOff, Zap, Save,
+  Settings, Power, PowerOff, Zap, Save, RotateCcw,
 } from 'lucide-react'
 import { connectApi, ConnectInstance, ConnectEvent } from '../../lib/connect-api'
 
@@ -31,8 +31,8 @@ function EventIcon({ type, status }: { type: string; status: string }) {
   if (status === 'warning')             return <AlertCircle  className="w-3.5 h-3.5 text-amber-400" />
   if (type === 'patient_synced')        return <Users       className="w-3.5 h-3.5 text-sky-400" />
   if (type === 'care_plan_synced')      return <Heart       className="w-3.5 h-3.5 text-purple-400" />
-  if (type === 'auth_ok')               return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-  if (type === 'startup')               return <Power       className="w-3.5 h-3.5 text-emerald-400" />
+  if (type === 'auth_ok')               return <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+  if (type === 'startup')               return <Power       className="w-3.5 h-3.5 text-primary" />
   if (type === 'shutdown')              return <PowerOff    className="w-3.5 h-3.5 text-zinc-400" />
   if (type.startsWith('config'))        return <Settings    className="w-3.5 h-3.5 text-muted-foreground/50" />
   if (type === 'heartbeat')             return <Activity    className="w-3.5 h-3.5 text-muted-foreground/30" />
@@ -65,8 +65,10 @@ export function ConnectInstanceDetail() {
 
   // Config editor state
   const [cfg, setCfg] = useState({ syncInterval: 30, paused: false, notifyEmail: '' })
-  const [saving, setSaving] = useState(false)
-  const [saved,  setSaved]  = useState(false)
+  const [saving,      setSaving]      = useState(false)
+  const [saved,       setSaved]       = useState(false)
+  const [restarting,  setRestarting]  = useState(false)
+  const [restartDone, setRestartDone] = useState(false)
 
   const load = async () => {
     if (!id) return
@@ -94,6 +96,20 @@ export function ConnectInstanceDetail() {
   }
 
   useEffect(() => { void load() }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const triggerRestart = async () => {
+    if (!id || restarting) return
+    setRestarting(true)
+    try {
+      await connectApi.triggerRestart(id)
+      setRestartDone(true)
+      setTimeout(() => setRestartDone(false), 5000)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Restart failed')
+    } finally {
+      setRestarting(false)
+    }
+  }
 
   const saveConfig = async () => {
     if (!id) return
@@ -135,7 +151,7 @@ export function ConnectInstanceDetail() {
   if (!instance) return null
 
   const statusColor =
-    instance.status === 'online'  ? 'text-emerald-400' :
+    instance.status === 'online'  ? 'text-primary' :
     instance.status === 'error'   ? 'text-red-400'     : 'text-zinc-500'
 
   const StatusIcon = instance.status === 'online' ? Wifi :
@@ -165,10 +181,21 @@ export function ConnectInstanceDetail() {
             <span>Last seen: {timeAgo(instance.lastHeartbeatAt)}</span>
           </div>
         </div>
-        <button onClick={load}
-          className="p-2 rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-white/5 transition shrink-0">
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-        </button>
+        <div className="flex items-center gap-1 shrink-0">
+          <button onClick={triggerRestart} disabled={restarting} title="Remote restart"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition disabled:opacity-50 ${
+              restartDone
+                ? 'bg-primary/15 text-primary'
+                : 'border border-white/10 text-muted-foreground/60 hover:text-foreground hover:bg-white/5'
+            }`}>
+            {restarting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : restartDone ? <CheckCircle2 className="w-3.5 h-3.5" /> : <RotateCcw className="w-3.5 h-3.5" />}
+            {restartDone ? 'Restart queued' : 'Restart'}
+          </button>
+          <button onClick={load}
+            className="p-2 rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-white/5 transition">
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -204,7 +231,7 @@ export function ConnectInstanceDetail() {
               type="number" min={10} max={3600}
               value={cfg.syncInterval}
               onChange={e => setCfg(c => ({ ...c, syncInterval: parseInt(e.target.value) || 30 }))}
-              className="w-full bg-background border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500/50"
+              className="w-full bg-background border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50"
             />
           </div>
           <div>
@@ -216,7 +243,7 @@ export function ConnectInstanceDetail() {
               value={cfg.notifyEmail}
               onChange={e => setCfg(c => ({ ...c, notifyEmail: e.target.value }))}
               placeholder="alerts@yourhospital.com"
-              className="w-full bg-background border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500/50"
+              className="w-full bg-background border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50"
             />
           </div>
           <div className="flex flex-col justify-end">
@@ -227,7 +254,7 @@ export function ConnectInstanceDetail() {
               className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition ${
                 cfg.paused
                   ? 'border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
-                  : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                  : 'border-emerald-500/30 bg-emerald-500/10 text-primary hover:bg-primary/20'
               }`}>
               {cfg.paused ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
               {cfg.paused ? 'Paused — click to resume' : 'Active — click to pause'}
@@ -240,7 +267,7 @@ export function ConnectInstanceDetail() {
             {instance.config?.updatedAt ? `Last updated ${timeAgo(instance.config.updatedAt)}` : ''}
           </p>
           <button onClick={saveConfig} disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 text-sm font-medium transition disabled:opacity-50">
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/15 text-primary hover:bg-emerald-500/25 text-sm font-medium transition disabled:opacity-50">
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : saved ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
             {saved ? 'Saved' : 'Save Changes'}
           </button>
@@ -252,7 +279,7 @@ export function ConnectInstanceDetail() {
         <div className="px-4 py-3 border-b border-white/07 flex items-center justify-between">
           <h2 className="text-sm font-semibold">Recent Activity</h2>
           <button onClick={() => navigate(`/connect/events?instanceId=${id}`)}
-            className="text-xs text-emerald-400 hover:text-emerald-300 transition">
+            className="text-xs text-primary hover:text-emerald-300 transition">
             View all →
           </button>
         </div>
