@@ -43,9 +43,27 @@ jobs:
           host: 46.101.83.26
           username: root
           password: ${{ secrets.SERVER_PASSWORD }}
+          envs: SMTP_PASS
           script: |
             chmod -R 755 /var/www/era-hub/
             cd /opt/era-comms && git pull origin main 2>/dev/null || true
+
+            # Inject SMTP credentials into .env.production
+            ENV_FILE=/opt/era-comms/.env.production
+            set_env() {
+              local key=$1 val=$2
+              if grep -q "^${key}=" "$ENV_FILE" 2>/dev/null; then
+                sed -i "s|^${key}=.*|${key}=${val}|" "$ENV_FILE"
+              else
+                echo "${key}=${val}" >> "$ENV_FILE"
+              fi
+            }
+            set_env SMTP_HOST mail.erasystems.com.ng
+            set_env SMTP_PORT 587
+            set_env SMTP_USER hello@erasystems.com.ng
+            set_env EMAIL_FROM hello@erasystems.com.ng
+            if [ -n "$SMTP_PASS" ]; then set_env SMTP_PASS "$SMTP_PASS"; fi
+
             cp /opt/era-comms/scripts/nginx.conf /etc/nginx/sites-available/era-comms 2>/dev/null || true
             nginx -t && systemctl reload nginx 2>/dev/null || true
             cd /opt/era-comms/docker && docker compose -f docker-compose.prod.yml up -d --build 2>/dev/null || true
