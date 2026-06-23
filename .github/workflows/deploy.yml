@@ -22,7 +22,7 @@ jobs:
         env:
           VITE_PATIENT_API_URL: https://api.erasystems.com.ng
           VITE_COMMS_API_URL: https://comms.erasystems.com.ng
-          VITE_COMMS_OPERATOR_SECRET: ${{ secrets.COMMS_OPERATOR_SECRET }}
+          VITE_COMMS_OPERATOR_SECRET: ${{ secrets.OPERATOR_SECRET }}
         run: npm run build
 
       - name: Upload files to server
