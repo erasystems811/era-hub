@@ -8,6 +8,7 @@ export function CoreSettings() {
   const [url, setUrl] = useState('')
   const [secret, setSecret] = useState('')
   const [status, setStatus] = useState<'idle' | 'testing' | 'ok' | 'fail'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
   const [stats, setStats] = useState<{ total: number; processed: number; pending: number } | null>(null)
 
   useEffect(() => {
@@ -22,10 +23,11 @@ export function CoreSettings() {
 
     setStatus('testing')
     setStats(null)
+    setErrorMsg('')
 
     try {
       const res = await fetch(`${cleanUrl}/health`)
-      if (!res.ok) throw new Error()
+      if (!res.ok) throw new Error(`Health check returned ${res.status}`)
 
       saveCoreConfig(cleanUrl, cleanSecret)
       setStatus('ok')
@@ -34,7 +36,8 @@ export function CoreSettings() {
         headers: { 'x-core-secret': cleanSecret },
       })
       if (s.ok) setStats(await s.json())
-    } catch {
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : String(e))
       setStatus('fail')
     }
   }
@@ -97,9 +100,12 @@ export function CoreSettings() {
         )}
 
         {status === 'fail' && (
-          <div className="flex items-center gap-2 px-4 py-3 rounded-xl" style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)' }}>
-            <XCircle className="w-4 h-4 text-red-400 shrink-0" />
-            <span className="text-sm text-red-400">Could not reach ERA Core — check the URL</span>
+          <div className="flex items-start gap-2 px-4 py-3 rounded-xl" style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)' }}>
+            <XCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm text-red-400">Could not reach ERA Core</p>
+              {errorMsg && <p className="text-xs text-red-400/70 mt-1 break-all">{errorMsg}</p>}
+            </div>
           </div>
         )}
 
