@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Book, MessageSquare, Clock, Zap, Users, Mic, Inbox, BarChart2,
+  Book, MessageSquare, Clock, Zap, Users, Mic, Inbox, BarChart2, Mail,
 } from 'lucide-react'
 import { bizApi, type BizProfile, type ModuleConfig } from './business-api'
 
@@ -22,8 +22,9 @@ const MODULES: ModuleDef[] = [
   { key: 'scenarios',         icon: Zap,          label: 'Scenarios',      desc: 'Automated response flows',                  href: '/biz/scenarios'     },
   { key: 'humanHandoff',      icon: Users,        label: 'Human Handoff',  desc: 'When AI escalates to a person',             href: '/biz/handoff'       },
   { key: 'voiceNotes',        icon: Mic,          label: 'Voice Notes',    desc: 'Handle voice messages from customers',       href: '/biz/voice-notes'   },
-  { key: 'conversationInbox', icon: Inbox,        label: 'Inbox',          desc: 'Monitor and join live chats',               href: '/biz/inbox'         },
-  { key: 'analytics',         icon: BarChart2,    label: 'Analytics',      desc: 'See your performance stats',                href: '/biz/analytics'     },
+  { key: 'conversationInbox', icon: Inbox,        label: 'Inbox',           desc: 'Monitor and join live chats',               href: '/biz/inbox'         },
+  { key: 'analytics',         icon: BarChart2,    label: 'Analytics',       desc: 'See your performance stats',                href: '/biz/analytics'     },
+  { key: 'emailCampaigns',    icon: Mail,         label: 'Email Campaigns', desc: 'Send bulk emails to your customers',         href: '/biz/email'         },
 ]
 
 // Tailwind-safe toggle component

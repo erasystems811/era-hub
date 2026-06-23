@@ -38,6 +38,7 @@ import { VoiceNotesModule }   from './pages/business-panel/VoiceNotesModule'
 import { InboxModule }        from './pages/business-panel/InboxModule'
 import { AnalyticsModule }    from './pages/business-panel/AnalyticsModule'
 import { BizSettingsPage }    from './pages/business-panel/BizSettingsPage'
+import { BizEmailPage }      from './pages/business-panel/BizEmailPage'
 
 // ERA Core
 import { CoreChat }   from './pages/core/CoreChat'
@@ -155,6 +156,7 @@ function BizApp() {
         <Route path="/biz/inbox"          element={<InboxModule />} />
         <Route path="/biz/analytics"      element={<AnalyticsModule />} />
         <Route path="/biz/settings"       element={<BizSettingsPage />} />
+        <Route path="/biz/email"          element={<BizEmailPage />} />
         <Route path="*"                   element={<Navigate to="/biz/dashboard" replace />} />
       </Routes>
     </BizLayout>

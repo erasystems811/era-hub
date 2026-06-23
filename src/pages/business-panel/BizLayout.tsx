@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useLocation, NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Book, MessageSquare, Clock, Zap, Users,
-  Mic, Inbox, BarChart2, Settings, LogOut, ChevronLeft, ChevronRight,
+  Mic, Inbox, BarChart2, Settings, LogOut, ChevronLeft, ChevronRight, Mail,
 } from 'lucide-react'
 import { bizApi, clearBizToken, type BizProfile, type ModuleConfig } from './business-api'
 
@@ -27,6 +27,7 @@ const NAV_MODULES: NavItem[] = [
   { icon: Mic,          label: 'Voice Notes',    href: '/biz/voice-notes',    moduleKey: 'voiceNotes'        },
   { icon: Inbox,        label: 'Inbox',          href: '/biz/inbox',          moduleKey: 'conversationInbox' },
   { icon: BarChart2,    label: 'Analytics',      href: '/biz/analytics',      moduleKey: 'analytics'         },
+  { icon: Mail,         label: 'Email',          href: '/biz/email',          moduleKey: 'emailCampaigns'    },
 ]
 
 interface Props { children: React.ReactNode }

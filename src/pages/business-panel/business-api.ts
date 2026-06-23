@@ -43,6 +43,7 @@ export interface ModuleConfig {
   voiceNotes:        boolean
   conversationInbox: boolean
   analytics:         boolean
+  emailCampaigns:    boolean
 }
 
 export interface BizProfile {
@@ -128,6 +129,31 @@ export interface NotificationPrefs {
   emailDailyDigest:      boolean
 }
 
+export interface EmailDomain {
+  id: string; domain: string; verified: boolean
+}
+
+export interface EmailTemplate {
+  id: string; name: string; subject: string; htmlBody: string; updatedAt: string
+}
+
+export interface ContactList {
+  id: string; name: string; contactCount: number; createdAt: string
+}
+
+export interface Contact {
+  id: string; email: string; firstName: string | null; lastName: string | null; createdAt: string
+}
+
+export interface Campaign {
+  id: string; name: string; status: string
+  templateName: string; listName: string
+  totalRecipients: number; totalSent: number; totalDelivered: number
+  totalClicked: number; totalBounced: number; deliveryRate: number
+  scheduledAt: string | null; startedAt: string | null; completedAt: string | null
+  createdAt: string
+}
+
 // ── API ───────────────────────────────────────────────────────────────────────
 
 export const bizApi = {
@@ -176,4 +202,27 @@ export const bizApi = {
     post<void>('/auth/change-password', { currentPassword: current, newPassword: next }),
 
   getUsage: () => get<UsageRecord>('/usage'),
+
+  // Email
+  getEmailDomains:   () => get<EmailDomain[]>('/email/domains'),
+  listTemplates:     () => get<EmailTemplate[]>('/email/templates'),
+  createTemplate:    (d: { name: string; subject: string; htmlBody: string }) => post<EmailTemplate>('/email/templates', d),
+  updateTemplate:    (id: string, d: Partial<{ name: string; subject: string; htmlBody: string }>) => req<void>(`/email/templates/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
+  deleteTemplate:    (id: string) => del<void>(`/email/templates/${id}`),
+
+  listContactLists:  () => get<ContactList[]>('/email/contacts/lists'),
+  createContactList: (name: string) => post<ContactList>('/email/contacts/lists', { name }),
+  deleteContactList: (id: string) => del<void>(`/email/contacts/lists/${id}`),
+  getContacts:       (listId: string) => get<Contact[]>(`/email/contacts/lists/${listId}`),
+  importContacts:    (listId: string, contacts: { email: string; firstName?: string; lastName?: string }[]) =>
+    post<{ imported: number }>(`/email/contacts/lists/${listId}/import`, contacts),
+  deleteContact:     (contactId: string) => del<void>(`/email/contacts/${contactId}`),
+
+  listCampaigns: () => get<Campaign[]>('/email/campaigns'),
+  createCampaign: (d: { name: string; templateId: string; listId: string; domainId: string; fromName: string; fromEmail: string; scheduledAt?: string }) =>
+    post<Campaign>('/email/campaigns', d),
+  getCampaign:    (id: string) => get<Campaign>(`/email/campaigns/${id}`),
+  sendCampaign:   (id: string) => post<{ launched: boolean; queued: number }>(`/email/campaigns/${id}/send`, {}),
+  cancelCampaign: (id: string) => post<{ cancelled: boolean }>(`/email/campaigns/${id}/cancel`, {}),
+  deleteCampaign: (id: string) => del<void>(`/email/campaigns/${id}`),
 }
