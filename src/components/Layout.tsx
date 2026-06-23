@@ -34,27 +34,17 @@ const PATIENT_NAV = [
 ]
 
 const COMMS_NAV = [
-  { icon: Radio,         label: 'Dashboard',    href: '/comms/dashboard',    sub: 'Live platform view' },
-  { icon: Smartphone,    label: 'Sessions',     href: '/comms/sessions',     sub: 'WhatsApp connections' },
-  { icon: Users,         label: 'Businesses',   href: '/comms/businesses',   sub: 'Client accounts' },
-  { icon: ClipboardList, label: 'Requests',     href: '/comms/requests',     sub: 'Onboarding queue' },
-  { icon: Layers,        label: 'Plans',        href: '/comms/plans',        sub: 'Subscription tiers' },
-  { icon: CreditCard,    label: 'Billing',      href: '/comms/billing',      sub: 'Revenue & consumption' },
-  { icon: ScrollText,    label: 'Event Log',    href: '/comms/event-log',    sub: 'Full activity history' },
-  { icon: ShieldAlert,   label: 'Alerts',       href: '/comms/alerts',       sub: 'Issues & notifications' },
-  { icon: BookOpen,      label: 'Audit Trail',  href: '/comms/audit',        sub: 'Who did what & when' },
-  { icon: Search,        label: 'Investigate',  href: '/comms/investigate',  sub: 'Search any business' },
-  { icon: GitMerge,      label: 'Onboarding',   href: '/comms/onboarding',   sub: 'Setup pipeline tracker' },
-  { icon: Bot,           label: 'AI Engine',    href: '/comms/ai-engine',    sub: 'AI usage & configuration' },
-  { icon: FileSearch,    label: 'AI Logs',      href: '/comms/ai-logs',      sub: 'AI conversation history' },
-  { icon: LayoutTemplate,label: 'AI Templates', href: '/comms/ai-templates',     sub: 'Scenario template library' },
-  { icon: Mail,          label: 'Email',         href: '/comms/email',            sub: 'Postal sending engine' },
-  { icon: FileText,      label: 'Templates',     href: '/comms/email/templates',  sub: 'Visual email builder' },
-  { icon: Send,          label: 'Campaigns',     href: '/comms/email/campaigns',  sub: 'Bulk email sends' },
-  { icon: Users,         label: 'Contacts',      href: '/comms/email/contacts',   sub: 'Lists & suppression' },
-  { icon: Globe,         label: 'Domains',       href: '/comms/email/domains',    sub: 'DNS & verification' },
-  { icon: Phone,         label: 'Voice',         href: '/comms/voice',            sub: 'Coming soon' },
-  { icon: Settings,      label: 'Settings',      href: '/comms/settings',         sub: 'API & configuration' },
+  { icon: Radio,         label: 'Dashboard',  href: '/comms/dashboard',  sub: 'Live platform view',          alsoActiveFor: [] },
+  { icon: Users,         label: 'Businesses', href: '/comms/businesses', sub: 'Client accounts',             alsoActiveFor: [] },
+  { icon: Smartphone,    label: 'Sessions',   href: '/comms/sessions',   sub: 'WhatsApp connections',        alsoActiveFor: ['/comms/connect-session'] },
+  { icon: ClipboardList, label: 'Requests',   href: '/comms/requests',   sub: 'Onboarding queue',            alsoActiveFor: [] },
+  { icon: Activity,      label: 'Monitoring', href: '/comms/alerts',     sub: 'Alerts, logs & audit',        alsoActiveFor: ['/comms/event-log', '/comms/audit', '/comms/investigate'] },
+  { icon: Bot,           label: 'AI Engine',  href: '/comms/ai-engine',  sub: 'AI usage & configuration',   alsoActiveFor: ['/comms/ai-logs', '/comms/ai-templates', '/comms/ai-config'] },
+  { icon: Mail,          label: 'Email',      href: '/comms/email',      sub: 'Postal sending engine',       alsoActiveFor: [] },
+  { icon: Layers,        label: 'Plans',      href: '/comms/plans',      sub: 'Subscription tiers',          alsoActiveFor: [] },
+  { icon: CreditCard,    label: 'Billing',    href: '/comms/billing',    sub: 'Revenue & consumption',       alsoActiveFor: [] },
+  { icon: Settings,      label: 'Settings',   href: '/comms/settings',   sub: 'API & configuration',         alsoActiveFor: [] },
+  { icon: Phone,         label: 'Voice',      href: '/comms/voice',      sub: 'Coming soon',                 alsoActiveFor: [] },
 ]
 
 const CONNECT_NAV = [
@@ -175,11 +165,14 @@ function ProductLayout({ product, children }: { product: 'patient' | 'comms' | '
     }
   }
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
-  const currentPage = prod.nav.find(n => isActive(n.href))
+  const isActive = (href: string, also?: readonly string[]) =>
+    pathname === href ||
+    pathname.startsWith(href + '/') ||
+    (also?.some(p => pathname === p || pathname.startsWith(p + '/')) ?? false)
+  const currentPage = prod.nav.find(n => isActive(n.href, (n as { alsoActiveFor?: readonly string[] }).alsoActiveFor))
 
-  function NavItem({ icon: Icon, label, href, sub }: { icon: React.ComponentType<{ className?: string }>; label: string; href: string; sub: string }) {
-    const active = isActive(href)
+  function NavItem({ icon: Icon, label, href, sub, alsoActiveFor }: { icon: React.ComponentType<{ className?: string }>; label: string; href: string; sub: string; alsoActiveFor?: readonly string[] }) {
+    const active = isActive(href, alsoActiveFor)
     return (
       <button
         onClick={() => go(href)}
