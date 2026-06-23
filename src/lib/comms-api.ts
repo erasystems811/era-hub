@@ -316,3 +316,16 @@ export const emailApi = {
                       get<EmailSuppressed[]>(`/email/contacts/suppression${clientId ? `?clientId=${clientId}` : ''}`),
   removeSuppressed: (id: string) => del<void>(`/email/contacts/suppression/${id}`),
 }
+
+export interface AIEngineConfig {
+  temperature:          number
+  systemPrompt:         string
+  maxRequestsPerHour:   number
+  maxTokensPerResponse: number
+  dailySpendCutoff:     number
+}
+
+export const aiEngineApi = {
+  getConfig:  ()                       => get<AIEngineConfig>('/ai-config'),
+  saveConfig: (data: AIEngineConfig)   => put<void>('/ai-config', data),
+}
