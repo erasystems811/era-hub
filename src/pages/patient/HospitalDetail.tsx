@@ -4,12 +4,12 @@ import {
   ArrowLeft, RefreshCw, Settings, Zap, Layers, Loader2,
   Copy, Check, XCircle, Shield, Save, Mail, Phone, Plus,
   Eye, EyeOff, KeyRound, Link, Users, AlertCircle, RotateCcw,
-  CheckCircle2, Clock, MessageSquare, Filter,
+  CheckCircle2, Clock, MessageSquare, Filter, Wallet,
 } from 'lucide-react'
-import { patientApi, Hospital, HospitalSettings, HospitalModules } from '../../lib/patient-api'
+import { patientApi, Hospital, HospitalSettings, HospitalModules, WalletInfo } from '../../lib/patient-api'
 import { fmtMoney, fmtDateTime } from '../../lib/utils'
 
-type Tab = 'general' | 'settings' | 'modules' | 'automation'
+type Tab = 'general' | 'settings' | 'modules' | 'automation' | 'wallet'
 type AutoFilter = 'all' | 'failed' | 'sent'
 
 const PREDEFINED_DEPARTMENTS = [
@@ -96,6 +96,7 @@ export function HospitalDetail() {
   const [hospital, setHospital] = useState<Hospital | null>(null)
   const [settings, setSettings] = useState<HospitalSettings | null>(null)
   const [modules,  setModules]  = useState<HospitalModules | null>(null)
+  const [wallet,   setWallet]   = useState<WalletInfo | null>(null)
 
   // UI
   const [loading,    setLoading]    = useState(true)
@@ -144,6 +145,12 @@ export function HospitalDetail() {
   const [autoLoading, setAutoLoading] = useState(false)
   const [retryingId,  setRetryingId]  = useState<number | null>(null)
   const [retryError,  setRetryError]  = useState<string | null>(null)
+
+  // Wallet tab
+  const [walletLoading, setWalletLoading] = useState(false)
+  const [creditAmount,  setCreditAmount]  = useState('')
+  const [creditNote,    setCreditNote]    = useState('')
+  const [creditLoading, setCreditLoading] = useState(false)
 
   const [regenResult, setRegenResult] = useState<string | null>(null)
 
@@ -217,10 +224,22 @@ export function HospitalDetail() {
     finally { setAutoLoading(false) }
   }, [hId, autoFilter])
 
+  const loadWallet = useCallback(async () => {
+    setWalletLoading(true)
+    try {
+      const w = await patientApi.getHospitalWallet(hId)
+      setWallet(w)
+    } catch { /* endpoint may not be available */ }
+    finally { setWalletLoading(false) }
+  }, [hId])
+
   useEffect(() => { void load() }, [load])
   useEffect(() => {
     if (tab === 'automation') void loadAutomations()
   }, [tab, loadAutomations])
+  useEffect(() => {
+    if (tab === 'wallet' && !wallet) void loadWallet()
+  }, [tab, wallet, loadWallet])
 
   const saveGeneral = async () => {
     setSaving(true); setError(null)
@@ -311,6 +330,19 @@ export function HospitalDetail() {
     finally { setRetryingId(null) }
   }
 
+  const creditWallet = async () => {
+    const amount = parseFloat(creditAmount)
+    if (!amount || isNaN(amount)) return
+    setCreditLoading(true); setError(null)
+    try {
+      await patientApi.creditHospitalWallet(hId, amount, creditNote || 'Manual credit')
+      setCreditAmount(''); setCreditNote('')
+      await loadWallet()
+      flash('Wallet credited successfully')
+    } catch (e) { setError(e instanceof Error ? e.message : 'Could not credit wallet') }
+    finally { setCreditLoading(false) }
+  }
+
   const toggleDept = (dept: string) =>
     setDepartments(prev => prev.includes(dept) ? prev.filter(d => d !== dept) : [...prev, dept])
 
@@ -345,6 +377,7 @@ export function HospitalDetail() {
     { key: 'settings',   label: 'Settings',   icon: <Settings className="w-3.5 h-3.5" /> },
     { key: 'modules',    label: 'Modules',    icon: <Layers className="w-3.5 h-3.5" /> },
     { key: 'automation', label: 'Automation', icon: <Zap className="w-3.5 h-3.5" /> },
+    { key: 'wallet',     label: 'Wallet',     icon: <Wallet className="w-3.5 h-3.5" /> },
   ]
 
   const statusBadge = hospital.active
@@ -961,6 +994,88 @@ export function HospitalDetail() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── WALLET TAB ──────────────────────────────────────────────────────── */}
+      {tab === 'wallet' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Balance + credit */}
+          <div className="rounded-2xl border border-white/07 bg-card p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">Wallet balance</h3>
+              <button onClick={() => void loadWallet()} disabled={walletLoading}
+                className="btn-secondary p-1.5" title="Refresh">
+                <RefreshCw className={`w-3.5 h-3.5 ${walletLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+
+            {walletLoading ? (
+              <div className="flex items-center gap-2 text-muted-foreground py-4">
+                <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+              </div>
+            ) : (
+              <p className="text-4xl font-bold text-foreground tabular-nums">
+                {wallet ? fmtMoney(wallet.balanceKobo) : fmtMoney(hospital.walletBalanceKobo)}
+              </p>
+            )}
+            <p className="text-sm text-muted-foreground -mt-3">Current balance</p>
+
+            <div className="pt-2 border-t border-white/06 space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Add credit</p>
+              <div>
+                <label className="label">Amount (₦)</label>
+                <input className="input" type="number" min="0" value={creditAmount}
+                  onChange={e => setCreditAmount(e.target.value)} placeholder="5000" />
+              </div>
+              <div>
+                <label className="label">Note (optional)</label>
+                <input className="input" value={creditNote}
+                  onChange={e => setCreditNote(e.target.value)} placeholder="Monthly top-up" />
+              </div>
+              <button className="btn-primary w-full flex items-center justify-center gap-2"
+                onClick={creditWallet} disabled={creditLoading || !creditAmount}>
+                {creditLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Adding…</> : 'Add credit'}
+              </button>
+            </div>
+          </div>
+
+          {/* Transactions */}
+          <div className="rounded-2xl border border-white/07 bg-card p-6">
+            <h3 className="text-sm font-semibold text-foreground mb-4">Transaction history</h3>
+            {walletLoading ? (
+              <div className="flex items-center gap-2 text-muted-foreground py-8">
+                <Loader2 className="w-4 h-4 animate-spin" /> Loading transactions…
+              </div>
+            ) : !wallet ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
+                <Wallet className="w-8 h-8 opacity-20" />
+                <p className="text-sm">No transaction data</p>
+                <button className="text-xs text-teal hover:underline mt-1" onClick={() => void loadWallet()}>Load transactions</button>
+              </div>
+            ) : wallet.transactions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
+                <Wallet className="w-8 h-8 opacity-20" />
+                <p className="text-sm">No transactions yet</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-white/06">
+                {wallet.transactions.slice(0, 20).map(t => (
+                  <div key={t.id} className="flex items-start justify-between gap-3 py-3">
+                    <div className="min-w-0">
+                      <p className="text-sm text-foreground truncate">{t.description}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{fmtDateTime(t.created_at)}</p>
+                    </div>
+                    <span className={`text-sm font-semibold shrink-0 ${t.type === 'credit' ? 'text-teal' : 'text-red-400'}`}>
+                      {t.type === 'credit' ? '+' : '−'}{fmtMoney(t.amount_kobo)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
       )}
     </div>
