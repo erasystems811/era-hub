@@ -29,6 +29,7 @@ const get  = <T>(p: string) => req<T>(p, { cache: 'no-store' })
 const post = <T>(p: string, b: unknown) => req<T>(p, { method: 'POST', body: JSON.stringify(b) })
 const patch = <T>(p: string, b: unknown) => req<T>(p, { method: 'PATCH', body: JSON.stringify(b) })
 const del  = <T>(p: string) => req<T>(p, { method: 'DELETE' })
+const put  = <T>(p: string, b: unknown) => req<T>(p, { method: 'PUT', body: JSON.stringify(b) })
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -183,4 +184,135 @@ export const commsApi = {
 export function commsQrSocket(sessionId: string): WebSocket {
   const base = COMMS_API.replace(/^http/, 'ws')
   return new WebSocket(`${base}/v1/admin/sessions/${sessionId}/qr?secret=${encodeURIComponent(COMMS_SECRET)}`)
+}
+
+// ── Email API types ───────────────────────────────────────────────────────────
+
+export interface EmailOverviewStats {
+  postalConnected: boolean
+  sentToday:    number
+  sent30d:      number
+  deliveryRate: number
+  clickRate:    number
+  bounceRate:   number
+}
+
+export interface EmailDomain {
+  id:            string
+  clientId:      string
+  clientName:    string
+  domain:        string
+  spfVerified:   boolean
+  dkimVerified:  boolean
+  dmarcVerified: boolean
+  mxVerified:    boolean
+  dkimPublicKey: string | null
+  verified:      boolean
+  verifiedAt:    string | null
+  createdAt:     string
+}
+
+export interface PostalDnsRecord {
+  spfRecord:   string
+  dkimRecord:  { name: string; value: string }
+  dmarcRecord: string
+  mxRecord:    string
+}
+
+export interface EmailTemplate {
+  id:         string
+  clientId:   string
+  clientName: string
+  name:       string
+  subject:    string
+  htmlBody:   string
+  createdAt:  string
+  updatedAt:  string
+}
+
+export interface EmailCampaign {
+  id:              string
+  clientId:        string
+  clientName:      string
+  name:            string
+  templateId:      string
+  templateName:    string
+  listId:          string
+  listName:        string
+  status:          'draft' | 'scheduled' | 'sending' | 'sent' | 'cancelled'
+  scheduledAt:     string | null
+  startedAt:       string | null
+  completedAt:     string | null
+  totalRecipients: number
+  totalSent:       number
+  totalDelivered:  number
+  totalClicked:    number
+  totalBounced:    number
+  deliveryRate:    number
+  clickRate:       number
+  bounceRate:      number
+  createdAt:       string
+}
+
+export interface EmailContactList {
+  id:           string
+  clientId:     string
+  clientName:   string
+  name:         string
+  contactCount: number
+  createdAt:    string
+}
+
+export interface EmailSuppressed {
+  id:         string
+  email:      string
+  reason:     string
+  clientId:   string | null
+  clientName: string | null
+  global:     boolean
+  createdAt:  string
+}
+
+// ── Email API ─────────────────────────────────────────────────────────────────
+
+export const emailApi = {
+  overview:         () => get<EmailOverviewStats>('/email/overview'),
+
+  listDomains:      () => get<EmailDomain[]>('/email/domains'),
+  addDomain:        (clientId: string, domain: string) =>
+                      post<EmailDomain>('/email/domains', { clientId, domain }),
+  deleteDomain:     (id: string) => del<void>(`/email/domains/${id}`),
+  domainDns:        (id: string) => get<PostalDnsRecord>(`/email/domains/${id}/dns`),
+  verifyDomain:     (id: string) =>
+                      post<{ queued: boolean; message: string }>(`/email/domains/${id}/verify`, {}),
+
+  listTemplates:    (clientId?: string) =>
+                      get<EmailTemplate[]>(`/email/templates${clientId ? `?clientId=${clientId}` : ''}`),
+  createTemplate:   (data: { clientId: string; name: string; subject: string; htmlBody: string }) =>
+                      post<EmailTemplate>('/email/templates', data),
+  updateTemplate:   (id: string, data: { name?: string; subject?: string; htmlBody?: string }) =>
+                      put<EmailTemplate>(`/email/templates/${id}`, data),
+  deleteTemplate:   (id: string) => del<void>(`/email/templates/${id}`),
+
+  listCampaigns:    (params?: { clientId?: string; status?: string }) => {
+                      const qs = new URLSearchParams()
+                      if (params?.clientId) qs.set('clientId', params.clientId)
+                      if (params?.status)   qs.set('status',   params.status)
+                      const q = qs.toString()
+                      return get<EmailCampaign[]>(`/email/campaigns${q ? `?${q}` : ''}`)
+                    },
+  sendCampaign:     (id: string) =>
+                      post<{ launched: boolean; queued: boolean }>(`/email/campaigns/${id}/send`, {}),
+  cancelCampaign:   (id: string) =>
+                      post<{ cancelled: boolean }>(`/email/campaigns/${id}/cancel`, {}),
+
+  listContactLists: (clientId?: string) =>
+                      get<EmailContactList[]>(`/email/contacts/lists${clientId ? `?clientId=${clientId}` : ''}`),
+  createContactList:(clientId: string, name: string) =>
+                      post<{ id: string; name: string; created_at: string }>('/email/contacts/lists', { clientId, name }),
+  deleteContactList:(id: string) => del<void>(`/email/contacts/lists/${id}`),
+
+  listSuppressed:   (clientId?: string) =>
+                      get<EmailSuppressed[]>(`/email/contacts/suppression${clientId ? `?clientId=${clientId}` : ''}`),
+  removeSuppressed: (id: string) => del<void>(`/email/contacts/suppression/${id}`),
 }

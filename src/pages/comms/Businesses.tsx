@@ -1,5 +1,4 @@
 ﻿import { useEffect, useState, type ComponentType } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   Plus, Users, Search, Eye, EyeOff, Copy, Check, Trash2, X, Loader2,
   ChevronRight, AlertCircle, Pencil, BarChart2, KeyRound, Save,
@@ -468,13 +467,110 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
   )
 }
 
+function toSlug(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+function CreateBusinessModal({ plans, onCreated, onClose }: {
+  plans: Plan[]
+  onCreated: (c: Client) => void
+  onClose: () => void
+}) {
+  const [name, setName]     = useState('')
+  const [slug, setSlug]     = useState('')
+  const [planId, setPlanId] = useState(plans[0]?.id ?? '')
+  const [email, setEmail]   = useState('')
+  const [phone, setPhone]   = useState('')
+  const [creating, setCreating] = useState(false)
+  const [error, setError]   = useState('')
+  const [slugEdited, setSlugEdited] = useState(false)
+
+  const handleName = (v: string) => {
+    setName(v)
+    if (!slugEdited) setSlug(toSlug(v))
+  }
+
+  const submit = async () => {
+    if (!name.trim()) { setError('Enter a business name'); return }
+    if (!slug.trim()) { setError('Enter a slug'); return }
+    if (!planId)      { setError('Select a plan'); return }
+    setCreating(true); setError('')
+    try {
+      const c = await commsApi.createClient({
+        name: name.trim(),
+        slug: slug.trim(),
+        planId,
+        contactEmail: email.trim() || undefined,
+        contactPhone: phone.trim() || undefined,
+      })
+      onCreated(c)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to create business')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 bg-[#1a1624] border border-white/10 rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="px-6 py-5 border-b border-white/08">
+          <h2 className="font-semibold text-foreground">Add business</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Creates a business account directly, without the self-service request flow.</p>
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          <div>
+            <label className={LABEL}>Business name</label>
+            <input className={FIELD} placeholder="Acme Corp" value={name} onChange={e => handleName(e.target.value)} />
+          </div>
+          <div>
+            <label className={LABEL}>Slug <span className="text-muted-foreground/40 normal-case font-normal">(used in URLs)</span></label>
+            <input
+              className={FIELD + ' font-mono'}
+              placeholder="acme-corp"
+              value={slug}
+              onChange={e => { setSlugEdited(true); setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')) }}
+            />
+          </div>
+          <div>
+            <label className={LABEL}>Plan</label>
+            <select className={FIELD} value={planId} onChange={e => setPlanId(e.target.value)}>
+              <option value="">Select plan…</option>
+              {plans.map(p => <option key={p.id} value={p.id}>{p.displayName}</option>)}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={LABEL}>Contact email <span className="text-muted-foreground/40 normal-case font-normal">(optional)</span></label>
+              <input className={FIELD} type="email" placeholder="hello@acme.com" value={email} onChange={e => setEmail(e.target.value)} />
+            </div>
+            <div>
+              <label className={LABEL}>Contact phone <span className="text-muted-foreground/40 normal-case font-normal">(optional)</span></label>
+              <input className={FIELD} placeholder="+234…" value={phone} onChange={e => setPhone(e.target.value)} />
+            </div>
+          </div>
+          {error && <p className="text-xs text-red-400">{error}</p>}
+        </div>
+        <div className="px-6 py-4 border-t border-white/08 flex gap-2 justify-end">
+          <button className="btn-secondary" onClick={onClose}>Cancel</button>
+          <button className="btn-primary flex items-center gap-2" onClick={() => void submit()} disabled={creating}>
+            {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            Create business
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function Businesses() {
-  const nav = useNavigate()
   const [clients, setClients] = useState<Client[]>(() => pageCache.get<Client[]>('comms:clients') ?? [])
   const [plans, setPlans] = useState<Plan[]>(() => pageCache.get<Plan[]>('comms:plans') ?? [])
   const [loading, setLoading] = useState(() => !pageCache.get('comms:clients'))
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Client | null>(null)
+  const [showCreate, setShowCreate] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -503,7 +599,7 @@ export function Businesses() {
           <h1 className="page-title">Businesses</h1>
           <p className="caption mt-0.5">{clients.length} business{clients.length !== 1 ? 'es' : ''} on ERA Comms</p>
         </div>
-        <button className="btn-primary flex items-center gap-2" onClick={() => nav('/comms/onboarding')}>
+        <button className="btn-primary flex items-center gap-2" onClick={() => setShowCreate(true)}>
           <Plus className="w-4 h-4" /> Add business
         </button>
       </div>
@@ -538,7 +634,7 @@ export function Businesses() {
           <Users className="w-10 h-10 text-muted-foreground/20" />
           <p className="font-semibold text-foreground">{search ? 'No businesses match your search' : 'No businesses yet'}</p>
           <p className="caption text-sm">{search ? 'Try a different name or slug' : 'Onboard your first business to start managing comms'}</p>
-          {!search && <button className="btn-primary mt-1" onClick={() => nav('/comms/onboarding')}>Add first business</button>}
+          {!search && <button className="btn-primary mt-1" onClick={() => setShowCreate(true)}>Add first business</button>}
         </div>
       ) : (
         <div className="rounded-2xl border border-white/07 bg-card overflow-hidden">
@@ -586,6 +682,17 @@ export function Businesses() {
 
       {selected && (
         <ClientDrawer client={selected} plans={plans} onClose={() => setSelected(null)} onUpdated={load} />
+      )}
+
+      {showCreate && (
+        <CreateBusinessModal
+          plans={plans}
+          onCreated={c => {
+            setClients(prev => [c, ...prev])
+            setShowCreate(false)
+          }}
+          onClose={() => setShowCreate(false)}
+        />
       )}
     </div>
   )
