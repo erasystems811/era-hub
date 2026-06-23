@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './contexts/auth'
 import { Layout } from './components/Layout'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { Login } from './pages/Login'
 import { Home } from './pages/Home'
 
@@ -74,7 +75,7 @@ function ProtectedApp() {
         {/* ERA Patient */}
         <Route path="/patient" element={<PatientHome />} />
         <Route path="/patient/hospitals" element={<Hospitals />} />
-        <Route path="/patient/hospitals/:id" element={<HospitalDetail />} />
+        <Route path="/patient/hospitals/:id" element={<ErrorBoundary><HospitalDetail /></ErrorBoundary>} />
         <Route path="/patient/analytics" element={<Analytics />} />
         <Route path="/patient/support" element={<Support />} />
         <Route path="/patient/automation" element={<AutomationLog />} />

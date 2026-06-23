@@ -380,7 +380,7 @@ export function HospitalDetail() {
                 </span>
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {hospital.username} · {hospital.patientCount.toLocaleString()} patients
+                {hospital.username} · {(hospital.patientCount ?? 0).toLocaleString()} patients
                 {hospital.walletBalanceKobo != null && (
                   <span className="ml-2">· {fmtMoney(hospital.walletBalanceKobo)} wallet</span>
                 )}
