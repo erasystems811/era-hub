@@ -23,8 +23,58 @@ const MIME = {
   '.webp':  'image/webp',
 }
 
+async function readBody(req) {
+  let raw = ''
+  for await (const chunk of req) raw += chunk
+  return raw
+}
+
 createServer(async (req, res) => {
   const urlPath = (req.url ?? '/').split('?')[0].replace(/\.\./g, '')
+
+  // ERA Core proxy — routes all /api/core-proxy requests server-side to avoid browser network blocks
+  if (urlPath === '/api/core-proxy') {
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204, {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      })
+      res.end()
+      return
+    }
+
+    if (req.method === 'POST') {
+      try {
+        const { url, method = 'GET', secret, data } = JSON.parse(await readBody(req))
+
+        if (!url || !url.startsWith('https://')) {
+          res.writeHead(400, { 'Content-Type': 'application/json' })
+          res.end(JSON.stringify({ error: 'Invalid URL' }))
+          return
+        }
+
+        const headers = { 'Content-Type': 'application/json' }
+        if (secret) headers['x-core-secret'] = secret
+
+        const upstream = await fetch(url, {
+          method,
+          headers,
+          body: data !== undefined ? JSON.stringify(data) : undefined,
+        })
+
+        const text = await upstream.text()
+        res.writeHead(upstream.status, { 'Content-Type': 'application/json' })
+        res.end(text)
+      } catch (e) {
+        res.writeHead(502, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ error: 'Proxy error: ' + e.message }))
+      }
+      return
+    }
+  }
+
+  // Static file serving
   const filePath = join(DIST, urlPath)
 
   let isFile = false

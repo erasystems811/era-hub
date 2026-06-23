@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Brain, CheckCircle, XCircle } from 'lucide-react'
-import { getCoreApi, getCoreSecret, saveCoreConfig } from '../../lib/config'
+import { saveCoreConfig } from '../../lib/config'
+import { coreFetch } from '../../lib/coreFetch'
 
 const PURPLE = '#9B7FD4'
 
@@ -26,16 +27,16 @@ export function CoreSettings() {
     setErrorMsg('')
 
     try {
-      const res = await fetch(`${cleanUrl}/health`)
-      if (!res.ok) throw new Error(`Health check returned ${res.status}`)
-
+      await coreFetch<{ ok: boolean }>('/health', { url: `${cleanUrl}/health`, secret: cleanSecret })
       saveCoreConfig(cleanUrl, cleanSecret)
       setStatus('ok')
-
-      const s = await fetch(`${cleanUrl}/v1/ingest/status`, {
-        headers: { 'x-core-secret': cleanSecret },
-      })
-      if (s.ok) setStats(await s.json())
+      try {
+        const s = await coreFetch<{ total: number; processed: number; pending: number }>(
+          '/v1/ingest/status',
+          { url: `${cleanUrl}/v1/ingest/status`, secret: cleanSecret }
+        )
+        setStats(s)
+      } catch { /* stats optional */ }
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : String(e))
       setStatus('fail')

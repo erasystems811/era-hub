@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Brain, RefreshCw, Trash2, Settings } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { getCoreApi, getCoreSecret } from '../../lib/config'
+import { coreFetch } from '../../lib/coreFetch'
 
 type Category = 'principle' | 'preference' | 'weakness' | 'style' | 'blindspot' | 'decision'
 type Mode = 'business' | 'personal' | 'both'
@@ -78,10 +78,8 @@ export function CoreMemory() {
     setLoading(true)
     setError(null)
     try {
-      const url = filter === 'all' ? `${getCoreApi()}/v1/memories` : `${getCoreApi()}/v1/memories?mode=${filter}`
-      const res = await fetch(url, { headers: { 'x-core-secret': getCoreSecret() } })
-      if (!res.ok) throw new Error(`${res.status}`)
-      setMemories(await res.json() as Memory[])
+      const path = filter === 'all' ? '/v1/memories' : `/v1/memories?mode=${filter}`
+      setMemories(await coreFetch<Memory[]>(path))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load')
     } finally {
@@ -92,10 +90,7 @@ export function CoreMemory() {
   async function deleteMemory(id: string) {
     setDeleting(id)
     try {
-      await fetch(`${getCoreApi()}/v1/memories/${id}`, {
-        method: 'DELETE',
-        headers: { 'x-core-secret': getCoreSecret() },
-      })
+      await coreFetch(`/v1/memories/${id}`, { method: 'DELETE' })
       setMemories(prev => prev.filter(m => m.id !== id))
     } finally {
       setDeleting(null)
