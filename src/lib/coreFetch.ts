@@ -2,35 +2,27 @@ import { getCoreApi, getCoreSecret } from './config'
 
 type Method = 'GET' | 'POST' | 'DELETE'
 
-async function doFetch(url: string, method: Method, secret?: string, data?: unknown): Promise<Response> {
-  // In dev mode use direct fetch; in production route through server-side proxy
-  // to avoid browser cross-origin / network blocks
-  if (import.meta.env.DEV) {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-    if (secret) headers['x-core-secret'] = secret
-    return fetch(url, {
-      method,
-      headers,
-      body: data !== undefined ? JSON.stringify(data) : undefined,
-    })
-  }
-
-  return fetch('/api/core-proxy', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url, method, secret, data }),
-  })
+function getBase(): string {
+  // In dev: call ERA Core directly. In production: route through /api/core proxy.
+  return import.meta.env.DEV ? getCoreApi() : '/api/core'
 }
 
 export async function coreFetch<T = unknown>(
   path: string,
-  opts: { method?: Method; body?: unknown; url?: string; secret?: string } = {}
+  opts: { method?: Method; body?: unknown } = {}
 ): Promise<T> {
-  const url = opts.url ?? `${getCoreApi()}${path}`
-  const secret = opts.secret ?? getCoreSecret()
   const method = opts.method ?? 'GET'
+  const secret = getCoreSecret()
 
-  const res = await doFetch(url, method, secret, opts.body)
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (secret) headers['x-core-secret'] = secret
+
+  const res = await fetch(`${getBase()}${path}`, {
+    method,
+    headers,
+    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+  })
+
   if (!res.ok) {
     const text = await res.text().catch(() => '')
     throw new Error(`${res.status}${text ? ': ' + text : ''}`)

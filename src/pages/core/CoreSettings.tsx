@@ -27,14 +27,11 @@ export function CoreSettings() {
     setErrorMsg('')
 
     try {
-      await coreFetch<{ ok: boolean }>('/health', { url: `${cleanUrl}/health`, secret: cleanSecret })
       saveCoreConfig(cleanUrl, cleanSecret)
+      await coreFetch<{ ok: boolean }>('/health')
       setStatus('ok')
       try {
-        const s = await coreFetch<{ total: number; processed: number; pending: number }>(
-          '/v1/ingest/status',
-          { url: `${cleanUrl}/v1/ingest/status`, secret: cleanSecret }
-        )
+        const s = await coreFetch<{ total: number; processed: number; pending: number }>('/v1/ingest/status')
         setStats(s)
       } catch { /* stats optional */ }
     } catch (e) {
