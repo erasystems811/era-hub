@@ -3,7 +3,7 @@ import {
   Loader2, Search, CheckCircle2, XCircle, Clock, Users,
   Smartphone, Code2, Mail, Phone, FileText, AlertCircle, Copy, Check, Key,
 } from 'lucide-react'
-import { commsApi, OnboardingRequest } from '../../lib/comms-api'
+import { commsApi, type Client, OnboardingRequest } from '../../lib/comms-api'
 import { pageCache } from '../../lib/cache'
 
 // ── Temp-password modal ────────────────────────────────────────────────────
@@ -282,6 +282,14 @@ function RequestCard({
 }
 
 type ApprovalResult = { businessName: string; email: string; tempPassword: string }
+type PageSection = 'applications' | 'pipeline'
+
+function pipelineStage(c: Client): { label: string; style: string } {
+  if (c.active && c.sessionCount > 0) return { label: 'Live',                style: 'bg-teal/10 text-teal border-teal/20'                          }
+  if (c.sessionCount > 0)             return { label: 'WhatsApp Connected',  style: 'bg-blue-500/10 text-blue-400 border-blue-500/20'               }
+  if (c.active)                       return { label: 'Approved',            style: 'bg-amber-500/10 text-amber-400 border-amber-500/20'             }
+  return                                     { label: 'Inactive',            style: 'bg-red-500/10 text-red-400 border-red-500/20'                   }
+}
 
 export function Requests() {
   const [requests, setRequests] = useState<OnboardingRequest[]>(() => pageCache.get<OnboardingRequest[]>('comms:requests') ?? [])
@@ -290,6 +298,9 @@ export function Requests() {
   const [search, setSearch]     = useState('')
   const [tierFilter, setTierFilter] = useState<'all' | 'ai_agent' | 'developer'>('all')
   const [approvalResult, setApprovalResult] = useState<ApprovalResult | null>(null)
+  const [pageSection, setPageSection] = useState<PageSection>('applications')
+  const [clients, setClients]   = useState<Client[]>([])
+  const [pipelineLoading, setPipelineLoading] = useState(false)
 
   const load = async () => {
     try {
@@ -308,6 +319,15 @@ export function Requests() {
     const id = setInterval(() => void load(), 60_000)
     return () => clearInterval(id)
   }, [tab])
+
+  useEffect(() => {
+    if (pageSection !== 'pipeline' || clients.length > 0) return
+    setPipelineLoading(true)
+    commsApi.listClients()
+      .then(setClients)
+      .catch(() => {})
+      .finally(() => setPipelineLoading(false))
+  }, [pageSection])
 
   const handleApprove = async (id: string) => {
     const req = requests.find(r => r.id === id)
@@ -355,19 +375,38 @@ export function Requests() {
       )}
 
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between mb-4">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="page-title">Requests</h1>
-            {pending.length > 0 && (
+            {pending.length > 0 && pageSection === 'applications' && (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary">
                 {pending.length} pending
               </span>
             )}
           </div>
-          <p className="caption mt-0.5">Business applications waiting for your approval</p>
+          <p className="caption mt-0.5">
+            {pageSection === 'applications' ? 'Business applications waiting for your approval' : 'Onboarding pipeline for all businesses'}
+          </p>
         </div>
       </div>
+
+      {/* Section tabs */}
+      <div className="flex gap-1 border-b border-white/07 mb-6">
+        {([['applications', 'Applications'], ['pipeline', 'Pipeline']] as const).map(([id, label]) => (
+          <button key={id} onClick={() => setPageSection(id)}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              pageSection === id ? 'text-primary border-primary' : 'text-muted-foreground border-transparent hover:text-foreground hover:border-white/20'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {pageSection === 'pipeline' ? (
+        <PipelineView clients={clients} pending={requests.filter(r => r.status === 'pending')} loading={pipelineLoading} />
+      ) : (<>
 
       {/* Stat cards */}
       <div className="grid grid-cols-3 gap-3 mb-6">
@@ -434,6 +473,97 @@ export function Requests() {
           ))}
         </div>
       )}
+      </>)}
+    </div>
+  )
+}
+
+function PipelineView({ clients, pending, loading }: {
+  clients: Client[]
+  pending: OnboardingRequest[]
+  loading: boolean
+}) {
+  if (loading) return (
+    <div className="flex items-center justify-center py-20 gap-2 text-muted-foreground">
+      <Loader2 className="w-4 h-4 animate-spin" /> Loading pipeline…
+    </div>
+  )
+
+  const total = pending.length + clients.length
+  if (total === 0) return (
+    <div className="rounded-2xl border border-white/07 bg-card flex flex-col items-center justify-center py-16 gap-3">
+      <Users className="w-10 h-10 text-muted-foreground/20" />
+      <p className="font-semibold text-foreground">No businesses yet</p>
+      <p className="caption text-sm">Applications and approved businesses will appear here</p>
+    </div>
+  )
+
+  const stages = [
+    { label: 'Awaiting Approval', count: pending.length,                                                         style: 'bg-white/05 text-muted-foreground border-white/10' },
+    { label: 'Approved',          count: clients.filter(c => c.active && c.sessionCount === 0).length,           style: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+    { label: 'WhatsApp Connected',count: clients.filter(c => c.sessionCount > 0 && !c.active).length,            style: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+    { label: 'Live',              count: clients.filter(c => c.active && c.sessionCount > 0).length,             style: 'bg-teal/10 text-teal border-teal/20' },
+  ]
+
+  return (
+    <div className="space-y-5">
+      {/* Stage summary */}
+      <div className="grid grid-cols-4 gap-3">
+        {stages.map(s => (
+          <div key={s.label} className={`rounded-xl border px-4 py-3 ${s.style}`}>
+            <p className="text-lg font-bold tabular-nums">{s.count}</p>
+            <p className="text-[11px] font-medium opacity-70 mt-0.5 leading-tight">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div className="rounded-2xl border border-white/07 bg-card overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-white/07">
+              {['Business', 'Plan', 'Stage', 'Since'].map(h => (
+                <th key={h} className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3.5">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/05">
+            {pending.map(r => (
+              <tr key={r.id} className="hover:bg-white/[0.025] transition-colors">
+                <td className="px-5 py-3.5">
+                  <p className="font-medium text-foreground">{r.businessName}</p>
+                  <p className="text-[11px] text-muted-foreground/50">{r.contactEmail}</p>
+                </td>
+                <td className="px-5 py-3.5 text-xs text-muted-foreground capitalize">{r.tier?.replace('_', ' ') ?? '—'}</td>
+                <td className="px-5 py-3.5">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-white/05 text-muted-foreground border-white/10">
+                    Awaiting Approval
+                  </span>
+                </td>
+                <td className="px-5 py-3.5 text-xs text-muted-foreground">{timeAgo(r.createdAt)}</td>
+              </tr>
+            ))}
+            {clients.map(c => {
+              const { label, style } = pipelineStage(c)
+              return (
+                <tr key={c.id} className="hover:bg-white/[0.025] transition-colors">
+                  <td className="px-5 py-3.5">
+                    <p className="font-medium text-foreground">{c.name}</p>
+                    <p className="text-[11px] text-muted-foreground/50">{c.contactEmail ?? c.slug}</p>
+                  </td>
+                  <td className="px-5 py-3.5 text-xs text-muted-foreground">{c.planName}</td>
+                  <td className="px-5 py-3.5">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${style}`}>
+                      {label}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5 text-xs text-muted-foreground">{timeAgo(c.createdAt)}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
