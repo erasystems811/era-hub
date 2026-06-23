@@ -163,8 +163,10 @@ export default function App() {
   const path = window.location.pathname
 
   // Public routes — no auth required
-  if (path === '/apply/ai-agent')  return <AIAgentSignup />
-  if (path === '/apply/developer') return <DeveloperSignup />
+  if (path.startsWith('/apply')) {
+    if (path === '/apply/developer') return <DeveloperSignup />
+    return <AIAgentSignup />
+  }
 
   // Business owner panel — has its own auth
   if (path === '/biz/login') return <BizLogin />
