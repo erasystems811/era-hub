@@ -3,6 +3,8 @@ name: Deploy ERA Hub
 on:
   push:
     branches: [main, master]
+  repository_dispatch:
+    types: [era-comms-updated]
 
 jobs:
   deploy:
@@ -35,7 +37,7 @@ jobs:
           target: /var/www/era-hub
           strip_components: 1
 
-      - name: Fix permissions + apply nginx
+      - name: Fix permissions + deploy era-comms
         uses: appleboy/ssh-action@master
         with:
           host: 46.101.83.26
@@ -46,3 +48,4 @@ jobs:
             cd /opt/era-comms && git pull origin main 2>/dev/null || true
             cp /opt/era-comms/scripts/nginx.conf /etc/nginx/sites-available/era-comms 2>/dev/null || true
             nginx -t && systemctl reload nginx 2>/dev/null || true
+            cd /opt/era-comms/docker && docker compose -f docker-compose.prod.yml up -d --build 2>/dev/null || true
