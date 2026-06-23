@@ -39,6 +39,12 @@ import { InboxModule }        from './pages/business-panel/InboxModule'
 import { AnalyticsModule }    from './pages/business-panel/AnalyticsModule'
 import { BizSettingsPage }    from './pages/business-panel/BizSettingsPage'
 
+// ERA Connect
+import { ConnectHome }           from './pages/connect/ConnectHome'
+import { ConnectInstances }      from './pages/connect/ConnectInstances'
+import { ConnectEvents }         from './pages/connect/ConnectEvents'
+import { ConnectInstanceDetail } from './pages/connect/ConnectInstanceDetail'
+
 // ERA Comms
 import { CommsHome }      from './pages/comms/CommsHome'
 import { CommsDashboard } from './pages/comms/CommsDashboard'
@@ -115,14 +121,11 @@ function ProtectedApp() {
         <Route path="/comms/email/domains"       element={<EmailDomains />} />
         <Route path="/comms/voice"               element={<VoiceComingSoon />} />
 
-        {/* Future */}
-        <Route path="/connect" element={
-          <div className="max-w-md mx-auto mt-16 text-center">
-            <div className="text-4xl mb-4">⚡</div>
-            <h1 className="page-title mb-2">ERA Connect</h1>
-            <p className="caption">This product is coming soon. Check back later.</p>
-          </div>
-        } />
+        {/* ERA Connect */}
+        <Route path="/connect"                    element={<ConnectHome />} />
+        <Route path="/connect/instances"          element={<ConnectInstances />} />
+        <Route path="/connect/instances/:id"      element={<ConnectInstanceDetail />} />
+        <Route path="/connect/events"             element={<ConnectEvents />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
