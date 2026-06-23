@@ -3,6 +3,7 @@ import { Bot, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { commsApi, type Client } from '../../lib/comms-api'
 import { eventsApi, type PlatformEvent } from '../../lib/events-api'
+import { AIEngineTabs } from '../../components/AIEngineTabs'
 
 const INPUT = 'px-3.5 py-2 rounded-xl bg-[hsl(262_20%_11%)] border border-white/[0.10] text-foreground text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/15 transition-all'
 
@@ -66,6 +67,7 @@ export function AILogs() {
 
   return (
     <div className="max-w-5xl space-y-6">
+      <AIEngineTabs />
       <div>
         <h1 className="page-title">AI Logs</h1>
         <p className="caption mt-0.5">Every conversation the AI has handled</p>

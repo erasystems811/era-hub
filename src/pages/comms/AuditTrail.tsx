@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Search, Download, X, Loader2, FileText, ChevronLeft, ChevronRight } from 'lucide-react'
 import { eventsApi, AuditEntry } from '../../lib/events-api'
+import { MonitoringTabs } from '../../components/MonitoringTabs'
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
@@ -93,6 +94,7 @@ export function AuditTrail() {
 
   return (
     <div className="max-w-5xl">
+      <MonitoringTabs />
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>

@@ -46,12 +46,10 @@ import { ConnectEvents }         from './pages/connect/ConnectEvents'
 import { ConnectInstanceDetail } from './pages/connect/ConnectInstanceDetail'
 
 // ERA Comms
-import { CommsHome }      from './pages/comms/CommsHome'
 import { CommsDashboard } from './pages/comms/CommsDashboard'
 import { Sessions }       from './pages/comms/Sessions'
 import { Businesses }     from './pages/comms/Businesses'
 import { Requests }       from './pages/comms/Requests'
-import { Onboarding }     from './pages/comms/Onboarding'
 import { Plans }          from './pages/comms/Plans'
 import { Billing }        from './pages/comms/Billing'
 import { CommsSettings }  from './pages/comms/CommsSettings'
@@ -95,12 +93,11 @@ function ProtectedApp() {
         <Route path="/patient/automation-tests" element={<AutomationTests />} />
 
         {/* ERA Comms */}
-        <Route path="/comms"              element={<CommsHome />} />
+        <Route path="/comms"              element={<Navigate to="/comms/dashboard" replace />} />
         <Route path="/comms/dashboard"    element={<CommsDashboard />} />
         <Route path="/comms/sessions"     element={<Sessions />} />
         <Route path="/comms/businesses"   element={<Businesses />} />
         <Route path="/comms/requests"     element={<Requests />} />
-        <Route path="/comms/onboarding"   element={<Onboarding />} />
         <Route path="/comms/plans"        element={<Plans />} />
         <Route path="/comms/billing"              element={<Billing />} />
         <Route path="/comms/billing/:clientId"   element={<BillingDetail />} />

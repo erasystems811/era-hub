@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Search, Download, ChevronLeft, ChevronRight, Loader2, FileText, X } from 'lucide-react'
 import { eventsApi, PlatformEvent, EventSeverity } from '../../lib/events-api'
+import { MonitoringTabs } from '../../components/MonitoringTabs'
 
 const PAGE_SIZE = 50
 
@@ -139,9 +140,9 @@ export function EventLog() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between mb-4">
         <div>
-          <h1 className="page-title">Event Log</h1>
+          <h1 className="page-title">Monitoring</h1>
           <p className="caption mt-0.5">
             {loading ? 'Loading…' : `${filtered.length.toLocaleString()} event${filtered.length !== 1 ? 's' : ''}${hasFilters ? ' matching filters' : ' total'}`}
           </p>
@@ -154,6 +155,8 @@ export function EventLog() {
           <Download className="w-3.5 h-3.5" /> Export CSV
         </button>
       </div>
+
+      <MonitoringTabs />
 
       {/* Filters */}
       <div className="rounded-xl border border-white/07 bg-card p-4 space-y-3">

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bot, Zap, Clock, CheckCircle, ChevronRight, Save } from 'lucide-react'
-import { commsApi, type Client } from '../../lib/comms-api'
+import { Bot, Zap, Clock, CheckCircle, ChevronRight, Save, Loader2, AlertCircle } from 'lucide-react'
+import { commsApi, type Client, aiEngineApi } from '../../lib/comms-api'
 import { eventsApi, type UsageRecord } from '../../lib/events-api'
+import { AIEngineTabs } from '../../components/AIEngineTabs'
 
 const DEFAULT_PROMPT =
   'You are a helpful business assistant. Be concise, friendly, and professional. Only answer questions related to the business you are serving. If you don\'t know something, say so clearly and offer to connect the customer with a human representative.'
@@ -12,12 +13,15 @@ export function AIEngine() {
   const [clients, setClients] = useState<Client[]>([])
   const [usage, setUsage] = useState<UsageRecord[]>([])
   const [loading, setLoading] = useState(true)
+  const [configLoading, setConfigLoading] = useState(true)
 
   const [temperature, setTemperature] = useState(0.7)
   const [systemPrompt, setSystemPrompt] = useState(DEFAULT_PROMPT)
   const [maxRequests, setMaxRequests] = useState(100)
   const [maxTokens, setMaxTokens] = useState(1000)
   const [cutoff, setCutoff] = useState(5000)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
@@ -25,6 +29,18 @@ export function AIEngine() {
       commsApi.listClients().catch(() => [] as Client[]),
       eventsApi.listUsage().catch(() => [] as UsageRecord[]),
     ]).then(([c, u]) => { setClients(c); setUsage(u) }).finally(() => setLoading(false))
+
+    setConfigLoading(true)
+    aiEngineApi.getConfig()
+      .then(cfg => {
+        setTemperature(cfg.temperature)
+        setSystemPrompt(cfg.systemPrompt || DEFAULT_PROMPT)
+        setMaxRequests(cfg.maxRequestsPerHour)
+        setMaxTokens(cfg.maxTokensPerResponse)
+        setCutoff(cfg.dailySpendCutoff)
+      })
+      .catch(() => {})
+      .finally(() => setConfigLoading(false))
   }, [])
 
   const totalTokens = usage.reduce((s, r) => s + r.aiTokensUsed, 0)
@@ -32,13 +48,28 @@ export function AIEngine() {
 
   const usageMap = new Map(usage.map(r => [r.businessId, r]))
 
-  function handleSave() {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+  async function handleSave() {
+    setSaving(true); setSaveError('')
+    try {
+      await aiEngineApi.saveConfig({
+        temperature,
+        systemPrompt,
+        maxRequestsPerHour: maxRequests,
+        maxTokensPerResponse: maxTokens,
+        dailySpendCutoff: cutoff,
+      })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Failed to save')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
     <div className="max-w-4xl space-y-8">
+      <AIEngineTabs />
       <div>
         <h1 className="page-title">AI Engine</h1>
         <p className="caption mt-0.5">Generative AI usage, performance, and model configuration</p>
@@ -175,12 +206,18 @@ export function AIEngine() {
           <p className="text-xs text-muted-foreground/50 mt-1">{systemPrompt.length} characters</p>
         </div>
 
+        {saveError && (
+          <div className="flex items-center gap-2 text-xs text-red-400 bg-red-500/8 border border-red-500/15 rounded-lg px-3 py-2">
+            <AlertCircle className="w-3.5 h-3.5 shrink-0" /> {saveError}
+          </div>
+        )}
         <button
-          onClick={handleSave}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all"
+          onClick={() => void handleSave()}
+          disabled={saving || configLoading}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 disabled:opacity-50 transition-all"
         >
-          <Save className="w-4 h-4" />
-          {saved ? 'Saved!' : 'Save model config'}
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {saved ? 'Saved!' : saving ? 'Saving…' : 'Save model config'}
         </button>
       </div>
 
@@ -221,11 +258,12 @@ export function AIEngine() {
           </div>
         </div>
         <button
-          onClick={handleSave}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all"
+          onClick={() => void handleSave()}
+          disabled={saving || configLoading}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 disabled:opacity-50 transition-all"
         >
-          <Save className="w-4 h-4" />
-          {saved ? 'Saved!' : 'Save limits'}
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {saved ? 'Saved!' : saving ? 'Saving…' : 'Save limits'}
         </button>
       </div>
     </div>

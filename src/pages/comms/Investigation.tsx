@@ -4,6 +4,7 @@ import {
   Clock, CheckCircle2, XCircle, Info,
 } from 'lucide-react'
 import { eventsApi, PlatformEvent, AuditEntry, PlatformAlert, EventSeverity } from '../../lib/events-api'
+import { MonitoringTabs } from '../../components/MonitoringTabs'
 
 type InvestigationTab = 'events' | 'audit' | 'alerts'
 
@@ -99,6 +100,7 @@ export function Investigation() {
 
   return (
     <div className="max-w-4xl">
+      <MonitoringTabs />
       {/* Header */}
       <div className="mb-6">
         <h1 className="page-title">Investigation</h1>

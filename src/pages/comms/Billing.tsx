@@ -243,27 +243,32 @@ export function Billing() {
             </div>
           </div>
 
-          {/* Usage trends placeholder */}
-          <div className="rounded-2xl border border-white/[0.07] bg-card p-5">
-            <h2 className="text-sm font-semibold text-foreground mb-1">Usage Trends</h2>
-            <p className="text-xs text-muted-foreground mb-4">Daily breakdown available in Event Log</p>
-            <div className="flex items-end gap-1 h-16">
-              {Array.from({ length: 28 }, (_, i) => {
-                const h = 20 + Math.round(Math.random() * 80)
-                return (
-                  <div
-                    key={i}
-                    className="flex-1 rounded-sm bg-primary/20 hover:bg-primary/40 transition-colors"
-                    style={{ height: `${h}%` }}
-                    title={`Day ${i + 1}`}
-                  />
-                )
-              })}
+          {/* Per-business message volume bar chart — real data */}
+          {topConsumers.length > 0 && (
+            <div className="rounded-2xl border border-white/[0.07] bg-card p-5">
+              <h2 className="text-sm font-semibold text-foreground mb-1">Message Volume by Business</h2>
+              <p className="text-xs text-muted-foreground mb-4">Total messages (in + out) for top businesses this period</p>
+              <div className="space-y-2">
+                {topConsumers.slice(0, 8).map(u => {
+                  const total = u.messagesIn + u.messagesOut
+                  const max = topConsumers[0] ? topConsumers[0].messagesIn + topConsumers[0].messagesOut : 1
+                  const pct = max > 0 ? Math.round((total / max) * 100) : 0
+                  return (
+                    <div key={u.businessId} className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground w-28 truncate shrink-0">{u.businessName}</span>
+                      <div className="flex-1 h-5 bg-white/[0.04] rounded-md overflow-hidden">
+                        <div
+                          className="h-full bg-primary/30 rounded-md transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-foreground tabular-nums w-14 text-right shrink-0">{fmtNumber(total)}</span>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-            <div className="flex justify-between mt-1.5 text-[10px] text-muted-foreground/40">
-              <span>1</span><span>7</span><span>14</span><span>21</span><span>28</span>
-            </div>
-          </div>
+          )}
         </>
       )}
     </div>

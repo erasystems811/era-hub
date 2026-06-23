@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { CheckCircle2, AlertTriangle, AlertCircle, Loader2, RefreshCw, ShieldCheck } from 'lucide-react'
 import { eventsApi, PlatformAlert } from '../../lib/events-api'
+import { MonitoringTabs } from '../../components/MonitoringTabs'
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
@@ -129,9 +130,9 @@ export function Alerts() {
   return (
     <div className="max-w-4xl">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between mb-4">
         <div>
-          <h1 className="page-title">Alerts</h1>
+          <h1 className="page-title">Monitoring</h1>
           <p className="caption mt-0.5">
             {loading ? 'Loading…' : `${active.length} active alert${active.length !== 1 ? 's' : ''}`}
           </p>
@@ -144,6 +145,8 @@ export function Alerts() {
           Refresh
         </button>
       </div>
+
+      <MonitoringTabs />
 
       {/* Tabs */}
       <div className="flex gap-1 mb-5 p-1 rounded-xl bg-white/[0.04] border border-white/06 w-fit">

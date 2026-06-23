@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
-import { Plus, Smartphone, RefreshCw, X, Loader2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Plus, Smartphone, RefreshCw, X, Loader2, KeyRound } from 'lucide-react'
 import { StatusDot } from '../../components/StatusDot'
 import { QRModal } from '../../components/QRModal'
 import { commsApi, Session, Client } from '../../lib/comms-api'
@@ -110,6 +111,7 @@ function ConfirmStopModal({ session, onClose, onStopped }: { session: Session; o
 }
 
 export function Sessions() {
+  const nav = useNavigate()
   const [sessions, setSessions] = useState<Session[]>(() => pageCache.get<Session[]>('comms:sessions') ?? [])
   const [clients, setClients] = useState<Client[]>(() => pageCache.get<Client[]>('comms:clients') ?? [])
   const [loading, setLoading] = useState(() => !pageCache.get('comms:sessions'))
@@ -146,6 +148,9 @@ export function Sessions() {
         <div className="flex gap-2 flex-wrap">
           <button className="btn-secondary flex items-center gap-2 text-sm" onClick={load} disabled={loading}>
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
+          </button>
+          <button className="btn-secondary flex items-center gap-2 text-sm" onClick={() => nav('/comms/connect-session')}>
+            <KeyRound className="w-3.5 h-3.5" /> OTP Connect
           </button>
           <button className="btn-primary flex items-center gap-2 text-sm" onClick={() => setShowAdd(true)}>
             <Plus className="w-4 h-4" /> Connect number

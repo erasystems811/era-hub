@@ -3,7 +3,7 @@ import {
   Home, Building2, MessageSquare, Users, BarChart2, Headphones,
   Zap, Briefcase, Smartphone, CreditCard, Settings,
   ChevronDown, ChevronRight, Layers, LayoutDashboard,
-  GitPullRequest, Route, Bell, ScrollText, Bot, Mail,
+  GitPullRequest, Mail, Activity, Bot, Phone,
 } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { useState, useEffect } from 'react'
@@ -14,6 +14,7 @@ interface NavItem {
   icon: JSX.Element
   children?: NavItem[]
   accent?: 'pink' | 'teal'
+  badge?: string
 }
 
 const NAV: NavItem[] = [
@@ -39,21 +40,17 @@ const NAV: NavItem[] = [
     icon: <MessageSquare className="w-4 h-4" />,
     accent: 'pink',
     children: [
-      // ── Live operations
       { path: '/comms/dashboard',   label: 'Dashboard',      icon: <LayoutDashboard className="w-4 h-4" />, accent: 'pink' },
       { path: '/comms/businesses',  label: 'Businesses',     icon: <Users className="w-4 h-4" />,           accent: 'pink' },
       { path: '/comms/sessions',    label: 'Sessions',       icon: <Smartphone className="w-4 h-4" />,      accent: 'pink' },
       { path: '/comms/requests',    label: 'Requests',       icon: <GitPullRequest className="w-4 h-4" />,  accent: 'pink' },
-      { path: '/comms/onboarding',  label: 'Onboarding',     icon: <Route className="w-4 h-4" />,           accent: 'pink' },
-      // ── Monitoring
-      { path: '/comms/alerts',      label: 'Alerts',         icon: <Bell className="w-4 h-4" />,            accent: 'pink' },
-      { path: '/comms/event-log',   label: 'Event Log',      icon: <ScrollText className="w-4 h-4" />,      accent: 'pink' },
-      // ── Config
+      { path: '/comms/alerts',      label: 'Monitoring',     icon: <Activity className="w-4 h-4" />,        accent: 'pink' },
       { path: '/comms/ai-engine',   label: 'AI Engine',      icon: <Bot className="w-4 h-4" />,             accent: 'pink' },
       { path: '/comms/email',       label: 'Email',          icon: <Mail className="w-4 h-4" />,            accent: 'pink' },
       { path: '/comms/plans',       label: 'Plans',          icon: <Layers className="w-4 h-4" />,          accent: 'pink' },
       { path: '/comms/billing',     label: 'Billing',        icon: <CreditCard className="w-4 h-4" />,      accent: 'pink' },
       { path: '/comms/settings',    label: 'Settings',       icon: <Settings className="w-4 h-4" />,        accent: 'pink' },
+      { path: '/comms/voice',       label: 'Voice',          icon: <Phone className="w-4 h-4" />,           accent: 'pink', badge: 'Soon' },
     ],
   },
 ]
@@ -115,7 +112,12 @@ function NavGroup({ item }: { item: NavItem }) {
                   >
                     {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full" style={{ background: childAccent.bar }} />}
                     <span style={active ? { color: childAccent.text } : {}}>{child.icon}</span>
-                    <span className={active ? 'font-semibold' : ''}>{child.label}</span>
+                    <span className={`flex-1 ${active ? 'font-semibold' : ''}`}>{child.label}</span>
+                    {child.badge && (
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-white/10 text-muted-foreground/60 leading-none">
+                        {child.badge}
+                      </span>
+                    )}
                   </div>
                 )}
               </NavLink>
