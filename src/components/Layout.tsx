@@ -122,7 +122,7 @@ function HubLayout({ children }: { children: ReactNode }) {
 }
 
 /* ─── Product Layout (ERA Patient / ERA Comms — product-specific sidebar) */
-function ProductLayout({ product, children }: { product: 'patient' | 'comms' | 'connect'; children: ReactNode }) {
+function ProductLayout({ product, children }: { product: 'patient' | 'comms' | 'connect' | 'core'; children: ReactNode }) {
   const { logout }       = useAuth()
   const { unreadCount }  = useNotifications()
   const { pathname }     = useLocation()

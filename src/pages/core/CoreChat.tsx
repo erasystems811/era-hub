@@ -28,15 +28,22 @@ function loadMessages(id: string): Message[] {
 function saveMessages(id: string, msgs: Message[]) { localStorage.setItem(msgKey(id), JSON.stringify(msgs)) }
 function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36) }
 
-// Replace with ERA Core backend call when ready
-async function getCoreResponse(_msgs: Message[]): Promise<string> {
-  await new Promise(r => setTimeout(r, 900))
-  return 'ERA Core backend not connected yet — the memory layer and response engine are being built. Your message has been stored in this session.'
+import { CORE_API, CORE_SECRET } from '../../lib/config'
+
+async function coreChat(sessionId: string | null, mode: 'business' | 'personal', message: string): Promise<{ session_id: string; response: string }> {
+  const res = await fetch(`${CORE_API}/v1/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-core-secret': CORE_SECRET },
+    body: JSON.stringify({ session_id: sessionId, mode, message }),
+  })
+  if (!res.ok) throw new Error(`ERA Core error: ${res.status}`)
+  return res.json() as Promise<{ session_id: string; response: string }>
 }
 
 const PURPLE = '#9B7FD4'
 
 export function CoreChat() {
+  const [mode, setMode] = useState<'business' | 'personal'>('business')
   const [sessions, setSessions] = useState<Session[]>(loadSessions)
   const [activeId, setActiveId] = useState<string | null>(() => loadSessions()[0]?.id ?? null)
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -45,6 +52,7 @@ export function CoreChat() {
   })
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -112,15 +120,26 @@ export function CoreChat() {
     }
 
     setLoading(true)
+    setError(null)
     try {
-      const reply = await getCoreResponse(withUser)
-      const coreMsg: Message = { id: uid(), role: 'core', content: reply, createdAt: new Date().toISOString() }
+      const result = await coreChat(sid, mode, text)
+      // Sync session ID from server if it was newly created
+      if (result.session_id !== sid) {
+        const updated = currentSessions.map(s => s.id === sid ? { ...s, id: result.session_id } : s)
+        setSessions(updated)
+        saveSessions(updated)
+        setActiveId(result.session_id)
+        sid = result.session_id
+      }
+      const coreMsg: Message = { id: uid(), role: 'core', content: result.response, createdAt: new Date().toISOString() }
       const final = [...withUser, coreMsg]
       setMessages(final)
       saveMessages(sid, final)
       const updated = currentSessions.map(s => s.id === sid ? { ...s, updatedAt: new Date().toISOString() } : s)
       setSessions(updated)
       saveSessions(updated)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
       setLoading(false)
     }
@@ -208,6 +227,26 @@ export function CoreChat() {
 
       {/* Chat area */}
       <div className="flex-1 flex flex-col min-w-0">
+
+        {/* Mode toggle */}
+        <div className="shrink-0 px-8 py-3 border-b flex items-center gap-2" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+          {(['business', 'personal'] as const).map(m => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className="px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all"
+              style={mode === m
+                ? { background: `${PURPLE}22`, color: PURPLE, border: `1px solid ${PURPLE}44` }
+                : { color: 'rgba(255,255,255,0.30)', border: '1px solid transparent' }
+              }
+            >
+              {m}
+            </button>
+          ))}
+          <span className="text-[10px] ml-2" style={{ color: 'rgba(255,255,255,0.20)' }}>
+            {mode === 'business' ? 'Claude · ERA Systems' : 'GPT · Personal life'}
+          </span>
+        </div>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-4">
@@ -314,9 +353,14 @@ export function CoreChat() {
               <Send className="w-3.5 h-3.5" />
             </button>
           </div>
-          <p className="text-[10px] text-center mt-2" style={{ color: 'rgba(255,255,255,0.18)' }}>
-            Enter to send · Shift+Enter for new line
-          </p>
+          {error && (
+            <p className="text-[11px] mt-2 text-center" style={{ color: '#f87171' }}>{error}</p>
+          )}
+          {!error && (
+            <p className="text-[10px] text-center mt-2" style={{ color: 'rgba(255,255,255,0.18)' }}>
+              Enter to send · Shift+Enter for new line
+            </p>
+          )}
         </div>
       </div>
     </div>
