@@ -11,7 +11,7 @@ import {
   ScrollText, ShieldAlert, Search, ClipboardList,
   Bot, LayoutTemplate, GitMerge, FileSearch, Zap,
   Mail, Send, Globe, Phone, FileText,
-  Wifi,
+  Wifi, Brain, Database,
 } from 'lucide-react'
 import { ChangePasswordModal } from './ChangePasswordModal'
 import { NotificationPanel } from './NotificationPanel'
@@ -53,10 +53,16 @@ const CONNECT_NAV = [
   { icon: ScrollText, label: 'Activity',   href: '/connect/events',     sub: 'Full sync event log' },
 ]
 
+const CORE_NAV = [
+  { icon: Brain,    label: 'Chat',    href: '/core/chat',   sub: 'Talk to ERA Core' },
+  { icon: Database, label: 'Memory',  href: '/core/memory', sub: 'What Core knows about you' },
+]
+
 const PRODUCTS = {
   patient: { name: 'ERA Patient', color: '#4DBFB3', accentText: 'text-teal',      activeBg: 'bg-teal/[0.22]',      nav: PATIENT_NAV },
   comms:   { name: 'ERA Comms',   color: '#CC7896', accentText: 'text-primary',   activeBg: 'bg-primary/[0.22]',   nav: COMMS_NAV   },
-  connect: { name: 'ERA Connect', color: '#CC7896', accentText: 'text-primary',     activeBg: 'bg-primary/[0.22]',     nav: CONNECT_NAV },
+  connect: { name: 'ERA Connect', color: '#CC7896', accentText: 'text-primary',   activeBg: 'bg-primary/[0.22]',   nav: CONNECT_NAV },
+  core:    { name: 'ERA Core',    color: '#9B7FD4', accentText: 'text-[#9B7FD4]', activeBg: 'bg-[#9B7FD4]/[0.22]', nav: CORE_NAV    },
 } as const
 
 const SB_BG     = 'rgba(14, 11, 20, 0.88)'
@@ -377,9 +383,13 @@ function ProductLayout({ product, children }: { product: 'patient' | 'comms' | '
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto p-4 md:p-6">
-          <div className="max-w-6xl mx-auto">{children}</div>
-        </main>
+        {product === 'core' ? (
+          <main className="flex-1 overflow-hidden">{children}</main>
+        ) : (
+          <main className="flex-1 overflow-auto p-4 md:p-6">
+            <div className="max-w-6xl mx-auto">{children}</div>
+          </main>
+        )}
       </div>
 
       {showSecurity && <ChangePasswordModal onClose={() => setShowSecurity(false)} />}
@@ -393,5 +403,6 @@ export function Layout({ children }: { children: ReactNode }) {
   if (pathname.startsWith('/patient')) return <ProductLayout product="patient">{children}</ProductLayout>
   if (pathname.startsWith('/comms'))   return <ProductLayout product="comms">{children}</ProductLayout>
   if (pathname.startsWith('/connect')) return <ProductLayout product="connect">{children}</ProductLayout>
+  if (pathname.startsWith('/core'))    return <ProductLayout product="core">{children}</ProductLayout>
   return <HubLayout>{children}</HubLayout>
 }

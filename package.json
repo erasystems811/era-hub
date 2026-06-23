@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "start": "npx serve -s dist"
+    "start": "node server.js"
   },
   "dependencies": {
     "@grapesjs/react": "^2.0.0",

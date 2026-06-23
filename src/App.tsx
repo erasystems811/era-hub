@@ -39,6 +39,9 @@ import { InboxModule }        from './pages/business-panel/InboxModule'
 import { AnalyticsModule }    from './pages/business-panel/AnalyticsModule'
 import { BizSettingsPage }    from './pages/business-panel/BizSettingsPage'
 
+// ERA Core
+import { CoreChat } from './pages/core/CoreChat'
+
 // ERA Connect
 import { ConnectHome }           from './pages/connect/ConnectHome'
 import { ConnectInstances }      from './pages/connect/ConnectInstances'
@@ -117,6 +120,10 @@ function ProtectedApp() {
         <Route path="/comms/email/contacts"      element={<EmailContacts />} />
         <Route path="/comms/email/domains"       element={<EmailDomains />} />
         <Route path="/comms/voice"               element={<VoiceComingSoon />} />
+
+        {/* ERA Core */}
+        <Route path="/core" element={<Navigate to="/core/chat" replace />} />
+        <Route path="/core/chat"   element={<CoreChat />} />
 
         {/* ERA Connect */}
         <Route path="/connect"                    element={<ConnectHome />} />
