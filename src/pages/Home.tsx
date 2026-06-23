@@ -49,6 +49,41 @@ export function Home() {
       {/* Portal cards */}
       <div className="grid md:grid-cols-2 gap-4 mb-4">
 
+        {/* ERA Core */}
+        <button
+          onClick={() => nav('/core/chat')}
+          className="group relative text-left rounded-2xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(155,127,212,0.16)]"
+          style={{ background: 'rgba(255,255,255,0.10)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderColor: 'rgba(155,127,212,0.22)', borderTopColor: 'rgba(255,255,255,0.22)', boxShadow: '0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.18)' }}
+        >
+          <div className="absolute inset-x-0 top-0 h-40 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse 110% 100% at 50% -10%, rgba(155,127,212,0.30) 0%, transparent 75%)' }} />
+
+          <div className="relative p-6 flex flex-col h-full min-h-[220px]">
+            <div className="flex items-start justify-between mb-6">
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center"
+                style={{ background: 'rgba(155,127,212,0.22)', border: '1px solid rgba(155,127,212,0.40)' }}>
+                <Brain className="w-5 h-5" style={{ color: '#9B7FD4' }} />
+              </div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground/25 group-hover:translate-x-1 transition-all duration-200 mt-1" style={{ color: 'rgba(155,127,212,0.4)' }} />
+            </div>
+
+            <div className="flex-1">
+              <h2 className="text-lg font-bold text-foreground tracking-tight mb-1.5">ERA Core</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Your digital mind — business brain, personal advisor, and the intelligence behind every ERA tool
+              </p>
+            </div>
+
+            <div className="mt-5 pt-4 border-t flex items-center gap-2.5"
+              style={{ borderColor: 'rgba(155,127,212,0.14)' }}>
+              <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#9B7FD4' }} />
+              <span className="text-xs text-muted-foreground">Business · Personal · Deploy</span>
+            </div>
+          </div>
+
+          <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(155,127,212,0.45), transparent)' }} />
+        </button>
+
         {/* ERA Patient */}
         <button
           onClick={() => nav('/patient/analytics')}
@@ -137,32 +172,6 @@ export function Home() {
           <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(191,124,147,0.45), transparent)' }} />
         </button>
       </div>
-
-      {/* ERA Core */}
-      <button
-        onClick={() => nav('/core/chat')}
-        className="group relative text-left rounded-2xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(155,127,212,0.16)]"
-        style={{ background: 'rgba(255,255,255,0.10)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderColor: 'rgba(155,127,212,0.22)', borderTopColor: 'rgba(255,255,255,0.22)', boxShadow: '0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.18)' }}
-      >
-        <div className="absolute inset-x-0 top-0 h-40 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 110% 100% at 50% -10%, rgba(155,127,212,0.22) 0%, transparent 75%)' }} />
-
-        <div className="relative p-5 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: 'rgba(155,127,212,0.18)', border: '1px solid rgba(155,127,212,0.35)' }}>
-            <Brain className="w-5 h-5" style={{ color: '#9B7FD4' }} />
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">ERA Core</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Your digital mind — business brain & personal</p>
-          </div>
-
-          <ArrowRight className="w-4 h-4 text-muted-foreground/25 group-hover:translate-x-1 transition-all duration-200 shrink-0" style={{ color: 'rgba(155,127,212,0.5)' }} />
-        </div>
-
-        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(155,127,212,0.35), transparent)' }} />
-      </button>
 
       {/* ERA Connect */}
       <button
