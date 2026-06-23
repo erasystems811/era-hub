@@ -1,15 +1,15 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft, RefreshCw, Wallet, Settings, Zap, Layers, Loader2,
-  Copy, Check, XCircle, Shield, Save, Mail, Phone, Plus, X,
+  ArrowLeft, RefreshCw, Settings, Zap, Layers, Loader2,
+  Copy, Check, XCircle, Shield, Save, Mail, Phone, Plus,
   Eye, EyeOff, KeyRound, Link, Users, AlertCircle, RotateCcw,
   CheckCircle2, Clock, MessageSquare, Filter,
 } from 'lucide-react'
-import { patientApi, Hospital, HospitalSettings, HospitalModules, WalletInfo } from '../../lib/patient-api'
-import { fmtDate, fmtMoney, fmtDateTime } from '../../lib/utils'
+import { patientApi, Hospital, HospitalSettings, HospitalModules } from '../../lib/patient-api'
+import { fmtMoney, fmtDateTime } from '../../lib/utils'
 
-type Tab = 'general' | 'settings' | 'modules' | 'automation' | 'wallet'
+type Tab = 'general' | 'settings' | 'modules' | 'automation'
 type AutoFilter = 'all' | 'failed' | 'sent'
 
 const PREDEFINED_DEPARTMENTS = [
@@ -26,6 +26,15 @@ const TONES = [
   { value: 'Reassuring',  sub: 'Calming, reduces anxiety' },
   { value: 'Jovial',      sub: 'Light-hearted and cheerful' },
 ]
+
+// Parse departments or tone that may arrive as a JSON string or already as an array
+function parseJsonArray(val: unknown): string[] {
+  if (Array.isArray(val)) return val as string[]
+  if (typeof val === 'string' && val.trim()) {
+    try { const p = JSON.parse(val); return Array.isArray(p) ? p : [] } catch { return [] }
+  }
+  return []
+}
 
 // ── Shared helper components ─────────────────────────────────────────────────
 
@@ -84,10 +93,9 @@ export function HospitalDetail() {
   const hId = Number(id)
 
   // Core data
-  const [hospital, setHospital]   = useState<Hospital | null>(null)
-  const [settings, setSettings]   = useState<HospitalSettings | null>(null)
-  const [modules,  setModules]    = useState<HospitalModules | null>(null)
-  const [wallet,   setWallet]     = useState<WalletInfo | null>(null)
+  const [hospital, setHospital] = useState<Hospital | null>(null)
+  const [settings, setSettings] = useState<HospitalSettings | null>(null)
+  const [modules,  setModules]  = useState<HospitalModules | null>(null)
 
   // UI
   const [loading,    setLoading]    = useState(true)
@@ -110,25 +118,25 @@ export function HospitalDetail() {
   const [contactPhone,          setContactPhone]          = useState('')
 
   // Settings tab form
-  const [departments,      setDepartments]      = useState<string[]>([])
-  const [customDeptInput,  setCustomDeptInput]  = useState('')
-  const [postTreatmentDays,setPostTreatmentDays]= useState('')
-  const [dormantDays,      setDormantDays]      = useState('')
-  const [senderName,       setSenderName]       = useState('')
-  const [hospitalPhone,    setHospitalPhone]    = useState('')
-  const [notifChannel,     setNotifChannel]     = useState<'whatsapp' | 'sms'>('whatsapp')
-  const [termiiSenderId,   setTermiiSenderId]   = useState('')
-  const [language,         setLanguage]         = useState('')
-  const [tones,            setTones]            = useState<string[]>([])
-  const [clinicDescription,setClinicDescription]= useState('')
+  const [departments,       setDepartments]       = useState<string[]>([...PREDEFINED_DEPARTMENTS])
+  const [customDeptInput,   setCustomDeptInput]   = useState('')
+  const [postTreatmentDays, setPostTreatmentDays] = useState('')
+  const [dormantDays,       setDormantDays]       = useState('')
+  const [senderName,        setSenderName]        = useState('')
+  const [hospitalPhone,     setHospitalPhone]     = useState('')
+  const [notifChannel,      setNotifChannel]      = useState<'whatsapp' | 'sms'>('whatsapp')
+  const [termiiSenderId,    setTermiiSenderId]    = useState('')
+  const [language,          setLanguage]          = useState('')
+  const [tones,             setTones]             = useState<string[]>([])
+  const [clinicDescription, setClinicDescription] = useState('')
 
   // Test SMS/Email
-  const [testSmsTo,       setTestSmsTo]      = useState('')
-  const [testSmsSending,  setTestSmsSending] = useState(false)
-  const [testSmsResult,   setTestSmsResult]  = useState<{ ok: boolean; detail: string } | null>(null)
-  const [testEmailTo,     setTestEmailTo]    = useState('')
-  const [testEmailSending,setTestEmailSending]= useState(false)
-  const [testEmailResult, setTestEmailResult]= useState<{ ok: boolean; msg: string } | null>(null)
+  const [testSmsTo,        setTestSmsTo]        = useState('')
+  const [testSmsSending,   setTestSmsSending]   = useState(false)
+  const [testSmsResult,    setTestSmsResult]    = useState<{ ok: boolean; detail: string } | null>(null)
+  const [testEmailTo,      setTestEmailTo]      = useState('')
+  const [testEmailSending, setTestEmailSending] = useState(false)
+  const [testEmailResult,  setTestEmailResult]  = useState<{ ok: boolean; msg: string } | null>(null)
 
   // Automation tab
   const [autoFilter,  setAutoFilter]  = useState<AutoFilter>('all')
@@ -137,63 +145,63 @@ export function HospitalDetail() {
   const [retryingId,  setRetryingId]  = useState<number | null>(null)
   const [retryError,  setRetryError]  = useState<string | null>(null)
 
-  // Wallet
-  const [creditAmount, setCreditAmount] = useState('')
-  const [creditNote,   setCreditNote]   = useState('')
-  const [creditLoading,setCreditLoading]= useState(false)
-  const [regenResult,  setRegenResult]  = useState<string | null>(null)
+  const [regenResult, setRegenResult] = useState<string | null>(null)
 
   const flash = (msg: string) => {
     setSuccessMsg(msg)
     setTimeout(() => setSuccessMsg(null), 3000)
   }
 
+  const populateSettingsForm = (s: HospitalSettings) => {
+    setSettings(s)
+    const depts = parseJsonArray(s.departments)
+    setDepartments(depts.length > 0 ? depts : [...PREDEFINED_DEPARTMENTS])
+    setPostTreatmentDays(s.pipelinePostTreatmentDays?.toString() ?? '')
+    setDormantDays(s.pipelineDormantDays?.toString() ?? '')
+    setSenderName(s.senderName ?? '')
+    setHospitalPhone(s.phoneNumber ?? '')
+    setNotifChannel((s.notificationChannel as 'whatsapp' | 'sms') ?? 'whatsapp')
+    setTermiiSenderId(s.termiiSenderId ?? '')
+    setLanguage(s.language ?? '')
+    setTones(parseJsonArray(s.tone))
+    setClinicDescription(s.clinicDescription ?? '')
+  }
+
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
+    try {
+      const [hRes, cfgRes] = await Promise.allSettled([
+        patientApi.getHospital(hId),
+        patientApi.getConfig(),
+      ])
 
-    const [hRes, sRes, mRes, wRes, cfgRes] = await Promise.allSettled([
-      patientApi.getHospital(hId),
-      patientApi.getSettings(hId),
-      patientApi.getModules(hId),
-      patientApi.getHospitalWallet(hId),
-      patientApi.getConfig(),
-    ])
+      if (hRes.status === 'rejected') {
+        setError(hRes.reason instanceof Error ? hRes.reason.message : 'Could not load hospital')
+        return
+      }
 
-    setLoading(false)
+      const h = hRes.value
+      setHospital(h)
 
-    if (hRes.status === 'rejected') {
-      setError(hRes.reason instanceof Error ? hRes.reason.message : 'Could not load hospital')
-      return
+      // Populate general form
+      setName(h.name)
+      setSubStatus(h.subscriptionStatus)
+      setActive(h.active)
+      setSubscriptionExpiresAt(h.subscriptionExpiresAt ? h.subscriptionExpiresAt.substring(0, 10) : '')
+      setContactEmail(h.contactEmail ?? '')
+      setContactPhone(h.contactPhone ?? '')
+
+      // Use embedded settings & modules (already returned by getHospital)
+      if (h.settings) populateSettingsForm(h.settings)
+      if (h.modules)  setModules(h.modules)
+
+      if (cfgRes.status === 'fulfilled') setEraPatientUrl(cfgRes.value.eraPatientUrl.replace(/\/$/, ''))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not load hospital')
+    } finally {
+      setLoading(false)
     }
-
-    const h = hRes.value
-    setHospital(h)
-    setName(h.name)
-    setSubStatus(h.subscriptionStatus)
-    setActive(h.active)
-    setSubscriptionExpiresAt(h.subscriptionExpiresAt ? h.subscriptionExpiresAt.substring(0, 10) : '')
-    setContactEmail(h.contactEmail ?? '')
-    setContactPhone(h.contactPhone ?? '')
-
-    if (sRes.status === 'fulfilled') {
-      const s = sRes.value
-      setSettings(s)
-      setDepartments(s.departments?.length > 0 ? s.departments : [...PREDEFINED_DEPARTMENTS])
-      setPostTreatmentDays(s.pipelinePostTreatmentDays?.toString() ?? '')
-      setDormantDays(s.pipelineDormantDays?.toString() ?? '')
-      setSenderName(s.senderName ?? '')
-      setHospitalPhone(s.phoneNumber ?? '')
-      setNotifChannel((s.notificationChannel as 'whatsapp' | 'sms') ?? 'whatsapp')
-      setTermiiSenderId(s.termiiSenderId ?? '')
-      setLanguage(s.language ?? '')
-      setTones(Array.isArray(s.tone) ? s.tone : [])
-      setClinicDescription(s.clinicDescription ?? '')
-    }
-
-    if (mRes.status === 'fulfilled') setModules(mRes.value)
-    if (wRes.status === 'fulfilled') setWallet(wRes.value)
-    if (cfgRes.status === 'fulfilled') setEraPatientUrl(cfgRes.value.eraPatientUrl.replace(/\/$/, ''))
   }, [hId])
 
   const loadAutomations = useCallback(async () => {
@@ -223,7 +231,7 @@ export function HospitalDetail() {
         contactEmail: contactEmail || null,
         contactPhone: contactPhone || null,
       })
-      setHospital(h)
+      setHospital(prev => prev ? { ...prev, ...h } : h)
       flash('Hospital updated')
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not save changes') }
     finally { setSaving(false) }
@@ -242,7 +250,7 @@ export function HospitalDetail() {
         termiiSenderId: termiiSenderId || null,
         language: language || null,
         tone: tones.length > 0 ? tones : null,
-        ...(clinicDescription ? { clinicDescription } : { clinicDescription: null }),
+        clinicDescription: clinicDescription || null,
       } as Partial<HospitalSettings>)
       setSettings(s)
       flash('Settings saved')
@@ -251,10 +259,11 @@ export function HospitalDetail() {
   }
 
   const toggleModule = async (key: keyof HospitalModules, val: boolean) => {
-    if (!modules) return
     setSaving(true)
-    try { setModules(await patientApi.updateModules(hId, { [key]: val })) }
-    catch (e) { setError(e instanceof Error ? e.message : 'Could not update module') }
+    try {
+      const updated = await patientApi.updateModules(hId, { [key]: val })
+      setModules(updated)
+    } catch (e) { setError(e instanceof Error ? e.message : 'Could not update module') }
     finally { setSaving(false) }
   }
 
@@ -262,7 +271,7 @@ export function HospitalDetail() {
     setSaving(true); setError(null)
     try {
       const { newPassword, hospital: h } = await patientApi.regeneratePassword(hId)
-      setHospital(prev => prev ? { ...prev, ...h, staffCredentials: prev.staffCredentials } : h)
+      setHospital(prev => prev ? { ...prev, ...h, currentPassword: newPassword, staffCredentials: prev.staffCredentials } : h)
       setRegenResult(newPassword)
       flash('Password regenerated — share with the hospital')
     } catch (e) { setError(e instanceof Error ? e.message : 'Regeneration failed') }
@@ -287,7 +296,7 @@ export function HospitalDetail() {
         `   Receptionist Password: ${sc.receptionistPlainPassword}`,
         '',
       ] : []),
-      `ℹ️ Staff log in at: ${eraPatientUrl} (Staff Login tab)`,
+      `ℹ️  Staff log in at: ${eraPatientUrl} (Staff Login tab)`,
     ].join('\n')
     navigator.clipboard.writeText(msg).then(() => {
       setAllCopied(true)
@@ -300,19 +309,6 @@ export function HospitalDetail() {
     try { await patientApi.retryAutomation(logId); await loadAutomations() }
     catch (e) { setRetryError(e instanceof Error ? e.message : 'Retry failed') }
     finally { setRetryingId(null) }
-  }
-
-  const credit = async () => {
-    const amount = parseFloat(creditAmount)
-    if (!amount || isNaN(amount)) return
-    setCreditLoading(true)
-    try {
-      await patientApi.creditHospitalWallet(hId, amount, creditNote || 'Manual credit')
-      setCreditAmount(''); setCreditNote('')
-      setWallet(await patientApi.getHospitalWallet(hId))
-      flash('Wallet credited')
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not credit wallet') }
-    finally { setCreditLoading(false) }
   }
 
   const toggleDept = (dept: string) =>
@@ -349,18 +345,17 @@ export function HospitalDetail() {
     { key: 'settings',   label: 'Settings',   icon: <Settings className="w-3.5 h-3.5" /> },
     { key: 'modules',    label: 'Modules',    icon: <Layers className="w-3.5 h-3.5" /> },
     { key: 'automation', label: 'Automation', icon: <Zap className="w-3.5 h-3.5" /> },
-    { key: 'wallet',     label: 'Wallet',     icon: <Wallet className="w-3.5 h-3.5" /> },
   ]
 
   const statusBadge = hospital.active
     ? 'bg-teal/10 text-teal border-teal/20'
     : 'bg-red-500/10 text-red-400 border-red-500/20'
 
-  const loginUrl = `${eraPatientUrl}/?h=${hospital.username}`
+  const loginUrl    = `${eraPatientUrl}/?h=${hospital.username}`
   const feedbackUrl = hospital.feedbackSlug ? `${eraPatientUrl}/feedback/h/${hospital.feedbackSlug}` : null
 
   const expiryDate = hospital.subscriptionExpiresAt ? new Date(hospital.subscriptionExpiresAt) : null
-  const daysLeft = expiryDate ? Math.ceil((expiryDate.getTime() - Date.now()) / 86400000) : null
+  const daysLeft   = expiryDate ? Math.ceil((expiryDate.getTime() - Date.now()) / 86400000) : null
 
   return (
     <div className="max-w-4xl">
@@ -371,31 +366,36 @@ export function HospitalDetail() {
       </button>
 
       {/* Header card */}
-      <div className="rounded-2xl border border-white/07 bg-card px-6 py-5 mb-5 flex items-start justify-between gap-4">
-        <div className="flex items-center gap-4 min-w-0">
-          <div className="w-12 h-12 rounded-2xl bg-teal/10 text-teal text-lg font-bold flex items-center justify-center shrink-0">
-            {hospital.name[0]?.toUpperCase()}
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl font-bold text-foreground truncate">{hospital.name}</h1>
-              <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${statusBadge}`}>
-                {hospital.active ? 'Active' : 'Suspended'}
-              </span>
+      <div className="rounded-2xl border border-white/07 bg-card px-6 py-5 mb-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-12 h-12 rounded-2xl bg-teal/10 text-teal text-lg font-bold flex items-center justify-center shrink-0">
+              {hospital.name[0]?.toUpperCase()}
             </div>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {hospital.username} · {hospital.patientCount.toLocaleString()} patients
-              {daysLeft !== null && (
-                <span className={`ml-2 ${daysLeft < 0 ? 'text-red-400' : daysLeft <= 30 ? 'text-amber-400' : ''}`}>
-                  · {daysLeft < 0 ? `expired ${Math.abs(daysLeft)}d ago` : `${daysLeft}d left`}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-bold text-foreground truncate">{hospital.name}</h1>
+                <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${statusBadge}`}>
+                  {hospital.active ? 'Active' : 'Suspended'}
                 </span>
-              )}
-            </p>
+              </div>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {hospital.username} · {hospital.patientCount.toLocaleString()} patients
+                {hospital.walletBalanceKobo != null && (
+                  <span className="ml-2">· {fmtMoney(hospital.walletBalanceKobo)} wallet</span>
+                )}
+                {daysLeft !== null && (
+                  <span className={`ml-2 ${daysLeft < 0 ? 'text-red-400' : daysLeft <= 30 ? 'text-amber-400' : ''}`}>
+                    · {daysLeft < 0 ? `expired ${Math.abs(daysLeft)}d ago` : `${daysLeft}d left`}
+                  </span>
+                )}
+              </p>
+            </div>
           </div>
+          <button onClick={load} className="btn-secondary p-2 shrink-0" title="Refresh">
+            <RefreshCw className="w-4 h-4" />
+          </button>
         </div>
-        <button onClick={load} className="btn-secondary p-2" title="Refresh">
-          <RefreshCw className="w-4 h-4" />
-        </button>
       </div>
 
       {/* Tab bar */}
@@ -430,11 +430,8 @@ export function HospitalDetail() {
           <div className="rounded-2xl border border-white/07 bg-card p-5 space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-foreground">Login credentials</h2>
-              <button
-                type="button"
-                onClick={copyAllCredentials}
-                className="flex items-center gap-1.5 btn-secondary text-xs"
-              >
+              <button type="button" onClick={copyAllCredentials}
+                className="flex items-center gap-1.5 btn-secondary text-xs">
                 {allCopied ? <Check className="w-3.5 h-3.5 text-teal" /> : <Copy className="w-3.5 h-3.5" />}
                 {allCopied ? 'Copied!' : 'Copy all'}
               </button>
@@ -527,10 +524,10 @@ export function HospitalDetail() {
                   <Users className="w-3.5 h-3.5 text-blue-400" />
                   <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-blue-400">Staff credentials</span>
                 </div>
-                <CredRow label="Nurse username"          value={hospital.staffCredentials.nurseUsername} />
-                <CredRow label="Nurse password"          value={hospital.staffCredentials.nursePlainPassword} />
-                <CredRow label="Receptionist username"   value={hospital.staffCredentials.receptionistUsername} />
-                <CredRow label="Receptionist password"   value={hospital.staffCredentials.receptionistPlainPassword} />
+                <CredRow label="Nurse username"        value={hospital.staffCredentials.nurseUsername} />
+                <CredRow label="Nurse password"        value={hospital.staffCredentials.nursePlainPassword} />
+                <CredRow label="Receptionist username" value={hospital.staffCredentials.receptionistUsername} />
+                <CredRow label="Receptionist password" value={hospital.staffCredentials.receptionistPlainPassword} />
                 <p className="text-xs text-muted-foreground mt-2">Staff log in at {eraPatientUrl} (Staff Login tab)</p>
               </div>
             )}
@@ -558,7 +555,8 @@ export function HospitalDetail() {
             </FieldLabel>
 
             <FieldLabel label="Subscription expiry date">
-              <input className="input" type="date" value={subscriptionExpiresAt} onChange={e => setSubscriptionExpiresAt(e.target.value)} />
+              <input className="input" type="date" value={subscriptionExpiresAt}
+                onChange={e => setSubscriptionExpiresAt(e.target.value)} />
               {subscriptionExpiresAt && (() => {
                 const d = Math.ceil((new Date(subscriptionExpiresAt).getTime() - Date.now()) / 86400000)
                 if (d < 0) return <p className="text-xs text-red-400 mt-1">⚠ Subscription expired {Math.abs(d)} day{Math.abs(d) !== 1 ? 's' : ''} ago</p>
@@ -584,20 +582,22 @@ export function HospitalDetail() {
               <FieldLabel label="Contact email" hint="Your private record for this client — not visible to the hospital.">
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                  <input className="input pl-10" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="admin@hospital.com" />
+                  <input className="input pl-10" type="email" value={contactEmail}
+                    onChange={e => setContactEmail(e.target.value)} placeholder="admin@hospital.com" />
                 </div>
               </FieldLabel>
               <FieldLabel label="Contact phone">
                 <div className="relative">
                   <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                  <input className="input pl-10" type="text" value={contactPhone} onChange={e => setContactPhone(e.target.value)} placeholder="+2348000000000" />
+                  <input className="input pl-10" type="text" value={contactPhone}
+                    onChange={e => setContactPhone(e.target.value)} placeholder="+2348000000000" />
                 </div>
               </FieldLabel>
             </div>
 
             <div className="flex justify-end pt-2">
               <button className="btn-primary flex items-center gap-2" onClick={saveGeneral} disabled={saving}>
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                 {saving ? 'Saving…' : 'Save changes'}
               </button>
             </div>
@@ -606,12 +606,7 @@ export function HospitalDetail() {
       )}
 
       {/* ── SETTINGS TAB ────────────────────────────────────────────────────── */}
-      {tab === 'settings' && !settings && (
-        <div className="rounded-2xl border border-white/07 bg-card p-6 text-center text-muted-foreground">
-          <p className="text-sm">Settings could not be loaded. <button className="text-teal hover:underline" onClick={load}>Try again</button></p>
-        </div>
-      )}
-      {tab === 'settings' && settings && (
+      {tab === 'settings' && (
         <div className="rounded-2xl border border-white/07 bg-card p-6 space-y-6 max-w-2xl">
           <h2 className="font-semibold text-foreground">Hospital settings</h2>
 
@@ -633,7 +628,8 @@ export function HospitalDetail() {
               </div>
             </div>
             <div className="flex gap-2">
-              <input className="input flex-1" type="text" value={customDeptInput} onChange={e => setCustomDeptInput(e.target.value)}
+              <input className="input flex-1" type="text" value={customDeptInput}
+                onChange={e => setCustomDeptInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomDept() } }}
                 placeholder="Add custom department…" />
               <button type="button" onClick={addCustomDept} disabled={!customDeptInput.trim()}
@@ -646,10 +642,12 @@ export function HospitalDetail() {
           {/* Pipeline */}
           <div className="pt-2 border-t border-white/06 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FieldLabel label="Post-treatment days" hint="Days before moving patient to Post Care">
-              <input className="input" type="number" min="1" value={postTreatmentDays} onChange={e => setPostTreatmentDays(e.target.value)} placeholder="14" />
+              <input className="input" type="number" min="1" value={postTreatmentDays}
+                onChange={e => setPostTreatmentDays(e.target.value)} placeholder="14" />
             </FieldLabel>
             <FieldLabel label="Dormant after days" hint="Days before patient becomes dormant">
-              <input className="input" type="number" min="1" value={dormantDays} onChange={e => setDormantDays(e.target.value)} placeholder="90" />
+              <input className="input" type="number" min="1" value={dormantDays}
+                onChange={e => setDormantDays(e.target.value)} placeholder="90" />
             </FieldLabel>
           </div>
 
@@ -659,16 +657,20 @@ export function HospitalDetail() {
               <p className="label mb-0.5">Email sending</p>
               <p className="text-xs text-muted-foreground">All emails send from ERA's verified noreply address. The display name is what patients see as the sender.</p>
             </div>
-            <FieldLabel label="Sender display name" hint='Patients see this as the "From" name — e.g. "GISDHEALTH", "City Clinic". Leave blank to use the hospital name.'>
+            <FieldLabel label="Sender display name"
+              hint='Patients see this as the "From" name — e.g. "GISDHEALTH", "City Clinic". Leave blank to use the hospital name.'>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                <input className="input pl-10" type="text" value={senderName} onChange={e => setSenderName(e.target.value)} placeholder="e.g. City Clinic" />
+                <input className="input pl-10" type="text" value={senderName}
+                  onChange={e => setSenderName(e.target.value)} placeholder="e.g. City Clinic" />
               </div>
             </FieldLabel>
-            <FieldLabel label="Hospital contact phone" hint="Shown in automated patient emails so patients know how to reach the hospital directly.">
+            <FieldLabel label="Hospital contact phone"
+              hint="Shown in automated patient emails so patients know how to reach the hospital directly.">
               <div className="relative">
                 <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                <input className="input pl-10" type="text" value={hospitalPhone} onChange={e => setHospitalPhone(e.target.value)} placeholder="+2348012345678" />
+                <input className="input pl-10" type="text" value={hospitalPhone}
+                  onChange={e => setHospitalPhone(e.target.value)} placeholder="+2348012345678" />
               </div>
             </FieldLabel>
           </div>
@@ -689,9 +691,10 @@ export function HospitalDetail() {
               label={notifChannel === 'whatsapp' ? 'WhatsApp number' : 'Termii sender ID'}
               hint={notifChannel === 'whatsapp'
                 ? 'WhatsApp always uses a phone number as the sender. Enter in international format, e.g. +2348012345678. Each hospital should have their own dedicated WhatsApp number registered with Termii.'
-                : 'What patients see as the sender on their phone. Leave blank to use Termii\'s shared pool number (works immediately). Or enter a dedicated phone number or short name (e.g. CityClinic, max 11 chars) — approval takes a few days.'}
+                : "What patients see as the sender on their phone. Leave blank to use Termii's shared pool number (works immediately). Or enter a dedicated phone number or short name (e.g. CityClinic, max 11 chars) — approval takes a few days."}
             >
-              <input className="input" type="text" value={termiiSenderId} onChange={e => setTermiiSenderId(e.target.value)}
+              <input className="input" type="text" value={termiiSenderId}
+                onChange={e => setTermiiSenderId(e.target.value)}
                 placeholder={notifChannel === 'whatsapp' ? '+2348012345678' : '+2348012345678 or HospitalName'} />
             </FieldLabel>
 
@@ -803,15 +806,17 @@ export function HospitalDetail() {
 
           {/* Clinic description */}
           <div className="pt-2 border-t border-white/06">
-            <FieldLabel label="Clinic description" hint="Used for AI-generated messages — describes the clinic's specialty and approach.">
-              <textarea className="input resize-none" rows={3} value={clinicDescription} onChange={e => setClinicDescription(e.target.value)}
+            <FieldLabel label="Clinic description"
+              hint="Used for AI-generated messages — describes the clinic's specialty and approach.">
+              <textarea className="input resize-none" rows={3} value={clinicDescription}
+                onChange={e => setClinicDescription(e.target.value)}
                 placeholder="A brief description of the clinic's specialty and patient care approach…" />
             </FieldLabel>
           </div>
 
           <div className="flex justify-end pt-2">
             <button className="btn-primary flex items-center gap-2" onClick={saveSettings} disabled={saving}>
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               {saving ? 'Saving…' : 'Save settings'}
             </button>
           </div>
@@ -819,12 +824,7 @@ export function HospitalDetail() {
       )}
 
       {/* ── MODULES TAB ─────────────────────────────────────────────────────── */}
-      {tab === 'modules' && !modules && (
-        <div className="rounded-2xl border border-white/07 bg-card p-6 text-center text-muted-foreground">
-          <p className="text-sm">Module settings could not be loaded. <button className="text-teal hover:underline" onClick={load}>Try again</button></p>
-        </div>
-      )}
-      {tab === 'modules' && modules && (
+      {tab === 'modules' && (
         <div className="rounded-2xl border border-white/07 bg-card p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
@@ -834,21 +834,24 @@ export function HospitalDetail() {
             {saving && <p className="text-xs text-teal">Saving…</p>}
           </div>
           {([
-            ['appointmentsEnabled',           'Appointments',               'Calendar scheduling and appointment management'],
-            ['feedbackEnabled',               'Patient feedback',           'Post-visit satisfaction surveys'],
-            ['wellnessNewsletterEnabled',     'Wellness newsletter',        'Automated weekly health tips to patients'],
-            ['whatsappEnabled',               'WhatsApp messaging',         'WhatsApp delivery channel'],
-            ['messagesEnabled',               'In-app messages',            'In-app messaging module'],
-            ['callTaskSmsEnabled',            'AI call task SMS',           'AI-driven follow-up SMS tasks'],
-            ['followupSmsEnabled',            'Follow-up SMS',              'Post-visit SMS follow-ups'],
-            ['appointmentReminderSmsEnabled', 'Appointment reminder SMS',   'Upcoming appointment reminders'],
+            ['appointmentsEnabled',           'Appointments',             'Calendar scheduling and appointment management'],
+            ['feedbackEnabled',               'Patient feedback',         'Post-visit satisfaction surveys'],
+            ['wellnessNewsletterEnabled',     'Wellness newsletter',      'Automated weekly health tips to patients'],
+            ['whatsappEnabled',               'WhatsApp messaging',       'WhatsApp delivery channel'],
+            ['messagesEnabled',               'In-app messages',          'In-app messaging module'],
+            ['callTaskSmsEnabled',            'AI call task SMS',         'AI-driven follow-up SMS tasks'],
+            ['followupSmsEnabled',            'Follow-up SMS',            'Post-visit SMS follow-ups'],
+            ['appointmentReminderSmsEnabled', 'Appointment reminder SMS', 'Upcoming appointment reminders'],
           ] as const).map(([key, label, sub]) => (
             <label key={key} className="flex items-center justify-between gap-4 py-3.5 cursor-pointer select-none border-b border-white/06 last:border-0">
               <div>
                 <p className="text-sm font-medium text-foreground">{label}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
               </div>
-              <PillToggle checked={modules[key]} onChange={val => void toggleModule(key, val)} />
+              <PillToggle
+                checked={modules?.[key] ?? false}
+                onChange={val => void toggleModule(key, val)}
+              />
             </label>
           ))}
         </div>
@@ -910,7 +913,7 @@ export function HospitalDetail() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium capitalize">{log.automationType.replace(/_/g, ' ')}</span>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                          log.status === 'sent' ? 'bg-teal/10 text-teal border-teal/20'
+                          log.status === 'sent'   ? 'bg-teal/10 text-teal border-teal/20'
                           : log.status === 'failed' ? 'bg-red-500/10 text-red-400 border-red-500/20'
                           : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                         }`}>
@@ -940,7 +943,8 @@ export function HospitalDetail() {
                     <div className="shrink-0 text-right space-y-1.5">
                       <p className="text-xs text-muted-foreground whitespace-nowrap">{fmtDateTime(log.createdAt)}</p>
                       {log.status === 'failed' && (
-                        <button type="button" onClick={() => void retryAutomation(log.id)} disabled={retryingId === log.id}
+                        <button type="button" onClick={() => void retryAutomation(log.id)}
+                          disabled={retryingId === log.id}
                           className="flex items-center gap-1 text-xs text-teal hover:text-teal/80 transition disabled:opacity-50">
                           {retryingId === log.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
                           Retry
@@ -957,58 +961,6 @@ export function HospitalDetail() {
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* ── WALLET TAB ──────────────────────────────────────────────────────── */}
-      {tab === 'wallet' && !wallet && (
-        <div className="rounded-2xl border border-white/07 bg-card p-6 text-center text-muted-foreground">
-          <p className="text-sm">Wallet data could not be loaded. <button className="text-teal hover:underline" onClick={load}>Try again</button></p>
-        </div>
-      )}
-      {tab === 'wallet' && wallet && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="rounded-2xl border border-white/07 bg-card p-6">
-            <h3 className="text-sm font-semibold text-foreground mb-4">Wallet balance</h3>
-            <p className="text-4xl font-bold text-foreground tabular-nums">{fmtMoney(wallet.balanceKobo)}</p>
-            <p className="text-sm text-muted-foreground mt-1 mb-6">Current balance</p>
-            <div className="space-y-3">
-              <div>
-                <label className="label">Credit amount (₦)</label>
-                <input className="input" type="number" min="0" value={creditAmount} onChange={e => setCreditAmount(e.target.value)} placeholder="5,000" />
-              </div>
-              <div>
-                <label className="label">Note (optional)</label>
-                <input className="input" value={creditNote} onChange={e => setCreditNote(e.target.value)} placeholder="Monthly top-up" />
-              </div>
-              <button className="btn-primary w-full flex items-center justify-center gap-2" onClick={credit} disabled={creditLoading || !creditAmount}>
-                {creditLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Adding…</> : 'Add credit'}
-              </button>
-            </div>
-          </div>
-          <div className="rounded-2xl border border-white/07 bg-card p-6">
-            <h3 className="text-sm font-semibold text-foreground mb-4">Transaction history</h3>
-            {wallet.transactions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
-                <Wallet className="w-8 h-8 opacity-20" />
-                <p className="text-sm">No transactions yet</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-white/06">
-                {wallet.transactions.slice(0, 15).map(t => (
-                  <div key={t.id} className="flex items-start justify-between gap-3 py-3">
-                    <div className="min-w-0">
-                      <p className="text-sm text-foreground truncate">{t.description}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{fmtDateTime(t.created_at)}</p>
-                    </div>
-                    <span className={`text-sm font-semibold shrink-0 ${t.type === 'credit' ? 'text-teal' : 'text-red-400'}`}>
-                      {t.type === 'credit' ? '+' : '−'}{fmtMoney(t.amount_kobo)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       )}
     </div>
