@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, Globe, Building2, SendHorizonal, Loader2, AlertCircle, ChevronDown } from 'lucide-react'
+import { Plus, Edit2, Trash2, Globe, Building2, SendHorizonal, Loader2, AlertCircle, ChevronDown, RefreshCw, CheckCircle2 } from 'lucide-react'
 import { patientApi, Announcement, Hospital } from '../../lib/patient-api'
 import { pageCache } from '../../lib/cache'
 
@@ -120,7 +120,10 @@ export function Announcements() {
   const [editing, setEditing] = useState<Announcement | null>(null)
   const [isNew, setIsNew] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<number | null>(null)
+
+  const flash = (msg: string) => { setSuccessMsg(msg); setTimeout(() => setSuccessMsg(null), 5000) }
 
   const load = async () => {
     setLoading(true)
@@ -151,8 +154,17 @@ export function Announcements() {
   }
 
   const autoDraft = async () => {
-    setDrafting(true); setError(null)
-    try { await patientApi.autoDraftAnnouncements(); await load() }
+    setDrafting(true); setError(null); setSuccessMsg(null)
+    try {
+      const created = await patientApi.autoDraftAnnouncements()
+      pageCache.bust('patient:announcements')
+      await load()
+      if (created.length > 0) {
+        flash(`${created.length} new draft${created.length !== 1 ? 's' : ''} created from recent deployments`)
+      } else {
+        flash('No new drafts — similar drafts already exist from this week. Publish or delete existing drafts then try again.')
+      }
+    }
     catch (e) { setError(e instanceof Error ? e.message : 'Failed to auto-draft') }
     finally { setDrafting(false) }
   }
@@ -236,11 +248,16 @@ export function Announcements() {
           <h1 className="page-title">Announcements</h1>
           <p className="caption mt-0.5">Push notices to all hospitals or specific ones</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <button onClick={() => void load()} disabled={loading}
+            className="btn-secondary text-xs flex items-center gap-1.5">
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
           <button onClick={autoDraft} disabled={drafting}
             className="btn-secondary text-xs flex items-center gap-1.5">
             {drafting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-            AI auto-draft
+            {drafting ? 'Generating…' : 'AI auto-draft'}
           </button>
           <button className="btn-primary text-sm flex items-center gap-2" onClick={() => { setEditing(null); setIsNew(true) }}>
             <Plus className="w-4 h-4" /> New announcement
@@ -265,6 +282,11 @@ export function Announcements() {
       {error && (
         <div className="flex items-center gap-2 text-sm text-red-400 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
           <AlertCircle className="w-4 h-4 shrink-0" />{error}
+        </div>
+      )}
+      {successMsg && (
+        <div className="flex items-center gap-2 text-sm text-teal p-3 rounded-lg bg-teal/10 border border-teal/20">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />{successMsg}
         </div>
       )}
 

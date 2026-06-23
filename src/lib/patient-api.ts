@@ -219,13 +219,15 @@ export const patientApi = {
     patch<Announcement>(`/super-admin/announcements/${id}`, data),
   publishAnnouncement: (id: number) => patch<void>(`/super-admin/announcements/${id}/publish`, {}),
   deleteAnnouncement: (id: number) => del<void>(`/super-admin/announcements/${id}`),
-  autoDraftAnnouncements: () => {
+  autoDraftAnnouncements: (): Promise<Announcement[]> => {
     const token = getToken()
     return fetch(`${PATIENT_API}/api/super-admin/announcements/auto-draft`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(token ? { 'x-super-admin-token': token } : {}) },
     }).then(async r => {
       if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error((e as { error?: string }).error ?? 'Failed') }
+      const body = await r.json().catch(() => [])
+      return Array.isArray(body) ? (body as Announcement[]) : []
     })
   },
 
