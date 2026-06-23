@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Eye, EyeOff, Server, Globe, Copy, Check, Key, ExternalLink, Mail, MessageSquare, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { Eye, EyeOff, Server, Globe, Copy, Check, Key, ExternalLink, Mail, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { COMMS_API, COMMS_SECRET } from '../../lib/config'
 
 const HUB = 'https://hub.erasystems.com.ng'
@@ -68,24 +68,13 @@ export function CommsSettings() {
             {apiStatus === 'error'    && <span className="flex items-center gap-1.5 text-xs text-red-400 font-semibold"><AlertTriangle className="w-3.5 h-3.5" /> Unreachable</span>}
           </div>
 
-          {/* WhatsApp OTP note */}
-          <div className="flex items-start gap-3 rounded-xl px-4 py-3" style={{ background: 'rgba(239,200,100,0.07)', border: '1px solid rgba(239,200,100,0.15)' }}>
-            <MessageSquare className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-xs font-semibold text-amber-400">WhatsApp OTP</p>
-              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                OTP codes are delivered via WhatsApp using the ERA Systems internal session. You must connect a WhatsApp number to the <strong className="text-foreground">ERA Systems</strong> operator account in Sessions, otherwise OTP codes will not be delivered.
-              </p>
-            </div>
-          </div>
-
           {/* Email note */}
           <div className="flex items-start gap-3 rounded-xl px-4 py-3" style={{ background: 'rgba(239,200,100,0.07)', border: '1px solid rgba(239,200,100,0.15)' }}>
             <Mail className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
             <div>
-              <p className="text-xs font-semibold text-amber-400">Email delivery (portal access &amp; API key emails)</p>
+              <p className="text-xs font-semibold text-amber-400">Email delivery required</p>
               <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                To enable email sending, add a GitHub Secret called <code className="text-primary/80">SMTP_PASS</code> with your email password in the <strong className="text-foreground">era-hub</strong> repository. Then push any change to trigger a redeploy.
+                OTP verification codes, portal access emails, and API key notifications all send via email. Add a GitHub Secret called <code className="text-primary/80">SMTP_PASS</code> (your email password) in the <strong className="text-foreground">era-hub</strong> repo → Settings → Secrets → Actions, then push any change to activate it.
               </p>
             </div>
           </div>

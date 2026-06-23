@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Wifi, CheckCircle2, AlertCircle, Loader2, ChevronLeft } from 'lucide-react'
+import { Wifi, CheckCircle2, AlertCircle, Loader2, ChevronLeft, Mail } from 'lucide-react'
 import { commsApi, Client } from '../../lib/comms-api'
 
 type Step = 'send' | 'verify' | 'done'
@@ -13,15 +13,16 @@ export function ConnectSession() {
   const [searchParams] = useSearchParams()
   const preselectedId = searchParams.get('businessId') ?? ''
 
-  const [clients, setClients]       = useState<Client[]>([])
+  const [clients, setClients]           = useState<Client[]>([])
   const [clientsLoading, setClientsLoading] = useState(true)
-  const [selectedId, setSelectedId] = useState(preselectedId)
-  const [phone, setPhone]           = useState('')
-  const [otpId, setOtpId]           = useState('')
-  const [code, setCode]             = useState('')
-  const [step, setStep]             = useState<Step>('send')
-  const [loading, setLoading]       = useState(false)
-  const [error, setError]           = useState<string | null>(null)
+  const [selectedId, setSelectedId]     = useState(preselectedId)
+  const [phone, setPhone]               = useState('')
+  const [email, setEmail]               = useState('')
+  const [otpId, setOtpId]               = useState('')
+  const [code, setCode]                 = useState('')
+  const [step, setStep]                 = useState<Step>('send')
+  const [loading, setLoading]           = useState(false)
+  const [error, setError]               = useState<string | null>(null)
   const [resendCooldown, setResendCooldown] = useState(0)
 
   useEffect(() => {
@@ -37,10 +38,10 @@ export function ConnectSession() {
   }, [resendCooldown])
 
   const sendOtp = async () => {
-    if (!phone.trim()) return
+    if (!phone.trim() || !email.trim()) return
     setError(null); setLoading(true)
     try {
-      const { otpId: id } = await commsApi.sendOtp(phone.trim())
+      const { otpId: id } = await commsApi.sendOtp(phone.trim(), email.trim())
       setOtpId(id)
       setStep('verify')
       setResendCooldown(60)
@@ -64,7 +65,7 @@ export function ConnectSession() {
     if (resendCooldown > 0) return
     setError(null); setLoading(true)
     try {
-      const { otpId: id } = await commsApi.sendOtp(phone.trim())
+      const { otpId: id } = await commsApi.sendOtp(phone.trim(), email.trim())
       setOtpId(id)
       setResendCooldown(60)
     } catch (e) {
@@ -73,7 +74,7 @@ export function ConnectSession() {
   }
 
   const reset = () => {
-    setStep('send'); setCode(''); setOtpId(''); setError(null); setPhone('')
+    setStep('send'); setCode(''); setOtpId(''); setError(null); setPhone(''); setEmail('')
   }
 
   return (
@@ -127,14 +128,22 @@ export function ConnectSession() {
               placeholder="+234 800 000 0000"
               value={phone}
               onChange={e => setPhone(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') void sendOtp() }}
             />
           </div>
 
-          <div className="rounded-xl border border-amber-500/20 bg-amber-500/06 px-4 py-3 flex gap-3">
-            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-300/80 leading-relaxed">
-              ERA Comms will send a WhatsApp verification message to this number. Make sure the phone is on and WhatsApp is active.
+          <div>
+            <label className={LABEL}>Email address to receive code</label>
+            <input
+              className={FIELD}
+              type="email"
+              placeholder="owner@business.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') void sendOtp() }}
+            />
+            <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1.5">
+              <Mail className="w-3 h-3 shrink-0" />
+              The 6-digit verification code will be emailed here
             </p>
           </div>
 
@@ -147,7 +156,7 @@ export function ConnectSession() {
 
           <button
             className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
-            disabled={!phone.trim() || loading || clientsLoading}
+            disabled={!phone.trim() || !email.trim() || loading || clientsLoading}
             onClick={sendOtp}
           >
             {loading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Sending…</> : 'Send verification code'}
@@ -160,8 +169,9 @@ export function ConnectSession() {
         <div className="rounded-2xl border border-white/07 bg-card p-6 space-y-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-1">Sending code to</p>
-              <p className="text-sm font-mono text-foreground">{phone}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-1">Code sent to</p>
+              <p className="text-sm font-mono text-foreground">{email}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">for number {phone}</p>
             </div>
             <button onClick={() => { setStep('send'); setError(null); setCode('') }}
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition">
