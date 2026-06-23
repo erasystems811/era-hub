@@ -2,7 +2,7 @@ name: Deploy ERA Hub
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
 
 jobs:
   deploy:
@@ -25,17 +25,24 @@ jobs:
           VITE_COMMS_OPERATOR_SECRET: ${{ secrets.COMMS_OPERATOR_SECRET }}
         run: npm run build
 
-      - name: Deploy to server
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SERVER_IP: 46.101.83.26
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-            dist/ root@$SERVER_IP:/var/www/era-hub/
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no root@$SERVER_IP \
-            "chmod -R 755 /var/www/era-hub/"
+      - name: Upload files to server
+        uses: appleboy/scp-action@master
+        with:
+          host: 46.101.83.26
+          username: root
+          password: ${{ secrets.SERVER_PASSWORD }}
+          source: "dist/*"
+          target: /var/www/era-hub
+          strip_components: 1
+
+      - name: Fix permissions + apply nginx
+        uses: appleboy/ssh-action@master
+        with:
+          host: 46.101.83.26
+          username: root
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            chmod -R 755 /var/www/era-hub/
+            cd /opt/era-comms && git pull origin main 2>/dev/null || true
+            cp /opt/era-comms/scripts/nginx.conf /etc/nginx/sites-available/era-comms 2>/dev/null || true
+            nginx -t && systemctl reload nginx 2>/dev/null || true
