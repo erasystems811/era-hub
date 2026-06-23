@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { Send, Plus, Brain, Trash2 } from 'lucide-react'
+import { Send, Plus, Brain, Trash2, Settings } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 interface Message {
   id: string
@@ -41,6 +42,29 @@ async function coreChat(sessionId: string | null, mode: 'business' | 'personal',
 }
 
 const PURPLE = '#9B7FD4'
+
+function NotConfigured() {
+  const nav = useNavigate()
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
+      <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5" style={{ background: `${PURPLE}18`, border: `1px solid ${PURPLE}30` }}>
+        <Brain className="w-7 h-7" style={{ color: PURPLE }} />
+      </div>
+      <h3 className="text-base font-semibold text-foreground mb-2">ERA Core not connected</h3>
+      <p className="text-sm max-w-xs leading-relaxed mb-6" style={{ color: 'rgba(255,255,255,0.38)' }}>
+        Set your ERA Core URL and secret key first.
+      </p>
+      <button
+        onClick={() => nav('/core/settings')}
+        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
+        style={{ background: PURPLE, color: 'white' }}
+      >
+        <Settings className="w-4 h-4" />
+        Connect ERA Core
+      </button>
+    </div>
+  )
+}
 
 export function CoreChat() {
   const [mode, setMode] = useState<'business' | 'personal'>('business')
@@ -154,6 +178,7 @@ export function CoreChat() {
     return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
   }
 
+  if (!getCoreApi()) return <div className="flex h-full"><NotConfigured /></div>
   return (
     <div className="flex h-full">
 

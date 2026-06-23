@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Brain, RefreshCw, Trash2 } from 'lucide-react'
+import { Brain, RefreshCw, Trash2, Settings } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { getCoreApi, getCoreSecret } from '../../lib/config'
 
 type Category = 'principle' | 'preference' | 'weakness' | 'style' | 'blindspot' | 'decision'
@@ -40,12 +41,38 @@ const MODE_LABELS: Record<Mode, string> = {
   both:     'Both',
 }
 
+const PURPLE_MEM = '#9B7FD4'
+
+function NotConfiguredMemory() {
+  const nav = useNavigate()
+  return (
+    <div className="flex flex-col items-center justify-center text-center px-6 py-24">
+      <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5" style={{ background: `${PURPLE_MEM}18`, border: `1px solid ${PURPLE_MEM}30` }}>
+        <Brain className="w-7 h-7" style={{ color: PURPLE_MEM }} />
+      </div>
+      <h3 className="text-base font-semibold text-foreground mb-2">ERA Core not connected</h3>
+      <p className="text-sm max-w-xs leading-relaxed mb-6" style={{ color: 'rgba(255,255,255,0.38)' }}>
+        Set your ERA Core URL and secret key first.
+      </p>
+      <button
+        onClick={() => nav('/core/settings')}
+        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
+        style={{ background: PURPLE_MEM, color: 'white' }}
+      >
+        <Settings className="w-4 h-4" />
+        Connect ERA Core
+      </button>
+    </div>
+  )
+}
+
 export function CoreMemory() {
   const [memories, setMemories] = useState<Memory[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<Mode | 'all'>('all')
   const [deleting, setDeleting] = useState<string | null>(null)
+  const configured = !!getCoreApi()
 
   async function load() {
     setLoading(true)
@@ -75,7 +102,9 @@ export function CoreMemory() {
     }
   }
 
-  useEffect(() => { void load() }, [filter])
+  useEffect(() => { if (configured) void load() }, [filter, configured])
+
+  if (!configured) return <NotConfiguredMemory />
 
   const grouped = memories.reduce<Record<Category, Memory[]>>((acc, m) => {
     if (!acc[m.category]) acc[m.category] = []
