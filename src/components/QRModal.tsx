@@ -25,9 +25,10 @@ export function QRModal({ sessionId, phoneNumber, onClose, onConnected }: Props)
 
     ws.onmessage = async (evt) => {
       try {
-        const msg = JSON.parse(evt.data as string) as { type: string; data?: string }
-        if (msg.type === 'qr' && msg.data) {
-          const url = await QRCode.toDataURL(msg.data, { width: 280, margin: 2 })
+        const msg = JSON.parse(evt.data as string) as { type: string; code?: string; data?: string }
+        const qrCode = msg.code ?? msg.data
+        if (msg.type === 'qr' && qrCode) {
+          const url = await QRCode.toDataURL(qrCode, { width: 280, margin: 2 })
           setQrDataUrl(url)
           setPhase('qr')
         } else if (msg.type === 'connected') {

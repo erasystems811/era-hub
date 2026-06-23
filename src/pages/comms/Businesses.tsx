@@ -95,7 +95,7 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
     if (!detail || !newLabel) return
     setSaving(true)
     try {
-      const k = await commsApi.createApiKey(detail.id, newLabel, ['messages:send', 'sessions:read'])
+      const k = await commsApi.createApiKey(detail.id, newLabel, ['messaging', 'analytics'])
       setFreshKey(k.key); setFreshKeyId(k.id)
       setShowFreshKey(false); setSecureSent(false)
       setNewLabel('')
