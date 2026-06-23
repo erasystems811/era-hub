@@ -74,7 +74,7 @@ export function CoreSettings() {
             type="password"
             value={secret}
             onChange={e => setSecret(e.target.value)}
-            placeholder="era-core-secret-2026-chidera"
+            placeholder="Your ERA Core secret key"
             className="w-full rounded-xl px-4 py-3 text-sm outline-none"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.88)' }}
           />
@@ -115,11 +115,6 @@ export function CoreSettings() {
         )}
       </div>
 
-      <div className="mt-8 rounded-xl px-4 py-4" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}>
-        <p className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Your ERA Core details</p>
-        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>URL: <span style={{ color: PURPLE }}>https://era-core-production.up.railway.app</span></p>
-        <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.25)' }}>Secret: <span style={{ color: PURPLE }}>era-core-secret-2026-chidera</span></p>
-      </div>
     </div>
   )
 }

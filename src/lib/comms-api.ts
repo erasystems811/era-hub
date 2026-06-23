@@ -163,7 +163,7 @@ export const commsApi = {
 
   // Master session — ERA Systems own number used for OTP and platform messages
   getMasterSession:    () => get<Session | null>('/sessions/master'),
-  sendOtp:             (phoneNumber: string) => post<{ otpId: string }>('/sessions/otp/send', { phoneNumber }),
+  sendOtp:             (phoneNumber: string, email?: string) => post<{ otpId: string }>('/sessions/otp/send', { phoneNumber, email }),
   verifyOtp:           (otpId: string, code: string) => post<{ sessionId: string }>('/sessions/otp/verify', { otpId, code }),
 
   // Business onboarding requests
