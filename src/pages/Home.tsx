@@ -141,16 +141,16 @@ export function Home() {
       {/* ERA Connect */}
       <button
         onClick={() => nav('/connect')}
-        className="group relative text-left rounded-2xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(52,211,153,0.16)]"
-        style={{ background: 'rgba(255,255,255,0.10)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderColor: 'rgba(52,211,153,0.22)', borderTopColor: 'rgba(255,255,255,0.22)', boxShadow: '0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.18)' }}
+        className="group relative text-left rounded-2xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(204,120,150,0.16)]"
+        style={{ background: 'rgba(255,255,255,0.10)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderColor: 'rgba(204,120,150,0.22)', borderTopColor: 'rgba(255,255,255,0.22)', boxShadow: '0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.18)' }}
       >
         <div className="absolute inset-x-0 top-0 h-40 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 110% 100% at 50% -10%, rgba(52,211,153,0.20) 0%, transparent 75%)' }} />
+          style={{ background: 'radial-gradient(ellipse 110% 100% at 50% -10%, rgba(204,120,150,0.20) 0%, transparent 75%)' }} />
 
         <div className="relative p-5 flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: 'rgba(52,211,153,0.18)', border: '1px solid rgba(52,211,153,0.35)' }}>
-            <Wifi className="w-5 h-5" style={{ color: '#34D399' }} />
+            style={{ background: 'rgba(204,120,150,0.18)', border: '1px solid rgba(204,120,150,0.35)' }}>
+            <Wifi className="w-5 h-5" style={{ color: '#CC7896' }} />
           </div>
 
           <div className="flex-1 min-w-0">
@@ -164,15 +164,15 @@ export function Home() {
 
           <div className="flex items-center gap-3 shrink-0">
             {connectHealthy === true
-              ? <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+              ? <CheckCircle className="w-3.5 h-3.5 text-primary" />
               : connectHealthy === false
               ? <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
               : <div className="w-3.5 h-3.5 rounded-full border border-muted-foreground/20" />}
-            <ArrowRight className="w-4 h-4 text-muted-foreground/25 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all duration-200" />
+            <ArrowRight className="w-4 h-4 text-muted-foreground/25 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200" />
           </div>
         </div>
 
-        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(52,211,153,0.35), transparent)' }} />
+        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(204,120,150,0.35), transparent)' }} />
       </button>
 
     </div>

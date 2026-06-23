@@ -66,7 +66,7 @@ const CONNECT_NAV = [
 const PRODUCTS = {
   patient: { name: 'ERA Patient', color: '#4DBFB3', accentText: 'text-teal',      activeBg: 'bg-teal/[0.22]',      nav: PATIENT_NAV },
   comms:   { name: 'ERA Comms',   color: '#CC7896', accentText: 'text-primary',   activeBg: 'bg-primary/[0.22]',   nav: COMMS_NAV   },
-  connect: { name: 'ERA Connect', color: '#34D399', accentText: 'text-emerald-400', activeBg: 'bg-emerald-400/[0.18]', nav: CONNECT_NAV },
+  connect: { name: 'ERA Connect', color: '#CC7896', accentText: 'text-primary',     activeBg: 'bg-primary/[0.22]',     nav: CONNECT_NAV },
 } as const
 
 const SB_BG     = 'rgba(14, 11, 20, 0.88)'
