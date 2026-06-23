@@ -1,115 +1,305 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, RefreshCw, CheckCircle2, XCircle, Wallet, Settings, Zap, Layers, Loader2, Copy, Check } from 'lucide-react'
+import {
+  ArrowLeft, RefreshCw, Wallet, Settings, Zap, Layers, Loader2,
+  Copy, Check, XCircle, Shield, Save, Mail, Phone, Plus, X,
+  Eye, EyeOff, KeyRound, Link, Users, AlertCircle, RotateCcw,
+  CheckCircle2, Clock, MessageSquare, Filter,
+} from 'lucide-react'
 import { patientApi, Hospital, HospitalSettings, HospitalModules, WalletInfo } from '../../lib/patient-api'
 import { fmtDate, fmtMoney, fmtDateTime } from '../../lib/utils'
 
-type Tab = 'overview' | 'settings' | 'modules' | 'automation' | 'wallet'
+type Tab = 'general' | 'settings' | 'modules' | 'automation' | 'wallet'
+type AutoFilter = 'all' | 'failed' | 'sent'
 
-function Field({ label, value, mono }: { label: string; value?: string | null | number | boolean; mono?: boolean }) {
-  const display = value === true ? 'Enabled' : value === false ? 'Disabled' : (value ?? null)
-  return (
-    <div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-1">{label}</p>
-      {display !== null
-        ? <p className={`text-sm text-foreground break-all ${mono ? 'font-mono' : ''}`}>{String(display)}</p>
-        : <p className="text-sm text-muted-foreground/40">—</p>}
-    </div>
-  )
-}
+const PREDEFINED_DEPARTMENTS = [
+  'General Outpatient', 'Antenatal / Maternity', 'Paediatrics', 'Surgery / Post-Op',
+  'Dental', 'Eye', 'Fertility / IVF', 'ENT (Ear, Nose and Throat)',
+]
 
-function CopyField({ label, value }: { label: string; value?: string | null }) {
+const TONES = [
+  { value: 'Formal',      sub: 'Strict and corporate' },
+  { value: 'Warm',        sub: 'Caring and personal' },
+  { value: 'Friendly',    sub: 'Casual and modern' },
+  { value: 'Empathetic',  sub: 'Deeply understanding' },
+  { value: 'Encouraging', sub: 'Motivating and uplifting' },
+  { value: 'Reassuring',  sub: 'Calming, reduces anxiety' },
+  { value: 'Jovial',      sub: 'Light-hearted and cheerful' },
+]
+
+// ── Shared helper components ─────────────────────────────────────────────────
+
+function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
-  const copy = async () => {
-    if (!value) return
-    await navigator.clipboard.writeText(value)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
   return (
-    <div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-1">{label}</p>
-      <div className="flex items-center gap-2 group">
-        <p className="text-sm text-foreground font-mono flex-1 min-w-0 truncate">{value ?? '—'}</p>
-        {value && (
-          <button onClick={copy} className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-teal">
-            {copied ? <Check className="w-3.5 h-3.5 text-teal" /> : <Copy className="w-3.5 h-3.5" />}
-          </button>
-        )}
+    <button
+      type="button"
+      onClick={() => { navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800) }) }}
+      className="shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-teal hover:bg-white/05 transition"
+      title="Copy"
+    >
+      {copied ? <Check className="w-3.5 h-3.5 text-teal" /> : <Copy className="w-3.5 h-3.5" />}
+    </button>
+  )
+}
+
+function CredRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-2 py-2 border-b border-white/06 last:border-0">
+      <div className="min-w-0">
+        <p className="text-[10px] text-muted-foreground uppercase tracking-[0.1em] font-semibold">{label}</p>
+        <p className="text-sm font-mono text-foreground truncate">{value}</p>
       </div>
+      <CopyBtn text={value} />
     </div>
   )
 }
 
-function Toggle({ label, sub, checked, onChange }: { label: string; sub?: string; checked: boolean; onChange: (v: boolean) => void }) {
+function FieldLabel({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <label className="flex items-center justify-between gap-4 py-3.5 cursor-pointer select-none border-b border-white/06 last:border-0">
-      <div>
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
-      </div>
-      <div
-        className={`relative w-10 h-6 rounded-full transition-colors duration-200 shrink-0 ${checked ? 'bg-teal' : 'bg-white/10'}`}
-        onClick={() => onChange(!checked)}
-      >
-        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all duration-200 ${checked ? 'left-5' : 'left-1'}`} />
-      </div>
-    </label>
+    <div className="space-y-1.5">
+      <label className="label">{label}</label>
+      {children}
+      {hint && <p className="text-xs text-muted-foreground leading-relaxed">{hint}</p>}
+    </div>
   )
 }
+
+function PillToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div
+      className={`relative w-10 h-6 rounded-full transition-colors duration-200 shrink-0 cursor-pointer ${checked ? 'bg-teal' : 'bg-white/10'}`}
+      onClick={() => onChange(!checked)}
+    >
+      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all duration-200 ${checked ? 'left-5' : 'left-1'}`} />
+    </div>
+  )
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export function HospitalDetail() {
   const { id } = useParams<{ id: string }>()
   const nav = useNavigate()
-  const [tab, setTab] = useState<Tab>('overview')
-  const [hospital, setHospital] = useState<Hospital | null>(null)
-  const [settings, setSettings] = useState<HospitalSettings | null>(null)
-  const [modules, setModules] = useState<HospitalModules | null>(null)
-  const [wallet, setWallet] = useState<WalletInfo | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [creditAmount, setCreditAmount] = useState('')
-  const [creditNote, setCreditNote] = useState('')
-  const [creditLoading, setCreditLoading] = useState(false)
-  const [regenResult, setRegenResult] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
   const hId = Number(id)
 
-  const load = async () => {
-    setLoading(true)
-    try {
-      const [h, s, m, w] = await Promise.all([
-        patientApi.getHospital(hId),
-        patientApi.getSettings(hId),
-        patientApi.getModules(hId),
-        patientApi.getHospitalWallet(hId),
-      ])
-      setHospital(h); setSettings(s); setModules(m); setWallet(w)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not load hospital') }
-    finally { setLoading(false) }
+  // Core data
+  const [hospital, setHospital]   = useState<Hospital | null>(null)
+  const [settings, setSettings]   = useState<HospitalSettings | null>(null)
+  const [modules,  setModules]    = useState<HospitalModules | null>(null)
+  const [wallet,   setWallet]     = useState<WalletInfo | null>(null)
+
+  // UI
+  const [loading,    setLoading]    = useState(true)
+  const [saving,     setSaving]     = useState(false)
+  const [error,      setError]      = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [tab,        setTab]        = useState<Tab>('general')
+
+  // Credentials display
+  const [showAdminPass, setShowAdminPass] = useState(false)
+  const [allCopied,     setAllCopied]     = useState(false)
+  const [eraPatientUrl, setEraPatientUrl] = useState('https://app.erasystems.com.ng')
+
+  // General tab form
+  const [name,                  setName]                  = useState('')
+  const [subStatus,             setSubStatus]             = useState('active')
+  const [active,                setActive]                = useState(true)
+  const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState('')
+  const [contactEmail,          setContactEmail]          = useState('')
+  const [contactPhone,          setContactPhone]          = useState('')
+
+  // Settings tab form
+  const [departments,      setDepartments]      = useState<string[]>([])
+  const [customDeptInput,  setCustomDeptInput]  = useState('')
+  const [postTreatmentDays,setPostTreatmentDays]= useState('')
+  const [dormantDays,      setDormantDays]      = useState('')
+  const [senderName,       setSenderName]       = useState('')
+  const [hospitalPhone,    setHospitalPhone]    = useState('')
+  const [notifChannel,     setNotifChannel]     = useState<'whatsapp' | 'sms'>('whatsapp')
+  const [termiiSenderId,   setTermiiSenderId]   = useState('')
+  const [language,         setLanguage]         = useState('')
+  const [tones,            setTones]            = useState<string[]>([])
+  const [clinicDescription,setClinicDescription]= useState('')
+
+  // Test SMS/Email
+  const [testSmsTo,       setTestSmsTo]      = useState('')
+  const [testSmsSending,  setTestSmsSending] = useState(false)
+  const [testSmsResult,   setTestSmsResult]  = useState<{ ok: boolean; detail: string } | null>(null)
+  const [testEmailTo,     setTestEmailTo]    = useState('')
+  const [testEmailSending,setTestEmailSending]= useState(false)
+  const [testEmailResult, setTestEmailResult]= useState<{ ok: boolean; msg: string } | null>(null)
+
+  // Automation tab
+  const [autoFilter,  setAutoFilter]  = useState<AutoFilter>('all')
+  const [automations, setAutomations] = useState<Awaited<ReturnType<typeof patientApi.getAutomationLog>>>([])
+  const [autoLoading, setAutoLoading] = useState(false)
+  const [retryingId,  setRetryingId]  = useState<number | null>(null)
+  const [retryError,  setRetryError]  = useState<string | null>(null)
+
+  // Wallet
+  const [creditAmount, setCreditAmount] = useState('')
+  const [creditNote,   setCreditNote]   = useState('')
+  const [creditLoading,setCreditLoading]= useState(false)
+  const [regenResult,  setRegenResult]  = useState<string | null>(null)
+
+  const flash = (msg: string) => {
+    setSuccessMsg(msg)
+    setTimeout(() => setSuccessMsg(null), 3000)
   }
 
-  useEffect(() => { void load() }, [hId])
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+
+    const [hRes, sRes, mRes, wRes, cfgRes] = await Promise.allSettled([
+      patientApi.getHospital(hId),
+      patientApi.getSettings(hId),
+      patientApi.getModules(hId),
+      patientApi.getHospitalWallet(hId),
+      patientApi.getConfig(),
+    ])
+
+    setLoading(false)
+
+    if (hRes.status === 'rejected') {
+      setError(hRes.reason instanceof Error ? hRes.reason.message : 'Could not load hospital')
+      return
+    }
+
+    const h = hRes.value
+    setHospital(h)
+    setName(h.name)
+    setSubStatus(h.subscriptionStatus)
+    setActive(h.active)
+    setSubscriptionExpiresAt(h.subscriptionExpiresAt ? h.subscriptionExpiresAt.substring(0, 10) : '')
+    setContactEmail(h.contactEmail ?? '')
+    setContactPhone(h.contactPhone ?? '')
+
+    if (sRes.status === 'fulfilled') {
+      const s = sRes.value
+      setSettings(s)
+      setDepartments(s.departments?.length > 0 ? s.departments : [...PREDEFINED_DEPARTMENTS])
+      setPostTreatmentDays(s.pipelinePostTreatmentDays?.toString() ?? '')
+      setDormantDays(s.pipelineDormantDays?.toString() ?? '')
+      setSenderName(s.senderName ?? '')
+      setHospitalPhone(s.phoneNumber ?? '')
+      setNotifChannel((s.notificationChannel as 'whatsapp' | 'sms') ?? 'whatsapp')
+      setTermiiSenderId(s.termiiSenderId ?? '')
+      setLanguage(s.language ?? '')
+      setTones(Array.isArray(s.tone) ? s.tone : [])
+      setClinicDescription(s.clinicDescription ?? '')
+    }
+
+    if (mRes.status === 'fulfilled') setModules(mRes.value)
+    if (wRes.status === 'fulfilled') setWallet(wRes.value)
+    if (cfgRes.status === 'fulfilled') setEraPatientUrl(cfgRes.value.eraPatientUrl.replace(/\/$/, ''))
+  }, [hId])
+
+  const loadAutomations = useCallback(async () => {
+    setAutoLoading(true)
+    setRetryError(null)
+    try {
+      const data = await patientApi.getAutomationLog({
+        hospitalId: hId,
+        status: autoFilter === 'all' ? undefined : autoFilter,
+      })
+      setAutomations(data)
+    } catch { /* silently ignore */ }
+    finally { setAutoLoading(false) }
+  }, [hId, autoFilter])
+
+  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    if (tab === 'automation') void loadAutomations()
+  }, [tab, loadAutomations])
+
+  const saveGeneral = async () => {
+    setSaving(true); setError(null)
+    try {
+      const h = await patientApi.updateHospital(hId, {
+        name, subscriptionStatus: subStatus, active,
+        subscriptionExpiresAt: subscriptionExpiresAt ? new Date(subscriptionExpiresAt).toISOString() : null,
+        contactEmail: contactEmail || null,
+        contactPhone: contactPhone || null,
+      })
+      setHospital(h)
+      flash('Hospital updated')
+    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save changes') }
+    finally { setSaving(false) }
+  }
+
+  const saveSettings = async () => {
+    setSaving(true); setError(null)
+    try {
+      const s = await patientApi.updateSettings(hId, {
+        departments,
+        pipelinePostTreatmentDays: postTreatmentDays ? parseInt(postTreatmentDays) : null,
+        pipelineDormantDays: dormantDays ? parseInt(dormantDays) : null,
+        senderName: senderName || null,
+        phoneNumber: hospitalPhone || null,
+        notificationChannel: notifChannel,
+        termiiSenderId: termiiSenderId || null,
+        language: language || null,
+        tone: tones.length > 0 ? tones : null,
+        ...(clinicDescription ? { clinicDescription } : { clinicDescription: null }),
+      } as Partial<HospitalSettings>)
+      setSettings(s)
+      flash('Settings saved')
+    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save settings') }
+    finally { setSaving(false) }
+  }
 
   const toggleModule = async (key: keyof HospitalModules, val: boolean) => {
     if (!modules) return
     setSaving(true)
     try { setModules(await patientApi.updateModules(hId, { [key]: val })) }
-    finally { setSaving(false) }
-  }
-
-  const toggleActive = async () => {
-    if (!hospital) return
-    setSaving(true)
-    try { setHospital(await patientApi.updateHospital(hId, { active: !hospital.active })) }
+    catch (e) { setError(e instanceof Error ? e.message : 'Could not update module') }
     finally { setSaving(false) }
   }
 
   const regenPassword = async () => {
-    setSaving(true)
-    try { const { newPassword } = await patientApi.regeneratePassword(hId); setRegenResult(newPassword) }
+    setSaving(true); setError(null)
+    try {
+      const { newPassword, hospital: h } = await patientApi.regeneratePassword(hId)
+      setHospital(prev => prev ? { ...prev, ...h, staffCredentials: prev.staffCredentials } : h)
+      setRegenResult(newPassword)
+      flash('Password regenerated — share with the hospital')
+    } catch (e) { setError(e instanceof Error ? e.message : 'Regeneration failed') }
     finally { setSaving(false) }
+  }
+
+  const copyAllCredentials = () => {
+    if (!hospital) return
+    const loginUrl = `${eraPatientUrl}/?h=${hospital.username}`
+    const sc = hospital.staffCredentials
+    const msg = [
+      `🏥 Era Patient — Login Details for ${hospital.name}`,
+      '',
+      `🔗 Admin Login Link: ${loginUrl}`,
+      `🔐 Admin Password: ${hospital.currentPassword ?? '(not available)'}`,
+      '',
+      ...(sc ? [
+        `👩‍⚕️ Nurse Username: ${sc.nurseUsername}`,
+        `   Nurse Password: ${sc.nursePlainPassword}`,
+        '',
+        `🗂️ Receptionist Username: ${sc.receptionistUsername}`,
+        `   Receptionist Password: ${sc.receptionistPlainPassword}`,
+        '',
+      ] : []),
+      `ℹ️ Staff log in at: ${eraPatientUrl} (Staff Login tab)`,
+    ].join('\n')
+    navigator.clipboard.writeText(msg).then(() => {
+      setAllCopied(true)
+      setTimeout(() => setAllCopied(false), 2500)
+    })
+  }
+
+  const retryAutomation = async (logId: number) => {
+    setRetryingId(logId); setRetryError(null)
+    try { await patientApi.retryAutomation(logId); await loadAutomations() }
+    catch (e) { setRetryError(e instanceof Error ? e.message : 'Retry failed') }
+    finally { setRetryingId(null) }
   }
 
   const credit = async () => {
@@ -120,8 +310,22 @@ export function HospitalDetail() {
       await patientApi.creditHospitalWallet(hId, amount, creditNote || 'Manual credit')
       setCreditAmount(''); setCreditNote('')
       setWallet(await patientApi.getHospitalWallet(hId))
-    } finally { setCreditLoading(false) }
+      flash('Wallet credited')
+    } catch (e) { setError(e instanceof Error ? e.message : 'Could not credit wallet') }
+    finally { setCreditLoading(false) }
   }
+
+  const toggleDept = (dept: string) =>
+    setDepartments(prev => prev.includes(dept) ? prev.filter(d => d !== dept) : [...prev, dept])
+
+  const addCustomDept = () => {
+    const t = customDeptInput.trim()
+    if (!t || departments.includes(t)) return
+    setDepartments(prev => [...prev, t])
+    setCustomDeptInput('')
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   if (loading) return (
     <div className="flex items-center justify-center py-24 gap-2 text-muted-foreground">
@@ -141,7 +345,7 @@ export function HospitalDetail() {
   )
 
   const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
-    { key: 'overview',   label: 'Overview',   icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
+    { key: 'general',    label: 'General',    icon: <Shield className="w-3.5 h-3.5" /> },
     { key: 'settings',   label: 'Settings',   icon: <Settings className="w-3.5 h-3.5" /> },
     { key: 'modules',    label: 'Modules',    icon: <Layers className="w-3.5 h-3.5" /> },
     { key: 'automation', label: 'Automation', icon: <Zap className="w-3.5 h-3.5" /> },
@@ -151,6 +355,12 @@ export function HospitalDetail() {
   const statusBadge = hospital.active
     ? 'bg-teal/10 text-teal border-teal/20'
     : 'bg-red-500/10 text-red-400 border-red-500/20'
+
+  const loginUrl = `${eraPatientUrl}/?h=${hospital.username}`
+  const feedbackUrl = hospital.feedbackSlug ? `${eraPatientUrl}/feedback/h/${hospital.feedbackSlug}` : null
+
+  const expiryDate = hospital.subscriptionExpiresAt ? new Date(hospital.subscriptionExpiresAt) : null
+  const daysLeft = expiryDate ? Math.ceil((expiryDate.getTime() - Date.now()) / 86400000) : null
 
   return (
     <div className="max-w-4xl">
@@ -175,16 +385,16 @@ export function HospitalDetail() {
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">
               {hospital.username} · {hospital.patientCount.toLocaleString()} patients
+              {daysLeft !== null && (
+                <span className={`ml-2 ${daysLeft < 0 ? 'text-red-400' : daysLeft <= 30 ? 'text-amber-400' : ''}`}>
+                  · {daysLeft < 0 ? `expired ${Math.abs(daysLeft)}d ago` : `${daysLeft}d left`}
+                </span>
+              )}
             </p>
           </div>
         </div>
-        <button
-          className={hospital.active ? 'btn-secondary text-sm' : 'btn-teal text-sm'}
-          style={hospital.active ? { color: '#CF738A', borderColor: 'rgba(207,115,138,0.3)' } : {}}
-          onClick={toggleActive}
-          disabled={saving}
-        >
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : hospital.active ? 'Suspend access' : 'Restore access'}
+        <button onClick={load} className="btn-secondary p-2" title="Refresh">
+          <RefreshCw className="w-4 h-4" />
         </button>
       </div>
 
@@ -192,7 +402,7 @@ export function HospitalDetail() {
       <div className="flex gap-1 mb-5 rounded-xl border border-white/07 bg-card p-1 overflow-x-auto">
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
               tab === t.key ? 'bg-teal text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-white/05'
             }`}>
             {t.icon} {t.label}
@@ -200,115 +410,562 @@ export function HospitalDetail() {
         ))}
       </div>
 
-      {/* Overview */}
-      {tab === 'overview' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="rounded-2xl border border-white/07 bg-card p-6">
-            <h3 className="text-sm font-semibold text-foreground mb-5">Account details</h3>
-            <div className="space-y-4">
-              <Field label="Subscription" value={hospital.subscriptionStatus} />
-              <Field label="Expires" value={fmtDate(hospital.subscriptionExpiresAt)} />
-              <Field label="Registered" value={fmtDate(hospital.createdAt)} />
-              <Field label="Contact email" value={hospital.contactEmail} />
-              <Field label="Contact phone" value={hospital.contactPhone} />
-              <Field label="Hospital code" value={hospital.hospitalCode} />
+      {/* Feedback / error banner */}
+      {(error || successMsg) && (
+        <div className={`flex items-center gap-2 text-sm px-4 py-2.5 rounded-xl border mb-4 ${
+          error
+            ? 'text-red-400 bg-red-500/10 border-red-500/20'
+            : 'text-teal bg-teal/10 border-teal/20'
+        }`}>
+          {error ? <AlertCircle className="w-4 h-4 shrink-0" /> : <CheckCircle2 className="w-4 h-4 shrink-0" />}
+          {error || successMsg}
+        </div>
+      )}
+
+      {/* ── GENERAL TAB ─────────────────────────────────────────────────────── */}
+      {tab === 'general' && (
+        <div className="space-y-4 max-w-lg">
+
+          {/* Credentials card */}
+          <div className="rounded-2xl border border-white/07 bg-card p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-foreground">Login credentials</h2>
+              <button
+                type="button"
+                onClick={copyAllCredentials}
+                className="flex items-center gap-1.5 btn-secondary text-xs"
+              >
+                {allCopied ? <Check className="w-3.5 h-3.5 text-teal" /> : <Copy className="w-3.5 h-3.5" />}
+                {allCopied ? 'Copied!' : 'Copy all'}
+              </button>
             </div>
+
+            {/* Admin login link */}
+            <div className="rounded-xl border border-white/08 bg-white/03 p-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Link className="w-3.5 h-3.5 text-teal" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-teal">Admin login link</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-mono text-foreground break-all">{loginUrl}</p>
+                <CopyBtn text={loginUrl} />
+              </div>
+            </div>
+
+            {/* Feedback link */}
+            <div className="rounded-xl border border-white/08 bg-white/03 p-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <MessageSquare className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-amber-400">Patient feedback link</span>
+              </div>
+              {feedbackUrl ? (
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-mono text-foreground break-all">{feedbackUrl}</p>
+                  <CopyBtn text={feedbackUrl} />
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground italic">Not generated yet — appears after first hospital login.</p>
+              )}
+            </div>
+
+            {/* Hospital code */}
+            {hospital.hospitalCode && (
+              <div className="rounded-xl border border-white/08 bg-white/03 p-3">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Shield className="w-3.5 h-3.5 text-violet-400" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-violet-400">Internal hospital code</span>
+                  <span className="ml-auto text-[10px] text-muted-foreground italic">Read-only</span>
+                </div>
+                <CredRow label="Hospital code (UUID)" value={hospital.hospitalCode} />
+              </div>
+            )}
+
+            {/* Admin creds */}
+            <div className="rounded-xl border border-white/08 bg-white/03 p-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-amber-400">Admin credentials</span>
+              </div>
+              <CredRow label="Username" value={hospital.username} />
+              <div className="flex items-center justify-between gap-2 py-2 border-b border-white/06">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-[0.1em] font-semibold">Password</p>
+                  <p className="text-sm font-mono text-foreground">
+                    {hospital.currentPassword
+                      ? (showAdminPass ? hospital.currentPassword : '•'.repeat(hospital.currentPassword.length))
+                      : <span className="text-muted-foreground/50 italic text-xs">Not stored — use Regenerate</span>}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  {hospital.currentPassword && (
+                    <>
+                      <button type="button" onClick={() => setShowAdminPass(v => !v)}
+                        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/05 transition">
+                        {showAdminPass ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                      <CopyBtn text={hospital.currentPassword} />
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="pt-2">
+                <button className="btn-secondary text-xs flex items-center gap-1.5" onClick={regenPassword} disabled={saving}>
+                  <RefreshCw className="w-3.5 h-3.5" /> Regenerate password
+                </button>
+                {regenResult && (
+                  <div className="mt-2 p-2.5 rounded-xl text-sm font-mono text-teal border border-teal/20 bg-teal/5">
+                    New: <span className="font-bold select-all">{regenResult}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Staff creds */}
+            {hospital.staffCredentials && (
+              <div className="rounded-xl border border-white/08 bg-white/03 p-3">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Users className="w-3.5 h-3.5 text-blue-400" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-blue-400">Staff credentials</span>
+                </div>
+                <CredRow label="Nurse username"          value={hospital.staffCredentials.nurseUsername} />
+                <CredRow label="Nurse password"          value={hospital.staffCredentials.nursePlainPassword} />
+                <CredRow label="Receptionist username"   value={hospital.staffCredentials.receptionistUsername} />
+                <CredRow label="Receptionist password"   value={hospital.staffCredentials.receptionistPlainPassword} />
+                <p className="text-xs text-muted-foreground mt-2">Staff log in at {eraPatientUrl} (Staff Login tab)</p>
+              </div>
+            )}
           </div>
 
-          <div className="rounded-2xl border border-white/07 bg-card p-6">
-            <h3 className="text-sm font-semibold text-foreground mb-5">Login credentials</h3>
-            <div className="space-y-4">
-              <CopyField label="Admin username" value={hospital.username} />
-              <CopyField label="Admin password" value={hospital.currentPassword} />
-              {hospital.staffCredentials && (
-                <>
-                  <div className="border-t border-white/06 pt-4">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">Staff credentials</p>
-                    <div className="space-y-3">
-                      <CopyField label="Nurse username" value={hospital.staffCredentials.nurseUsername} />
-                      <CopyField label="Nurse password" value={hospital.staffCredentials.nursePlainPassword} />
-                      <CopyField label="Receptionist username" value={hospital.staffCredentials.receptionistUsername} />
-                      <CopyField label="Receptionist password" value={hospital.staffCredentials.receptionistPlainPassword} />
-                    </div>
-                  </div>
-                </>
-              )}
+          {/* Account details form */}
+          <div className="rounded-2xl border border-white/07 bg-card p-6 space-y-5">
+            <h2 className="font-semibold text-foreground">Account details</h2>
+
+            <FieldLabel label="Hospital name">
+              <input className="input" value={name} onChange={e => setName(e.target.value)} />
+            </FieldLabel>
+
+            <FieldLabel label="Subscription status">
+              <select className="input" value={subStatus} onChange={e => {
+                const val = e.target.value
+                setSubStatus(val)
+                if (val === 'inactive') setActive(false)
+                else setActive(true)
+              }}>
+                <option value="active">Active</option>
+                <option value="trial">Trial</option>
+                <option value="inactive">Suspended</option>
+              </select>
+            </FieldLabel>
+
+            <FieldLabel label="Subscription expiry date">
+              <input className="input" type="date" value={subscriptionExpiresAt} onChange={e => setSubscriptionExpiresAt(e.target.value)} />
+              {subscriptionExpiresAt && (() => {
+                const d = Math.ceil((new Date(subscriptionExpiresAt).getTime() - Date.now()) / 86400000)
+                if (d < 0) return <p className="text-xs text-red-400 mt-1">⚠ Subscription expired {Math.abs(d)} day{Math.abs(d) !== 1 ? 's' : ''} ago</p>
+                if (d <= 30) return <p className="text-xs text-amber-400 mt-1">⚠ Expires in {d} day{d !== 1 ? 's' : ''}</p>
+                return <p className="text-xs text-teal mt-1">Active for {d} more days</p>
+              })()}
+            </FieldLabel>
+
+            <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-white/03 border border-white/08">
+              <div>
+                <p className="text-sm font-medium text-foreground">Account active</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Suspended accounts cannot log in</p>
+              </div>
+              <PillToggle checked={active} onChange={val => {
+                setActive(val)
+                if (!val) setSubStatus('inactive')
+                else if (subStatus === 'inactive') setSubStatus('active')
+              }} />
             </div>
-            <div className="mt-5 pt-4 border-t border-white/06">
-              <button className="btn-secondary text-sm flex items-center gap-2" onClick={regenPassword} disabled={saving}>
-                <RefreshCw className="w-3.5 h-3.5" /> Regenerate password
-              </button>
-              {regenResult && (
-                <div className="mt-3 p-3 rounded-xl text-sm font-mono text-teal border border-teal/20 bg-teal/5">
-                  New: <span className="font-bold select-all">{regenResult}</span>
+
+            <div className="pt-3 border-t border-white/06 space-y-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Account contact (private)</p>
+              <FieldLabel label="Contact email" hint="Your private record for this client — not visible to the hospital.">
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+                  <input className="input pl-10" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="admin@hospital.com" />
                 </div>
-              )}
+              </FieldLabel>
+              <FieldLabel label="Contact phone">
+                <div className="relative">
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+                  <input className="input pl-10" type="text" value={contactPhone} onChange={e => setContactPhone(e.target.value)} placeholder="+2348000000000" />
+                </div>
+              </FieldLabel>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button className="btn-primary flex items-center gap-2" onClick={saveGeneral} disabled={saving}>
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {saving ? 'Saving…' : 'Save changes'}
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Settings */}
+      {/* ── SETTINGS TAB ────────────────────────────────────────────────────── */}
+      {tab === 'settings' && !settings && (
+        <div className="rounded-2xl border border-white/07 bg-card p-6 text-center text-muted-foreground">
+          <p className="text-sm">Settings could not be loaded. <button className="text-teal hover:underline" onClick={load}>Try again</button></p>
+        </div>
+      )}
       {tab === 'settings' && settings && (
-        <div className="rounded-2xl border border-white/07 bg-card p-6">
-          <h3 className="text-sm font-semibold text-foreground mb-6">Hospital settings</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
-            <Field label="Notification channel" value={settings.notificationChannel ?? 'Not configured'} />
-            <Field label="Sender name" value={settings.senderName} />
-            <Field label="Phone number" value={settings.phoneNumber} />
-            <Field label="WhatsApp from number" value={settings.whatsappFromNumber} />
-            <Field label="Language" value={settings.language} />
-            <Field label="Termii sender ID" value={settings.termiiSenderId} />
-            <Field label="Sender ID approved" value={settings.senderIdApproved} />
-            <Field label="Post-treatment follow-up days" value={settings.pipelinePostTreatmentDays ?? 'Default'} />
-            <Field label="Dormant after days" value={settings.pipelineDormantDays ?? 'Default'} />
-            <Field label="Daily AI call limit" value={settings.callTaskAiDailyLimit ?? 'Unlimited'} />
-            <Field label="AI calls used today" value={settings.callTaskAiUsedToday} />
-          </div>
-          {settings.departments?.length > 0 && (
-            <div className="mt-6 pt-5 border-t border-white/06">
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">Departments</p>
-              <div className="flex flex-wrap gap-1.5">
-                {settings.departments.map(d => (
-                  <span key={d} className="text-xs px-2.5 py-1 rounded-full bg-white/06 text-foreground border border-white/10">{d}</span>
+        <div className="rounded-2xl border border-white/07 bg-card p-6 space-y-6 max-w-2xl">
+          <h2 className="font-semibold text-foreground">Hospital settings</h2>
+
+          {/* Departments */}
+          <div className="space-y-3">
+            <div>
+              <p className="label mb-0.5">Departments</p>
+              <p className="text-xs text-muted-foreground">Select active departments for this hospital — shown in the nurse station when logging care plans.</p>
+            </div>
+            <div className="rounded-xl border border-white/08 bg-white/02 p-4">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                {[...new Set([...PREDEFINED_DEPARTMENTS, ...departments.filter(d => !PREDEFINED_DEPARTMENTS.includes(d))])].map(dept => (
+                  <label key={dept} className="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" checked={departments.includes(dept)} onChange={() => toggleDept(dept)}
+                      className="w-4 h-4 rounded accent-teal shrink-0" />
+                    <span className={`text-sm ${departments.includes(dept) ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>{dept}</span>
+                  </label>
                 ))}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <input className="input flex-1" type="text" value={customDeptInput} onChange={e => setCustomDeptInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomDept() } }}
+                placeholder="Add custom department…" />
+              <button type="button" onClick={addCustomDept} disabled={!customDeptInput.trim()}
+                className="btn-secondary flex items-center gap-1.5 text-sm disabled:opacity-40">
+                <Plus className="w-4 h-4" /> Add
+              </button>
+            </div>
+          </div>
+
+          {/* Pipeline */}
+          <div className="pt-2 border-t border-white/06 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FieldLabel label="Post-treatment days" hint="Days before moving patient to Post Care">
+              <input className="input" type="number" min="1" value={postTreatmentDays} onChange={e => setPostTreatmentDays(e.target.value)} placeholder="14" />
+            </FieldLabel>
+            <FieldLabel label="Dormant after days" hint="Days before patient becomes dormant">
+              <input className="input" type="number" min="1" value={dormantDays} onChange={e => setDormantDays(e.target.value)} placeholder="90" />
+            </FieldLabel>
+          </div>
+
+          {/* Email sending */}
+          <div className="pt-2 border-t border-white/06 space-y-4">
+            <div>
+              <p className="label mb-0.5">Email sending</p>
+              <p className="text-xs text-muted-foreground">All emails send from ERA's verified noreply address. The display name is what patients see as the sender.</p>
+            </div>
+            <FieldLabel label="Sender display name" hint='Patients see this as the "From" name — e.g. "GISDHEALTH", "City Clinic". Leave blank to use the hospital name.'>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+                <input className="input pl-10" type="text" value={senderName} onChange={e => setSenderName(e.target.value)} placeholder="e.g. City Clinic" />
+              </div>
+            </FieldLabel>
+            <FieldLabel label="Hospital contact phone" hint="Shown in automated patient emails so patients know how to reach the hospital directly.">
+              <div className="relative">
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+                <input className="input pl-10" type="text" value={hospitalPhone} onChange={e => setHospitalPhone(e.target.value)} placeholder="+2348012345678" />
+              </div>
+            </FieldLabel>
+          </div>
+
+          {/* Notification channel */}
+          <div className="pt-2 border-t border-white/06 space-y-4">
+            <div>
+              <p className="label mb-0.5">Notification channel</p>
+              <p className="text-xs text-muted-foreground">Channel used for automated patient notifications (queue alerts, care plan updates, etc.).</p>
+            </div>
+            <FieldLabel label="Channel">
+              <select className="input" value={notifChannel} onChange={e => setNotifChannel(e.target.value as 'whatsapp' | 'sms')}>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="sms">SMS</option>
+              </select>
+            </FieldLabel>
+            <FieldLabel
+              label={notifChannel === 'whatsapp' ? 'WhatsApp number' : 'Termii sender ID'}
+              hint={notifChannel === 'whatsapp'
+                ? 'WhatsApp always uses a phone number as the sender. Enter in international format, e.g. +2348012345678. Each hospital should have their own dedicated WhatsApp number registered with Termii.'
+                : 'What patients see as the sender on their phone. Leave blank to use Termii\'s shared pool number (works immediately). Or enter a dedicated phone number or short name (e.g. CityClinic, max 11 chars) — approval takes a few days.'}
+            >
+              <input className="input" type="text" value={termiiSenderId} onChange={e => setTermiiSenderId(e.target.value)}
+                placeholder={notifChannel === 'whatsapp' ? '+2348012345678' : '+2348012345678 or HospitalName'} />
+            </FieldLabel>
+
+            {/* Test SMS */}
+            <div className="rounded-xl border border-white/08 bg-white/02 p-4 space-y-2">
+              <p className="label">Test SMS delivery</p>
+              <p className="text-xs text-muted-foreground">Send a test message to verify Termii is configured correctly.</p>
+              <div className="flex gap-2">
+                <input className="input flex-1" type="tel" value={testSmsTo}
+                  onChange={e => { setTestSmsTo(e.target.value); setTestSmsResult(null) }}
+                  placeholder="e.g. 2348012345678" />
+                <button type="button" disabled={testSmsSending || !testSmsTo.trim()}
+                  onClick={async () => {
+                    setTestSmsSending(true); setTestSmsResult(null)
+                    try {
+                      const r = await patientApi.testSms(testSmsTo.trim(), termiiSenderId.trim() || undefined)
+                      setTestSmsResult(r)
+                    } catch (e) { setTestSmsResult({ ok: false, detail: e instanceof Error ? e.message : 'Unknown error' }) }
+                    finally { setTestSmsSending(false) }
+                  }}
+                  className="btn-primary text-xs whitespace-nowrap disabled:opacity-50">
+                  {testSmsSending ? 'Sending…' : 'Send test'}
+                </button>
+              </div>
+              {testSmsResult && (
+                <p className={`text-xs rounded-lg px-3 py-2 font-mono break-all ${testSmsResult.ok ? 'bg-teal/10 text-teal' : 'bg-red-500/10 text-red-400'}`}>
+                  {testSmsResult.detail}
+                </p>
+              )}
+            </div>
+
+            {/* Test Email */}
+            <div className="rounded-xl border border-white/08 bg-white/02 p-4 space-y-2">
+              <p className="label">Test email delivery</p>
+              <p className="text-xs text-muted-foreground">Send a test email to verify Resend is configured correctly.</p>
+              <div className="flex gap-2">
+                <input className="input flex-1" type="email" value={testEmailTo}
+                  onChange={e => { setTestEmailTo(e.target.value); setTestEmailResult(null) }}
+                  placeholder="you@example.com" />
+                <button type="button" disabled={testEmailSending || !testEmailTo.trim()}
+                  onClick={async () => {
+                    setTestEmailSending(true); setTestEmailResult(null)
+                    try {
+                      const r = await patientApi.testEmail(testEmailTo.trim())
+                      setTestEmailResult(r.ok
+                        ? { ok: true,  msg: `Sent ✓ — from: ${r.from}` }
+                        : { ok: false, msg: r.error ?? 'Unknown error' })
+                    } catch (e) { setTestEmailResult({ ok: false, msg: e instanceof Error ? e.message : 'Unknown error' }) }
+                    finally { setTestEmailSending(false) }
+                  }}
+                  className="btn-primary text-xs whitespace-nowrap disabled:opacity-50">
+                  {testEmailSending ? 'Sending…' : 'Send test'}
+                </button>
+              </div>
+              {testEmailResult && (
+                <p className={`text-xs rounded-lg px-3 py-2 font-mono break-all ${testEmailResult.ok ? 'bg-teal/10 text-teal' : 'bg-red-500/10 text-red-400'}`}>
+                  {testEmailResult.msg}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Language */}
+          <div className="pt-2 border-t border-white/06">
+            <FieldLabel label="Language">
+              <select className="input" value={language} onChange={e => setLanguage(e.target.value)}>
+                <option value="">Default</option>
+                <option value="en">English</option>
+                <option value="ar">Arabic</option>
+                <option value="fr">French</option>
+              </select>
+            </FieldLabel>
+          </div>
+
+          {/* Communication tone */}
+          <div className="pt-2 border-t border-white/06 space-y-3">
+            <div>
+              <p className="label mb-0.5">Communication tone</p>
+              <p className="text-xs text-muted-foreground">
+                Select up to 4 tones for AI-generated messages.
+                {tones.length > 0 && <span className="ml-1 text-teal font-medium">{tones.length}/4 selected</span>}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {TONES.map(t => {
+                const selected = tones.includes(t.value)
+                const atMax = tones.length >= 4 && !selected
+                return (
+                  <button key={t.value} type="button" disabled={atMax}
+                    onClick={() => {
+                      if (selected) setTones(prev => prev.filter(x => x !== t.value))
+                      else if (tones.length < 4) setTones(prev => [...prev, t.value])
+                    }}
+                    className={`flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl border text-left transition-all ${
+                      selected ? 'border-teal/40 bg-teal/08 text-foreground' : atMax ? 'border-white/06 bg-transparent text-muted-foreground/40 cursor-not-allowed' : 'border-white/08 hover:border-teal/20 hover:bg-white/03 text-muted-foreground'
+                    }`}>
+                    <div className="flex items-center gap-2 w-full">
+                      <div className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center shrink-0 transition-colors ${selected ? 'bg-teal border-teal' : 'border-muted-foreground/30'}`}>
+                        {selected && <Check className="w-2.5 h-2.5 text-white" />}
+                      </div>
+                      <span className="text-sm font-semibold">{t.value}</span>
+                    </div>
+                    <p className="text-xs leading-snug pl-5 opacity-70">{t.sub}</p>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Clinic description */}
+          <div className="pt-2 border-t border-white/06">
+            <FieldLabel label="Clinic description" hint="Used for AI-generated messages — describes the clinic's specialty and approach.">
+              <textarea className="input resize-none" rows={3} value={clinicDescription} onChange={e => setClinicDescription(e.target.value)}
+                placeholder="A brief description of the clinic's specialty and patient care approach…" />
+            </FieldLabel>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <button className="btn-primary flex items-center gap-2" onClick={saveSettings} disabled={saving}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {saving ? 'Saving…' : 'Save settings'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODULES TAB ─────────────────────────────────────────────────────── */}
+      {tab === 'modules' && !modules && (
+        <div className="rounded-2xl border border-white/07 bg-card p-6 text-center text-muted-foreground">
+          <p className="text-sm">Module settings could not be loaded. <button className="text-teal hover:underline" onClick={load}>Try again</button></p>
+        </div>
+      )}
+      {tab === 'modules' && modules && (
+        <div className="rounded-2xl border border-white/07 bg-card p-6">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Feature modules</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Control which features are available to this hospital's staff. Changes save immediately.</p>
+            </div>
+            {saving && <p className="text-xs text-teal">Saving…</p>}
+          </div>
+          {([
+            ['appointmentsEnabled',           'Appointments',               'Calendar scheduling and appointment management'],
+            ['feedbackEnabled',               'Patient feedback',           'Post-visit satisfaction surveys'],
+            ['wellnessNewsletterEnabled',     'Wellness newsletter',        'Automated weekly health tips to patients'],
+            ['whatsappEnabled',               'WhatsApp messaging',         'WhatsApp delivery channel'],
+            ['messagesEnabled',               'In-app messages',            'In-app messaging module'],
+            ['callTaskSmsEnabled',            'AI call task SMS',           'AI-driven follow-up SMS tasks'],
+            ['followupSmsEnabled',            'Follow-up SMS',              'Post-visit SMS follow-ups'],
+            ['appointmentReminderSmsEnabled', 'Appointment reminder SMS',   'Upcoming appointment reminders'],
+          ] as const).map(([key, label, sub]) => (
+            <label key={key} className="flex items-center justify-between gap-4 py-3.5 cursor-pointer select-none border-b border-white/06 last:border-0">
+              <div>
+                <p className="text-sm font-medium text-foreground">{label}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
+              </div>
+              <PillToggle checked={modules[key]} onChange={val => void toggleModule(key, val)} />
+            </label>
+          ))}
+        </div>
+      )}
+
+      {/* ── AUTOMATION TAB ──────────────────────────────────────────────────── */}
+      {tab === 'automation' && (
+        <div className="space-y-4">
+          {retryError && (
+            <div className="flex items-start gap-2 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{retryError}</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Automation log</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">All AI messages, emails and WhatsApp automations for this hospital.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-white/04 border border-white/08 rounded-lg p-1">
+                {(['all', 'failed', 'sent'] as AutoFilter[]).map(f => (
+                  <button key={f} type="button" onClick={() => setAutoFilter(f)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${autoFilter === f ? 'bg-teal text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+                    {f.charAt(0).toUpperCase() + f.slice(1)}
+                  </button>
+                ))}
+              </div>
+              <button type="button" onClick={loadAutomations} disabled={autoLoading}
+                className="btn-secondary p-2" title="Refresh">
+                <RefreshCw className={`w-4 h-4 ${autoLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          {autoLoading ? (
+            <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+            </div>
+          ) : automations.length === 0 ? (
+            <div className="rounded-2xl border border-white/07 bg-card py-16 text-center text-muted-foreground">
+              <Zap className="w-8 h-8 mx-auto mb-3 opacity-20" />
+              <p className="text-sm">No automation logs found</p>
+              <p className="text-xs mt-1 opacity-60">Automations appear here as patients move through the pipeline</p>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-white/07 bg-card overflow-hidden">
+              <div className="divide-y divide-white/06">
+                {automations.map(log => (
+                  <div key={log.id} className="px-5 py-3.5 flex items-start gap-4">
+                    <div className="mt-0.5 shrink-0">
+                      {log.status === 'sent'
+                        ? <CheckCircle2 className="w-3.5 h-3.5 text-teal" />
+                        : log.status === 'failed'
+                        ? <XCircle className="w-3.5 h-3.5 text-red-400" />
+                        : <Clock className="w-3.5 h-3.5 text-amber-400" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium capitalize">{log.automationType.replace(/_/g, ' ')}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                          log.status === 'sent' ? 'bg-teal/10 text-teal border-teal/20'
+                          : log.status === 'failed' ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        }`}>
+                          {log.status === 'queued' ? 'in progress' : log.status}
+                        </span>
+                        <span className="text-xs bg-white/05 px-1.5 py-0.5 rounded-full text-muted-foreground flex items-center gap-1">
+                          {log.channel === 'email' ? <Mail className="w-3 h-3" /> : <MessageSquare className="w-3 h-3" />}
+                          {log.channel}
+                        </span>
+                        {log.retryCount > 0 && (
+                          <span className="text-xs text-muted-foreground">· {log.retryCount} retr{log.retryCount === 1 ? 'y' : 'ies'}</span>
+                        )}
+                      </div>
+                      {log.patientName && (
+                        <p className="text-xs text-muted-foreground mt-0.5">Patient: {log.patientName}</p>
+                      )}
+                      {log.messagePreview && (
+                        <p className="text-xs text-muted-foreground/70 mt-1 italic line-clamp-2">"{log.messagePreview}"</p>
+                      )}
+                      {log.errorMessage && (
+                        <p className="text-xs text-red-400 mt-1 flex items-start gap-1">
+                          <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
+                          {log.errorMessage}
+                        </p>
+                      )}
+                    </div>
+                    <div className="shrink-0 text-right space-y-1.5">
+                      <p className="text-xs text-muted-foreground whitespace-nowrap">{fmtDateTime(log.createdAt)}</p>
+                      {log.status === 'failed' && (
+                        <button type="button" onClick={() => void retryAutomation(log.id)} disabled={retryingId === log.id}
+                          className="flex items-center gap-1 text-xs text-teal hover:text-teal/80 transition disabled:opacity-50">
+                          {retryingId === log.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
+                          Retry
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-white/07 px-5 py-3 flex items-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><Filter className="w-3 h-3" />Showing {automations.length} records</span>
+                <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-teal" />Sent</span>
+                <span className="flex items-center gap-1"><XCircle className="w-3 h-3 text-red-400" />Failed</span>
               </div>
             </div>
           )}
         </div>
       )}
 
-      {/* Modules */}
-      {tab === 'modules' && modules && (
-        <div className="rounded-2xl border border-white/07 bg-card p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="text-sm font-semibold text-foreground">Feature modules</h3>
-            {saving && <p className="text-xs text-teal">Saving…</p>}
-          </div>
-          {([
-            ['appointmentsEnabled',          'Appointments',              'Booking and appointment management'],
-            ['feedbackEnabled',              'Patient feedback',          'Post-visit satisfaction surveys'],
-            ['wellnessNewsletterEnabled',    'Wellness newsletter',       'Automated health tips and news'],
-            ['whatsappEnabled',              'WhatsApp messaging',        'WhatsApp delivery channel'],
-            ['messagesEnabled',              'In-app messages',           'In-app messaging module'],
-            ['callTaskSmsEnabled',           'AI call task SMS',          'AI-driven follow-up SMS tasks'],
-            ['followupSmsEnabled',           'Follow-up SMS',             'Post-visit SMS follow-ups'],
-            ['appointmentReminderSmsEnabled','Appointment reminder SMS',  'Upcoming appointment reminders'],
-          ] as const).map(([key, label, sub]) => (
-            <Toggle key={key} label={label} sub={sub} checked={modules[key]} onChange={val => void toggleModule(key, val)} />
-          ))}
+      {/* ── WALLET TAB ──────────────────────────────────────────────────────── */}
+      {tab === 'wallet' && !wallet && (
+        <div className="rounded-2xl border border-white/07 bg-card p-6 text-center text-muted-foreground">
+          <p className="text-sm">Wallet data could not be loaded. <button className="text-teal hover:underline" onClick={load}>Try again</button></p>
         </div>
       )}
-
-      {/* Automation */}
-      {tab === 'automation' && (
-        <div className="rounded-2xl border border-white/07 bg-card p-6">
-          <h3 className="text-sm font-semibold text-foreground mb-5">Recent automation runs</h3>
-          <HospitalAutomationLog hospitalId={hId} />
-        </div>
-      )}
-
-      {/* Wallet */}
       {tab === 'wallet' && wallet && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="rounded-2xl border border-white/07 bg-card p-6">
@@ -324,7 +981,7 @@ export function HospitalDetail() {
                 <label className="label">Note (optional)</label>
                 <input className="input" value={creditNote} onChange={e => setCreditNote(e.target.value)} placeholder="Monthly top-up" />
               </div>
-              <button className="btn-teal w-full" onClick={credit} disabled={creditLoading || !creditAmount}>
+              <button className="btn-primary w-full flex items-center justify-center gap-2" onClick={credit} disabled={creditLoading || !creditAmount}>
                 {creditLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Adding…</> : 'Add credit'}
               </button>
             </div>
@@ -354,51 +1011,6 @@ export function HospitalDetail() {
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-function HospitalAutomationLog({ hospitalId }: { hospitalId: number }) {
-  const [logs, setLogs] = useState<Awaited<ReturnType<typeof patientApi.getAutomationLog>>>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    void patientApi.getAutomationLog({ hospitalId }).then(setLogs).finally(() => setLoading(false))
-  }, [hospitalId])
-
-  if (loading) return (
-    <div className="flex items-center gap-2 text-muted-foreground py-4">
-      <Loader2 className="w-4 h-4 animate-spin" /> Loading automation runs…
-    </div>
-  )
-  if (!logs.length) return (
-    <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
-      <Zap className="w-8 h-8 opacity-20" />
-      <p className="text-sm">No automation runs for this hospital</p>
-    </div>
-  )
-
-  const statusColor: Record<string, string> = {
-    sent:    'bg-teal/10 text-teal border-teal/20',
-    failed:  'bg-red-500/10 text-red-400 border-red-500/20',
-    pending: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  }
-
-  return (
-    <div className="divide-y divide-white/06">
-      {logs.slice(0, 20).map(l => (
-        <div key={l.id} className="flex items-start justify-between gap-3 py-3.5">
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-foreground capitalize">{l.automationType.replace(/_/g, ' ')} · {l.channel}</p>
-            {l.messagePreview && <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-xs">{l.messagePreview}</p>}
-            {l.errorMessage && <p className="text-xs text-red-400 mt-0.5">{l.errorMessage}</p>}
-            <p className="text-xs text-muted-foreground mt-0.5">{fmtDateTime(l.createdAt)}</p>
-          </div>
-          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 ${statusColor[l.status] ?? 'bg-white/06 text-muted-foreground border-white/10'}`}>
-            {l.status}
-          </span>
-        </div>
-      ))}
     </div>
   )
 }

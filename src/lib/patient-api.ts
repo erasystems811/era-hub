@@ -57,7 +57,7 @@ export interface HospitalSettings {
   termiiSenderId: string | null; senderIdApproved: boolean
   pipelinePostTreatmentDays: number | null; pipelineDormantDays: number | null
   whatsappFromNumber: string | null; callTaskAiDailyLimit: number | null
-  callTaskAiUsedToday: number
+  callTaskAiUsedToday: number; clinicDescription?: string | null
 }
 
 export interface HospitalModules {
