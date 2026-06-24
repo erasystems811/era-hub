@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Brain, CheckCircle, XCircle } from 'lucide-react'
-import { saveCoreConfig } from '../../lib/config'
+import { saveCoreConfig, getCoreApi, getCoreSecret } from '../../lib/config'
 import { coreFetch } from '../../lib/coreFetch'
 
 const PURPLE = '#9B7FD4'

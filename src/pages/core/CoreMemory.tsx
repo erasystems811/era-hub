@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Brain, RefreshCw, Trash2, Settings } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { coreFetch } from '../../lib/coreFetch'
+import { getCoreApi } from '../../lib/config'
 
 type Category = 'principle' | 'preference' | 'weakness' | 'style' | 'blindspot' | 'decision'
 type Mode = 'business' | 'personal' | 'both'
