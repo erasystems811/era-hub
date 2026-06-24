@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const PORT = parseInt(process.env.PORT ?? '3000', 10)
 const DIST = join(__dirname, 'dist')
-const ERA_CORE = 'https://era-core-production.up.railway.app'
+const ERA_CORE = (process.env.ERA_CORE_URL ?? 'https://era-core-production.up.railway.app').replace(/\/$/, '')
 
 const MIME = {
   '.html':  'text/html; charset=utf-8',

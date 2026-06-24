@@ -76,7 +76,7 @@ export function ConnectInstanceDetail() {
     setError('')
     try {
       const [inst, evRes] = await Promise.all([
-        connectApi.getinstance(id),
+        connectApi.getInstance(id),
         connectApi.listEvents({ instanceId: id, limit: 50 }),
       ])
       setInstance(inst)

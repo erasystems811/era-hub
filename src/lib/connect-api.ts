@@ -92,7 +92,7 @@ export const connectApi = {
 
   listInstances: () => get<ConnectInstance[]>('/instances'),
 
-  getinstance: (id: string) => get<ConnectInstance>(`/instances/${id}`),
+  getInstance: (id: string) => get<ConnectInstance>(`/instances/${id}`),
 
   createInstance: (body: {
     hospitalName: string
