@@ -24,6 +24,7 @@ import { AutomationTests }  from './pages/patient/AutomationTests'
 // Public (no auth required)
 import { AIAgentSignup }   from './pages/public/AIAgentSignup'
 import { DeveloperSignup } from './pages/public/DeveloperSignup'
+import { RevealKey }       from './pages/RevealKey'
 
 // Business Owner Panel
 import { BizLogin }           from './pages/business-panel/BizLogin'
@@ -175,6 +176,7 @@ export default function App() {
     if (path === '/apply/developer') return <DeveloperSignup />
     return <AIAgentSignup />
   }
+  if (path.startsWith('/reveal-key/')) return <RevealKey />
 
   // Business owner panel — has its own auth
   if (path === '/biz/login') return <BizLogin />
