@@ -7,6 +7,7 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
     headers: {
       'Content-Type': 'application/json',
       'X-Operator-Secret': COMMS_SECRET,
+      'ngrok-skip-browser-warning': 'true',
       ...opts.headers,
     },
   })
