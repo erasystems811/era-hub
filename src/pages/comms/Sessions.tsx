@@ -332,7 +332,12 @@ export function Sessions() {
                   <tr key={s.id} className={`transition-colors ${isIssue ? 'bg-red-500/[0.03]' : 'hover:bg-white/[0.025]'}`}>
                     <td className="px-5 py-3.5">
                       <p className="font-semibold text-foreground">{s.phoneNumber}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{s.role}</p>
+                      <button
+                        className="text-xs text-muted-foreground/40 hover:text-white/60 transition font-mono"
+                        title="Copy session ID"
+                        onClick={() => { void navigator.clipboard.writeText(s.id); alert('Session ID copied!') }}>
+                        {s.id.slice(0, 8)}…
+                      </button>
                     </td>
                     <td className="px-5 py-3.5 text-muted-foreground text-sm truncate max-w-[140px]">{s.client.name}</td>
                     <td className="px-5 py-3.5">
