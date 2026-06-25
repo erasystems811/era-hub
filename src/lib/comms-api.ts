@@ -161,6 +161,8 @@ export const commsApi = {
   createSession:  (data: { clientId: string; phoneNumber: string; role?: 'primary' | 'backup' }) =>
     post<{ id: string; phoneNumber: string; role: string; status: string }>('/sessions', data),
   stopSession:    (id: string) => del<void>(`/sessions/${id}`),
+  updateSessionProfile: (id: string, data: { name?: string | null; description?: string | null; pictureUrl?: string | null }) =>
+    patch<{ ok: boolean }>(`/sessions/${id}/profile`, data),
 
   // Master session — ERA Systems own number used for OTP and platform messages
   getMasterSession:    () => get<Session | null>('/sessions/master'),

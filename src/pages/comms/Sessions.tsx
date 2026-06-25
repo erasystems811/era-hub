@@ -1,6 +1,6 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Smartphone, RefreshCw, X, Loader2, KeyRound } from 'lucide-react'
+import { Plus, Smartphone, RefreshCw, X, Loader2, KeyRound, UserCircle2, Upload } from 'lucide-react'
 import { StatusDot } from '../../components/StatusDot'
 import { QRModal } from '../../components/QRModal'
 import { commsApi, Session, Client } from '../../lib/comms-api'
@@ -110,6 +110,130 @@ function ConfirmStopModal({ session, onClose, onStopped }: { session: Session; o
   )
 }
 
+function ProfileModal({ session, onClose, onSaved }: {
+  session: Session
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const [name, setName]               = useState('')
+  const [description, setDescription] = useState('')
+  const [pictureUrl, setPictureUrl]   = useState('')
+  const [preview, setPreview]         = useState<string | null>(null)
+  const [loading, setLoading]         = useState(false)
+  const [error, setError]             = useState<string | null>(null)
+  const [success, setSuccess]         = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => {
+      const dataUrl = ev.target?.result as string
+      setPreview(dataUrl)
+      setPictureUrl(dataUrl)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const submit = async () => {
+    if (!name.trim() && !description.trim() && !pictureUrl) {
+      setError('Fill in at least one field'); return
+    }
+    setLoading(true); setError(null)
+    try {
+      await commsApi.updateSessionProfile(session.id, {
+        name:        name.trim()        || null,
+        description: description.trim() || null,
+        pictureUrl:  pictureUrl         || null,
+      })
+      setSuccess(true)
+      setTimeout(() => { onSaved(); onClose() }, 1200)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md bg-[rgba(255,255,255,0.09)] backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl">
+        <div className="px-6 py-5 border-b border-white/08">
+          <h2 className="font-semibold text-foreground">WhatsApp Business Profile</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">{session.phoneNumber} · changes are pushed to WhatsApp immediately if connected</p>
+        </div>
+
+        <div className="px-6 py-5 space-y-4">
+          {error   && <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">{error}</div>}
+          {success && <div className="text-sm text-teal bg-teal/10 border border-teal/20 rounded-xl px-4 py-3">Profile saved and pushed to WhatsApp.</div>}
+
+          {/* Picture */}
+          <div>
+            <label className="label">Logo / Profile picture</label>
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-full bg-white/05 border border-white/10 overflow-hidden flex items-center justify-center flex-shrink-0">
+                {preview
+                  ? <img src={preview} alt="preview" className="w-full h-full object-cover" />
+                  : <UserCircle2 className="w-7 h-7 text-muted-foreground/30" />}
+              </div>
+              <div className="flex-1 space-y-2">
+                <button
+                  className="btn-secondary text-xs flex items-center gap-1.5 w-full justify-center"
+                  onClick={() => fileRef.current?.click()}>
+                  <Upload className="w-3.5 h-3.5" /> Upload image
+                </button>
+                <input
+                  className="input text-xs"
+                  placeholder="Or paste an image URL"
+                  value={preview ? '' : pictureUrl}
+                  onChange={e => { setPictureUrl(e.target.value); setPreview(null) }}
+                />
+              </div>
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
+          </div>
+
+          {/* Display name */}
+          <div>
+            <label className="label">Display name</label>
+            <input
+              className="input"
+              placeholder="e.g. Chidera Store"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              maxLength={25}
+            />
+            <p className="text-xs text-muted-foreground/50 mt-1">Shown in chats even if the contact hasn't saved the number · max 25 characters</p>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="label">About / Description</label>
+            <textarea
+              className="input resize-none"
+              rows={3}
+              placeholder="e.g. We deliver fresh produce daily. Message us to order!"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              maxLength={139}
+            />
+            <p className="text-xs text-muted-foreground/50 mt-1">Shown on the WhatsApp profile page · max 139 characters</p>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-white/08 flex gap-2 justify-end">
+          <button className="btn-secondary" onClick={onClose}>Cancel</button>
+          <button className="btn-primary" disabled={loading || success} onClick={submit}>
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</> : 'Save profile'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function Sessions() {
   const nav = useNavigate()
   const [sessions, setSessions] = useState<Session[]>(() => pageCache.get<Session[]>('comms:sessions') ?? [])
@@ -118,6 +242,7 @@ export function Sessions() {
   const [showAdd, setShowAdd] = useState(false)
   const [qrModal, setQrModal] = useState<ConnectModal | null>(null)
   const [stopModal, setStopModal] = useState<Session | null>(null)
+  const [profileModal, setProfileModal] = useState<Session | null>(null)
 
   const load = async () => {
     setLoading(true)
@@ -226,6 +351,10 @@ export function Sessions() {
                             {s.status === 'pending_qr' ? 'Show QR' : 'Reconnect'}
                           </button>
                         )}
+                        <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-blue-400 hover:bg-blue-500/10 transition"
+                          onClick={() => setProfileModal(s)} title="Set WhatsApp profile">
+                          <UserCircle2 className="w-3.5 h-3.5" />
+                        </button>
                         <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-red-400 hover:bg-red-500/10 transition"
                           onClick={() => setStopModal(s)} title="Disconnect">
                           <X className="w-3.5 h-3.5" />
@@ -254,6 +383,11 @@ export function Sessions() {
       {stopModal && (
         <ConfirmStopModal session={stopModal} onClose={() => setStopModal(null)}
           onStopped={() => { setStopModal(null); void load() }} />
+      )}
+
+      {profileModal && (
+        <ProfileModal session={profileModal} onClose={() => setProfileModal(null)}
+          onSaved={() => void load()} />
       )}
     </div>
   )
