@@ -1,6 +1,6 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Smartphone, RefreshCw, X, Loader2, KeyRound, UserCircle2, Upload, RotateCcw } from 'lucide-react'
+import { Plus, Smartphone, RefreshCw, X, Loader2, KeyRound, UserCircle2, Upload, RotateCcw, Hash } from 'lucide-react'
 import { StatusDot } from '../../components/StatusDot'
 import { QRModal } from '../../components/QRModal'
 import { commsApi, Session, Client } from '../../lib/comms-api'
@@ -243,6 +243,10 @@ export function Sessions() {
   const [qrModal, setQrModal] = useState<ConnectModal | null>(null)
   const [stopModal, setStopModal] = useState<Session | null>(null)
   const [profileModal, setProfileModal] = useState<Session | null>(null)
+  const [pairingModal, setPairingModal] = useState<Session | null>(null)
+  const [pairingPhone, setPairingPhone] = useState('')
+  const [pairingCode, setPairingCode] = useState('')
+  const [pairingLoading, setPairingLoading] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -351,6 +355,10 @@ export function Sessions() {
                             {s.status === 'pending_qr' ? 'Show QR' : 'Reconnect'}
                           </button>
                         )}
+                        <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-purple-400 hover:bg-purple-500/10 transition"
+                          onClick={() => { setPairingModal(s); setPairingPhone(''); setPairingCode('') }} title="Link with pairing code (no QR)">
+                          <Hash className="w-3.5 h-3.5" />
+                        </button>
                         <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-blue-400 hover:bg-blue-500/10 transition"
                           onClick={() => setProfileModal(s)} title="Set WhatsApp profile">
                           <UserCircle2 className="w-3.5 h-3.5" />
@@ -397,6 +405,50 @@ export function Sessions() {
       {profileModal && (
         <ProfileModal session={profileModal} onClose={() => setProfileModal(null)}
           onSaved={() => void load()} />
+      )}
+
+      {pairingModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#1a1729] border border-white/10 rounded-2xl p-6 w-full max-w-sm">
+            <h2 className="text-base font-semibold text-white mb-1">Link with pairing code</h2>
+            <p className="text-xs text-white/40 mb-4">Enter the WhatsApp number for this session. A code will appear — enter it in WhatsApp → Linked Devices → Link with phone number.</p>
+
+            {!pairingCode ? (
+              <>
+                <input
+                  className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/20 mb-3"
+                  placeholder="+2348012345678"
+                  value={pairingPhone}
+                  onChange={e => setPairingPhone(e.target.value)}
+                />
+                <div className="flex gap-2">
+                  <button onClick={() => setPairingModal(null)} className="flex-1 py-2 rounded-xl border border-white/10 text-sm text-white/50 hover:text-white transition">Cancel</button>
+                  <button
+                    disabled={pairingLoading || !pairingPhone}
+                    className="flex-1 py-2 rounded-xl bg-[#bf7c93] text-white text-sm font-semibold disabled:opacity-50"
+                    onClick={async () => {
+                      setPairingLoading(true)
+                      try {
+                        const { code } = await commsApi.requestPairingCode(pairingModal.id, pairingPhone)
+                        setPairingCode(code)
+                      } catch (e) { alert('Error: ' + (e as Error).message) }
+                      finally { setPairingLoading(false) }
+                    }}>
+                    {pairingLoading ? 'Getting code…' : 'Get code'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="bg-black/30 border border-white/10 rounded-xl p-4 text-center mb-4">
+                  <p className="text-xs text-white/40 mb-1">Enter this code in WhatsApp</p>
+                  <p className="text-3xl font-mono font-bold text-[#bf7c93] tracking-widest">{pairingCode}</p>
+                </div>
+                <button onClick={() => setPairingModal(null)} className="w-full py-2 rounded-xl bg-white/05 text-sm text-white/70 hover:text-white transition">Done</button>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )
