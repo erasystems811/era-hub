@@ -1,6 +1,6 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Smartphone, RefreshCw, X, Loader2, KeyRound, UserCircle2, Upload, RotateCcw, Hash, Send } from 'lucide-react'
+import { Plus, Smartphone, RefreshCw, X, Loader2, KeyRound, UserCircle2, Upload, RotateCcw, Hash, Send, ShieldOff } from 'lucide-react'
 import { StatusDot } from '../../components/StatusDot'
 import { QRModal } from '../../components/QRModal'
 import { commsApi, Session, Client } from '../../lib/comms-api'
@@ -357,24 +357,27 @@ export function Sessions() {
                         : <span className="text-xs text-muted-foreground/40">—</span>}
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="flex items-center justify-end gap-2">
-                        {(s.status === 'pending_qr' || s.status === 'disconnected') && (
-                          <button className="text-xs text-teal font-semibold hover:underline whitespace-nowrap"
-                            onClick={() => setQrModal({ sessionId: s.id, phoneNumber: s.phoneNumber })}>
-                            {s.status === 'pending_qr' ? 'Show QR' : 'Reconnect'}
-                          </button>
-                        )}
-                        {s.status === 'banned' && (
-                          <button className="text-xs text-amber-400 font-semibold hover:underline whitespace-nowrap"
-                            onClick={async () => {
-                              try { await commsApi.unbanSession(s.id); void load() }
-                              catch (e) { alert('Error: ' + (e as Error).message) }
-                            }}>Unban</button>
-                        )}
+                      <div className="flex items-center justify-end gap-1.5">
                         {s.status === 'connected' && (
                           <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-teal-400 hover:bg-teal-500/10 transition"
                             onClick={() => { setTestModal(s); setTestTo(''); setTestContent('Hello! This is a test message from ERA Comms.') }} title="Send test message">
                             <Send className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {(s.status === 'pending_qr' || s.status === 'disconnected') && (
+                          <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-teal-400 hover:bg-teal-500/10 transition"
+                            onClick={() => setQrModal({ sessionId: s.id, phoneNumber: s.phoneNumber })}
+                            title={s.status === 'pending_qr' ? 'Show QR' : 'Reconnect'}>
+                            <RefreshCw className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {s.status === 'banned' && (
+                          <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-amber-400 hover:bg-amber-500/10 transition"
+                            onClick={async () => {
+                              try { await commsApi.unbanSession(s.id); void load() }
+                              catch (e) { alert('Error: ' + (e as Error).message) }
+                            }} title="Unban session">
+                            <ShieldOff className="w-3.5 h-3.5" />
                           </button>
                         )}
                         <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-purple-400 hover:bg-purple-500/10 transition"
