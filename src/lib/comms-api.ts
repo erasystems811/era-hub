@@ -164,6 +164,7 @@ export const commsApi = {
   updateSessionProfile: (id: string, data: { name?: string | null; description?: string | null; pictureUrl?: string | null }) =>
     patch<{ ok: boolean }>(`/sessions/${id}/profile`, data),
   resetSessionCredentials: (id: string) => post<{ ok: boolean }>(`/sessions/${id}/reset-credentials`, {}),
+  unbanSession: (id: string) => post<{ ok: boolean }>(`/sessions/${id}/unban`, {}),
   sendTestMessage: (id: string, to: string, content: string) => post<{ ok: boolean; messageId: string }>(`/sessions/${id}/test-message`, { to, content }),
   requestPairingCode: (id: string, phoneNumber: string) => post<{ code: string }>(`/sessions/${id}/pairing-code`, { phoneNumber }),
 

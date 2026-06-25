@@ -364,6 +364,13 @@ export function Sessions() {
                             {s.status === 'pending_qr' ? 'Show QR' : 'Reconnect'}
                           </button>
                         )}
+                        {s.status === 'banned' && (
+                          <button className="text-xs text-amber-400 font-semibold hover:underline whitespace-nowrap"
+                            onClick={async () => {
+                              try { await commsApi.unbanSession(s.id); void load() }
+                              catch (e) { alert('Error: ' + (e as Error).message) }
+                            }}>Unban</button>
+                        )}
                         {s.status === 'connected' && (
                           <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-teal-400 hover:bg-teal-500/10 transition"
                             onClick={() => { setTestModal(s); setTestTo(''); setTestContent('Hello! This is a test message from ERA Comms.') }} title="Send test message">
