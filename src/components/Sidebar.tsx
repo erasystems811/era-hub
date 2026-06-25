@@ -4,7 +4,7 @@ import {
   Zap, Briefcase, Smartphone, CreditCard, Settings,
   ChevronDown, ChevronRight, Layers, LayoutDashboard,
   GitPullRequest, Mail, Activity, Bot, Phone,
-  Brain, Upload, Link,
+  Brain, Upload, Link, ShieldAlert,
 } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { useState, useEffect } from 'react'
@@ -65,6 +65,7 @@ const NAV: NavItem[] = [
       { path: '/comms/billing',     label: 'Billing',        icon: <CreditCard className="w-4 h-4" />,      accent: 'pink' },
       { path: '/comms/settings',    label: 'Settings',       icon: <Settings className="w-4 h-4" />,        accent: 'pink' },
       { path: '/comms/voice',       label: 'Voice',          icon: <Phone className="w-4 h-4" />,           accent: 'pink', badge: 'Soon' },
+      { path: '/comms/failsafe',    label: 'Failsafe Guide', icon: <ShieldAlert className="w-4 h-4" />,     accent: 'pink' },
     ],
   },
 ]
