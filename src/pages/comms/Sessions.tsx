@@ -1,6 +1,6 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Smartphone, X, Loader2, KeyRound, UserCircle2, Upload, Hash, Send, ShieldOff, QrCode, Trash2 } from 'lucide-react'
+import { Plus, Smartphone, RefreshCw, X, Loader2, KeyRound, UserCircle2, Upload, Hash, Send, ShieldOff, QrCode, Trash2 } from 'lucide-react'
 import { StatusDot } from '../../components/StatusDot'
 import { QRModal } from '../../components/QRModal'
 import { commsApi, Session, Client } from '../../lib/comms-api'
