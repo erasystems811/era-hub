@@ -163,6 +163,7 @@ export const commsApi = {
   stopSession:    (id: string) => del<void>(`/sessions/${id}`),
   updateSessionProfile: (id: string, data: { name?: string | null; description?: string | null; pictureUrl?: string | null }) =>
     patch<{ ok: boolean }>(`/sessions/${id}/profile`, data),
+  resetSessionCredentials: (id: string) => post<{ ok: boolean }>(`/sessions/${id}/reset-credentials`, {}),
 
   // Master session — ERA Systems own number used for OTP and platform messages
   getMasterSession:    () => get<Session | null>('/sessions/master'),

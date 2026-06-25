@@ -1,6 +1,6 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Smartphone, RefreshCw, X, Loader2, KeyRound, UserCircle2, Upload } from 'lucide-react'
+import { Plus, Smartphone, RefreshCw, X, Loader2, KeyRound, UserCircle2, Upload, RotateCcw } from 'lucide-react'
 import { StatusDot } from '../../components/StatusDot'
 import { QRModal } from '../../components/QRModal'
 import { commsApi, Session, Client } from '../../lib/comms-api'
@@ -354,6 +354,15 @@ export function Sessions() {
                         <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-blue-400 hover:bg-blue-500/10 transition"
                           onClick={() => setProfileModal(s)} title="Set WhatsApp profile">
                           <UserCircle2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-amber-400 hover:bg-amber-500/10 transition"
+                          title="Reset credentials (fix QR loop)"
+                          onClick={async () => {
+                            if (!confirm('This will wipe WhatsApp credentials and force a fresh QR scan. Continue?')) return
+                            try { await commsApi.resetSessionCredentials(s.id); alert('Credentials cleared. Open QR to scan fresh.') }
+                            catch (e) { alert('Failed: ' + (e as Error).message) }
+                          }}>
+                          <RotateCcw className="w-3.5 h-3.5" />
                         </button>
                         <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-red-400 hover:bg-red-500/10 transition"
                           onClick={() => setStopModal(s)} title="Disconnect">
