@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Search, Download, ChevronLeft, ChevronRight, Loader2, FileText, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { Search, Download, ChevronLeft, ChevronRight, Loader2, FileText, X, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react'
 import { eventsApi, PlatformEvent, EventSeverity } from '../../lib/events-api'
 import { MonitoringTabs } from '../../components/MonitoringTabs'
 
@@ -148,13 +148,22 @@ export function EventLog() {
             {loading ? 'Loading…' : `${filtered.length.toLocaleString()} event${filtered.length !== 1 ? 's' : ''}${hasFilters ? ' matching filters' : ' total'}`}
           </p>
         </div>
-        <button
-          onClick={() => exportCsv(filtered)}
-          disabled={loading || filtered.length === 0}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-white/07 bg-card text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-white/05 transition disabled:opacity-40"
-        >
-          <Download className="w-3.5 h-3.5" /> Export CSV
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => void fetch()}
+            disabled={loading}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-white/07 bg-card text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-white/05 transition disabled:opacity-40"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
+          </button>
+          <button
+            onClick={() => exportCsv(filtered)}
+            disabled={loading || filtered.length === 0}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-white/07 bg-card text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-white/05 transition disabled:opacity-40"
+          >
+            <Download className="w-3.5 h-3.5" /> Export CSV
+          </button>
+        </div>
       </div>
 
       <MonitoringTabs />
