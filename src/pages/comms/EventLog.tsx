@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Search, Download, ChevronLeft, ChevronRight, Loader2, FileText, X } from 'lucide-react'
+import { Search, Download, ChevronLeft, ChevronRight, Loader2, FileText, X, ChevronDown, ChevronUp } from 'lucide-react'
 import { eventsApi, PlatformEvent, EventSeverity } from '../../lib/events-api'
 import { MonitoringTabs } from '../../components/MonitoringTabs'
 
@@ -66,7 +66,7 @@ function Skeleton() {
   return (
     <div className="divide-y divide-white/05">
       {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="grid grid-cols-[160px_1fr_1fr_80px_1fr] gap-4 px-5 py-3.5 items-center">
+        <div key={i} className="grid grid-cols-[160px_1fr_160px_90px_1fr_24px] gap-4 px-5 py-3.5 items-center">
           {Array.from({ length: 5 }).map((__, j) => (
             <div key={j} className="h-3 bg-white/05 animate-pulse rounded" style={{ width: `${60 + Math.random() * 40}%` }} />
           ))}
@@ -81,6 +81,7 @@ export function EventLog() {
   const [loading,  setLoading]  = useState(true)
   const [error,    setError]    = useState<string | null>(null)
   const [page,     setPage]     = useState(0)
+  const [expanded, setExpanded] = useState<string | null>(null)
 
   const [search,   setSearch]   = useState('')
   const [severity, setSeverity] = useState<EventSeverity | 'all'>('all')
@@ -219,8 +220,8 @@ export function EventLog() {
       {/* Table */}
       <div className="rounded-2xl border border-white/07 bg-card overflow-hidden">
         {/* Header row */}
-        <div className="grid grid-cols-[160px_1fr_160px_90px_1fr] gap-4 px-5 py-3 border-b border-white/07 bg-white/[0.02]">
-          {['Time', 'Business', 'Event', 'Severity', 'Detail'].map(h => (
+        <div className="grid grid-cols-[160px_1fr_160px_90px_1fr_24px] gap-4 px-5 py-3 border-b border-white/07 bg-white/[0.02]">
+          {['Time', 'Business', 'Event', 'Severity', 'Detail', ''].map(h => (
             <p key={h} className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{h}</p>
           ))}
         </div>
@@ -234,38 +235,58 @@ export function EventLog() {
         ) : (
           <div className="divide-y divide-white/04">
             {paginated.map(ev => (
-              <div key={ev.id} className="grid grid-cols-[160px_1fr_160px_90px_1fr] gap-4 px-5 py-3 hover:bg-white/[0.018] transition-colors items-center">
-                {/* Time */}
-                <p className="text-[11px] font-mono text-muted-foreground/70 tabular-nums leading-tight">{fmtDatetime(ev.createdAt)}</p>
+              <div key={ev.id}>
+                <button
+                  className="w-full grid grid-cols-[160px_1fr_160px_90px_1fr_24px] gap-4 px-5 py-3 hover:bg-white/[0.018] transition-colors items-center text-left"
+                  onClick={() => setExpanded(e => e === ev.id ? null : ev.id)}>
+                  {/* Time */}
+                  <p className="text-[11px] font-mono text-muted-foreground/70 tabular-nums leading-tight">{fmtDatetime(ev.createdAt)}</p>
 
-                {/* Business */}
-                <div className="flex items-center gap-2 min-w-0">
-                  {ev.businessName ? (
-                    <>
-                      <div className="w-6 h-6 rounded-lg bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">
-                        {ev.businessName[0]?.toUpperCase()}
-                      </div>
-                      <p className="text-sm text-foreground font-medium truncate">{ev.businessName}</p>
-                    </>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">System</p>
-                  )}
-                </div>
+                  {/* Business */}
+                  <div className="flex items-center gap-2 min-w-0">
+                    {ev.businessName ? (
+                      <>
+                        <div className="w-6 h-6 rounded-lg bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">
+                          {ev.businessName[0]?.toUpperCase()}
+                        </div>
+                        <p className="text-sm text-foreground font-medium truncate">{ev.businessName}</p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">System</p>
+                    )}
+                  </div>
 
-                {/* Event */}
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                    ev.severity === 'critical' ? 'bg-red-400' :
-                    ev.severity === 'warning'  ? 'bg-amber-400' : 'bg-teal/60'
-                  }`} />
-                  <p className="text-xs text-foreground font-medium truncate">{formatEventType(ev.eventType)}</p>
-                </div>
+                  {/* Event */}
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                      ev.severity === 'critical' ? 'bg-red-400' :
+                      ev.severity === 'warning'  ? 'bg-amber-400' : 'bg-teal/60'
+                    }`} />
+                    <p className="text-xs text-foreground font-medium truncate">{formatEventType(ev.eventType)}</p>
+                  </div>
 
-                {/* Severity */}
-                <div><SeverityBadge severity={ev.severity} /></div>
+                  {/* Severity */}
+                  <div><SeverityBadge severity={ev.severity} /></div>
 
-                {/* Detail */}
-                <p className="text-xs text-muted-foreground truncate" title={ev.detail}>{ev.detail}</p>
+                  {/* Detail */}
+                  <p className="text-xs text-muted-foreground truncate">{ev.detail}</p>
+
+                  {/* Expand */}
+                  <div className="text-muted-foreground/30">
+                    {expanded === ev.id ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </div>
+                </button>
+
+                {expanded === ev.id && (
+                  <div className="px-5 pb-4 bg-black/20 border-t border-white/05">
+                    <p className="text-xs text-white/70 py-3 leading-relaxed">{ev.detail}</p>
+                    {ev.metadata && Object.keys(ev.metadata).length > 0 && (
+                      <pre className="text-[10px] text-muted-foreground/60 bg-black/30 rounded-lg p-3 overflow-x-auto">
+                        {JSON.stringify(ev.metadata, null, 2)}
+                      </pre>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
