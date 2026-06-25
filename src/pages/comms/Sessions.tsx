@@ -1,6 +1,6 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Smartphone, RefreshCw, X, Loader2, KeyRound, UserCircle2, Upload, RotateCcw, Hash } from 'lucide-react'
+import { Plus, Smartphone, RefreshCw, X, Loader2, KeyRound, UserCircle2, Upload, RotateCcw, Hash, Send } from 'lucide-react'
 import { StatusDot } from '../../components/StatusDot'
 import { QRModal } from '../../components/QRModal'
 import { commsApi, Session, Client } from '../../lib/comms-api'
@@ -247,6 +247,10 @@ export function Sessions() {
   const [pairingPhone, setPairingPhone] = useState('')
   const [pairingCode, setPairingCode] = useState('')
   const [pairingLoading, setPairingLoading] = useState(false)
+  const [testModal, setTestModal] = useState<Session | null>(null)
+  const [testTo, setTestTo] = useState('')
+  const [testContent, setTestContent] = useState('Hello! This is a test message from ERA Comms.')
+  const [testLoading, setTestLoading] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -360,6 +364,12 @@ export function Sessions() {
                             {s.status === 'pending_qr' ? 'Show QR' : 'Reconnect'}
                           </button>
                         )}
+                        {s.status === 'connected' && (
+                          <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-teal-400 hover:bg-teal-500/10 transition"
+                            onClick={() => { setTestModal(s); setTestTo(''); setTestContent('Hello! This is a test message from ERA Comms.') }} title="Send test message">
+                            <Send className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                         <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-purple-400 hover:bg-purple-500/10 transition"
                           onClick={() => { setPairingModal(s); setPairingPhone(''); setPairingCode('') }} title="Link with pairing code (no QR)">
                           <Hash className="w-3.5 h-3.5" />
@@ -410,6 +420,44 @@ export function Sessions() {
       {profileModal && (
         <ProfileModal session={profileModal} onClose={() => setProfileModal(null)}
           onSaved={() => void load()} />
+      )}
+
+      {testModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#1a1729] border border-white/10 rounded-2xl p-6 w-full max-w-sm">
+            <h2 className="text-base font-semibold text-white mb-1">Send test message</h2>
+            <p className="text-xs text-white/40 mb-4">Via {testModal.phoneNumber}</p>
+            <input
+              className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/20 mb-2"
+              placeholder="Send to: +2348012345678"
+              value={testTo}
+              onChange={e => setTestTo(e.target.value)}
+            />
+            <textarea
+              className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/20 mb-3 resize-none"
+              rows={3}
+              value={testContent}
+              onChange={e => setTestContent(e.target.value)}
+            />
+            <div className="flex gap-2">
+              <button onClick={() => setTestModal(null)} className="flex-1 py-2 rounded-xl border border-white/10 text-sm text-white/50 hover:text-white transition">Cancel</button>
+              <button
+                disabled={testLoading || !testTo || !testContent}
+                className="flex-1 py-2 rounded-xl bg-[#bf7c93] text-white text-sm font-semibold disabled:opacity-50"
+                onClick={async () => {
+                  setTestLoading(true)
+                  try {
+                    await commsApi.sendTestMessage(testModal.id, testTo, testContent)
+                    alert('Message sent!')
+                    setTestModal(null)
+                  } catch (e) { alert('Error: ' + (e as Error).message) }
+                  finally { setTestLoading(false) }
+                }}>
+                {testLoading ? 'Sending…' : 'Send'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {pairingModal && (
