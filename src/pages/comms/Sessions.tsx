@@ -6,6 +6,7 @@ import { QRModal } from '../../components/QRModal'
 import { commsApi, Session, Client } from '../../lib/comms-api'
 import { timeAgo, fmtNumber } from '../../lib/utils'
 import { pageCache } from '../../lib/cache'
+import { useToast } from '../../components/Toast'
 
 const STATUS_LABEL: Record<string, string> = {
   pending_qr:   'Waiting for QR',
@@ -236,6 +237,7 @@ function ProfileModal({ session, onClose, onSaved }: {
 
 export function Sessions() {
   const nav = useNavigate()
+  const toast = useToast()
   const [sessions, setSessions] = useState<Session[]>(() => pageCache.get<Session[]>('comms:sessions') ?? [])
   const [clients, setClients] = useState<Client[]>(() => pageCache.get<Client[]>('comms:clients') ?? [])
   const [loading, setLoading] = useState(() => !pageCache.get('comms:sessions'))
@@ -339,7 +341,7 @@ export function Sessions() {
                       <button
                         className="text-xs text-muted-foreground/40 hover:text-white/60 transition font-mono"
                         title="Copy session ID"
-                        onClick={() => { void navigator.clipboard.writeText(s.id); alert('Session ID copied!') }}>
+                        onClick={() => { void navigator.clipboard.writeText(s.id); toast('Session ID copied', 'success') }}>
                         {s.id.slice(0, 8)}…
                       </button>
                     </td>
@@ -374,8 +376,8 @@ export function Sessions() {
                         {s.status === 'banned' && (
                           <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-amber-400 hover:bg-amber-500/10 transition"
                             onClick={async () => {
-                              try { await commsApi.unbanSession(s.id); void load() }
-                              catch (e) { alert('Error: ' + (e as Error).message) }
+                              try { await commsApi.unbanSession(s.id); void load(); toast('Session unbanned', 'success') }
+                              catch (e) { toast((e as Error).message, 'error') }
                             }} title="Unban session">
                             <ShieldOff className="w-3.5 h-3.5" />
                           </button>
@@ -392,8 +394,8 @@ export function Sessions() {
                           title="Reset credentials — only use if session is stuck"
                           onClick={async () => {
                             if (!confirm('This wipes WhatsApp credentials. Only do this if the session is stuck. Continue?')) return
-                            try { await commsApi.resetSessionCredentials(s.id); alert('Credentials cleared. Use # button to re-link.') }
-                            catch (e) { alert('Failed: ' + (e as Error).message) }
+                            try { await commsApi.resetSessionCredentials(s.id); toast('Credentials cleared — use # to re-link', 'success') }
+                            catch (e) { toast((e as Error).message, 'error') }
                           }}>
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -458,9 +460,9 @@ export function Sessions() {
                   setTestLoading(true)
                   try {
                     await commsApi.sendTestMessage(testModal.id, testTo, testContent)
-                    alert('Queued ✓  —  arrives within a few seconds (anti-spam jitter applied).')
+                    toast('Message queued — should arrive within seconds', 'success')
                     setTestModal(null)
-                  } catch (e) { alert('Error: ' + (e as Error).message) }
+                  } catch (e) { toast((e as Error).message, 'error') }
                   finally { setTestLoading(false) }
                 }}>
                 {testLoading ? 'Sending…' : 'Send'}
@@ -494,7 +496,7 @@ export function Sessions() {
                       try {
                         const { code } = await commsApi.requestPairingCode(pairingModal.id, pairingPhone)
                         setPairingCode(code)
-                      } catch (e) { alert('Error: ' + (e as Error).message) }
+                      } catch (e) { toast((e as Error).message, 'error') }
                       finally { setPairingLoading(false) }
                     }}>
                     {pairingLoading ? 'Getting code…' : 'Get code'}

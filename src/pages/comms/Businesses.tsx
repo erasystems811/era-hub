@@ -7,6 +7,7 @@ import { StatusDot } from '../../components/StatusDot'
 import { commsApi, Client, ClientDetail, ApiKey, Plan } from '../../lib/comms-api'
 import { fmtDate, fmtNumber } from '../../lib/utils'
 import { pageCache } from '../../lib/cache'
+import { useToast } from '../../components/Toast'
 
 type DrawerTab = 'overview' | 'edit' | 'keys'
 
@@ -17,6 +18,7 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
   client: Client; plans: Plan[]
   onClose: () => void; onUpdated: () => void
 }) {
+  const toast = useToast()
   const [detail, setDetail]         = useState<ClientDetail | null>(null)
   const [loading, setLoading]       = useState(true)
   const [drawerError, setDrawerError] = useState<string | null>(null)
@@ -77,7 +79,7 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
       reload(detail.id)
       onUpdated()
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Save failed')
+      toast(e instanceof Error ? e.message : 'Save failed', 'error')
     } finally { setSaving(false) }
   }
 
@@ -244,7 +246,7 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
                         if (!confirm(`Permanently delete "${detail.name}"? This cannot be undone.`)) return
                         setSaving(true)
                         try { await commsApi.deleteClient(detail.id); onUpdated(); onClose() }
-                        catch (e) { alert(e instanceof Error ? e.message : 'Delete failed') }
+                        catch (e) { toast(e instanceof Error ? e.message : 'Delete failed', 'error') }
                         finally { setSaving(false) }
                       }}
                     >
@@ -347,7 +349,7 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
                                   await commsApi.sendSecureKeyLink(detail.id, freshKeyId)
                                   setSecureSent(true)
                                 } catch (e) {
-                                  alert(e instanceof Error ? e.message : 'Failed to send secure link')
+                                  toast(e instanceof Error ? e.message : 'Failed to send secure link', 'error')
                                 } finally { setSaving(false) }
                               }}
                               disabled={saving}

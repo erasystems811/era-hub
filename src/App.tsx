@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './contexts/auth'
 import { Layout } from './components/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { ToastProvider } from './components/Toast'
 import { Login } from './pages/Login'
 import { Home } from './pages/Home'
 
@@ -184,5 +185,9 @@ export default function App() {
   if (path === '/biz/login') return <BizLogin />
   if (path.startsWith('/biz/'))   return <BizApp />
 
-  return isAuthenticated ? <ProtectedApp /> : <Login />
+  return (
+    <ToastProvider>
+      {isAuthenticated ? <ProtectedApp /> : <Login />}
+    </ToastProvider>
+  )
 }

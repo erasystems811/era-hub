@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { CheckCircle2, AlertTriangle, AlertCircle, Loader2, RefreshCw, ShieldCheck } from 'lucide-react'
 import { eventsApi, PlatformAlert } from '../../lib/events-api'
 import { MonitoringTabs } from '../../components/MonitoringTabs'
+import { useToast } from '../../components/Toast'
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
@@ -84,6 +85,7 @@ function AlertCard({ alert, onResolve, resolving }: {
 }
 
 export function Alerts() {
+  const toast = useToast()
   const [tab, setTab]           = useState<Tab>('active')
   const [active, setActive]     = useState<PlatformAlert[]>([])
   const [resolved, setResolved] = useState<PlatformAlert[]>([])
@@ -119,7 +121,7 @@ export function Alerts() {
       await eventsApi.resolveAlert(id)
       await fetchAlerts()
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to resolve alert')
+      toast(e instanceof Error ? e.message : 'Failed to resolve alert', 'error')
     } finally { setResolving(null) }
   }
 

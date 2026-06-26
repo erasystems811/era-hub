@@ -3,6 +3,7 @@ import { Send, Loader2, AlertCircle, CheckCircle2, XCircle, Clock, FileEdit } fr
 import { emailApi, type EmailCampaign } from '../../lib/comms-api'
 import { fmtDate } from '../../lib/utils'
 import { EmailTabs } from './EmailOverview'
+import { useToast } from '../../components/Toast'
 
 const STATUS_STYLE: Record<string, string> = {
   draft:     'bg-white/05 text-muted-foreground border-white/10',
@@ -23,6 +24,7 @@ const STATUS_ICON: Record<string, ReactNode> = {
 function pct(n: number) { return n > 0 ? `${n.toFixed(1)}%` : '—' }
 
 function CampaignRow({ c, onUpdate }: { c: EmailCampaign; onUpdate: (id: string, next: EmailCampaign) => void }) {
+  const toast = useToast()
   const [busy, setBusy] = useState(false)
 
   const action = async (type: 'send' | 'cancel') => {
@@ -36,7 +38,7 @@ function CampaignRow({ c, onUpdate }: { c: EmailCampaign; onUpdate: (id: string,
       // Optimistically update status
       onUpdate(c.id, { ...c, status: type === 'send' ? 'sending' : 'cancelled' })
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Action failed')
+      toast(e instanceof Error ? e.message : 'Action failed', 'error')
     } finally {
       setBusy(false)
     }
