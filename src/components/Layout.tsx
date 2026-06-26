@@ -34,17 +34,22 @@ const PATIENT_NAV = [
 ]
 
 const COMMS_NAV = [
-  { icon: Radio,         label: 'Dashboard',  href: '/comms/dashboard',  sub: 'Live platform view',          alsoActiveFor: [] },
-  { icon: Users,         label: 'Businesses', href: '/comms/businesses', sub: 'Client accounts',             alsoActiveFor: [] },
-  { icon: Smartphone,    label: 'Sessions',   href: '/comms/sessions',   sub: 'WhatsApp connections',        alsoActiveFor: ['/comms/connect-session'] },
-  { icon: ClipboardList, label: 'Requests',   href: '/comms/requests',   sub: 'Onboarding queue',            alsoActiveFor: [] },
-  { icon: Activity,      label: 'Monitoring', href: '/comms/alerts',     sub: 'Alerts, logs & audit',        alsoActiveFor: ['/comms/event-log', '/comms/audit', '/comms/investigate'] },
-  { icon: Bot,           label: 'AI Engine',  href: '/comms/ai-engine',  sub: 'AI usage & configuration',   alsoActiveFor: ['/comms/ai-logs', '/comms/ai-templates', '/comms/ai-config'] },
-  { icon: Mail,          label: 'Email',      href: '/comms/email',      sub: 'Postal sending engine',       alsoActiveFor: [] },
-  { icon: Layers,        label: 'Plans',      href: '/comms/plans',      sub: 'Subscription tiers',          alsoActiveFor: [] },
-  { icon: CreditCard,    label: 'Billing',    href: '/comms/billing',    sub: 'Revenue & consumption',       alsoActiveFor: [] },
-  { icon: Settings,      label: 'Settings',   href: '/comms/settings',   sub: 'API & configuration',         alsoActiveFor: [] },
-  { icon: Phone,         label: 'Voice',      href: '/comms/voice',      sub: 'Coming soon',                 alsoActiveFor: [] },
+  { icon: Radio,         label: 'Dashboard',   href: '/comms/dashboard',   sub: 'Live platform view',         alsoActiveFor: [] },
+  { icon: Users,         label: 'Businesses',  href: '/comms/businesses',  sub: 'Client accounts',            alsoActiveFor: [] },
+  { icon: Smartphone,    label: 'Sessions',    href: '/comms/sessions',    sub: 'WhatsApp connections',       alsoActiveFor: ['/comms/connect-session'] },
+  { icon: Send,          label: 'Broadcasts',  href: '/comms/broadcasts',  sub: 'Bulk WhatsApp sends',        alsoActiveFor: [] },
+  { icon: Zap,           label: 'Automations', href: '/comms/automations', sub: 'Drip sequences',             alsoActiveFor: [] },
+  { icon: ClipboardList, label: 'Requests',    href: '/comms/requests',    sub: 'Onboarding queue',           alsoActiveFor: [] },
+  { icon: Activity,      label: 'Monitoring',  href: '/comms/alerts',      sub: 'Alerts, logs & audit',       alsoActiveFor: ['/comms/event-log', '/comms/audit', '/comms/investigate'] },
+  { icon: ShieldAlert,   label: 'Moderation',  href: '/comms/moderation',  sub: 'Rules & violations',         alsoActiveFor: [] },
+  { icon: Bot,           label: 'Auto-Reply',  href: '/comms/ai-engine',   sub: 'AI reply per business',      alsoActiveFor: ['/comms/ai-logs', '/comms/ai-templates', '/comms/ai-config'] },
+  { icon: Mail,          label: 'Email',       href: '/comms/email',       sub: 'Postal sending engine',      alsoActiveFor: ['/comms/email/templates', '/comms/email/campaigns', '/comms/email/contacts', '/comms/email/domains', '/comms/email/automations'] },
+  { icon: Layers,        label: 'Plans',       href: '/comms/plans',       sub: 'Subscription tiers',         alsoActiveFor: [] },
+  { icon: TrendingUp,    label: 'Revenue',     href: '/comms/revenue',     sub: 'MRR & subscriptions',        alsoActiveFor: [] },
+  { icon: FileText,      label: 'Opt-Outs',    href: '/comms/optouts',     sub: 'STOP list',                  alsoActiveFor: [] },
+  { icon: CreditCard,    label: 'Billing',     href: '/comms/billing',     sub: 'Revenue & consumption',      alsoActiveFor: [] },
+  { icon: Settings,      label: 'Settings',    href: '/comms/settings',    sub: 'API & configuration',        alsoActiveFor: [] },
+  { icon: Phone,         label: 'Voice',       href: '/comms/voice',       sub: 'Coming soon',                alsoActiveFor: [] },
 ]
 
 const CONNECT_NAV = [
