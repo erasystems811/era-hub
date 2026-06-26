@@ -2,16 +2,17 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useLocation, NavLink } from 'react-router-dom'
 import {
   Mail, Globe, FileText, Send, Users, Loader2,
-  AlertCircle, CheckCircle2, XCircle, Server,
+  AlertCircle, CheckCircle2, XCircle, Server, Zap,
 } from 'lucide-react'
 import { emailApi, type EmailOverviewStats, type EmailCampaign } from '../../lib/comms-api'
 
 const EMAIL_TABS = [
-  { label: 'Overview',  path: '/comms/email' },
-  { label: 'Domains',   path: '/comms/email/domains' },
-  { label: 'Templates', path: '/comms/email/templates' },
-  { label: 'Campaigns', path: '/comms/email/campaigns' },
-  { label: 'Contacts',  path: '/comms/email/contacts' },
+  { label: 'Overview',    path: '/comms/email' },
+  { label: 'Domains',     path: '/comms/email/domains' },
+  { label: 'Templates',   path: '/comms/email/templates' },
+  { label: 'Campaigns',   path: '/comms/email/campaigns' },
+  { label: 'Automations', path: '/comms/email/automations' },
+  { label: 'Contacts',    path: '/comms/email/contacts' },
 ]
 
 export function EmailTabs() {
@@ -120,10 +121,11 @@ export function EmailOverview() {
           {/* Navigation cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { label: 'Domains',   desc: 'Sending domain setup & DNS',  Icon: Globe,     path: '/comms/email/domains' },
-              { label: 'Templates', desc: 'HTML email templates',         Icon: FileText,  path: '/comms/email/templates' },
-              { label: 'Campaigns', desc: 'Schedule & send campaigns',    Icon: Send,      path: '/comms/email/campaigns' },
-              { label: 'Contacts',  desc: 'Lists & suppression',          Icon: Users,     path: '/comms/email/contacts' },
+              { label: 'Domains',     desc: 'Sending domain setup & DNS',    Icon: Globe,     path: '/comms/email/domains' },
+              { label: 'Templates',  desc: 'HTML email templates',          Icon: FileText,  path: '/comms/email/templates' },
+              { label: 'Campaigns',  desc: 'Schedule & send campaigns',     Icon: Send,      path: '/comms/email/campaigns' },
+              { label: 'Automations',desc: 'Drip sequences & API triggers', Icon: Zap,       path: '/comms/email/automations' },
+              { label: 'Contacts',   desc: 'Lists & suppression',           Icon: Users,     path: '/comms/email/contacts' },
             ].map(item => (
               <button
                 key={item.path}

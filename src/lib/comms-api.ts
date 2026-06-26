@@ -292,10 +292,14 @@ export const emailApi = {
   listDomains:      () => get<EmailDomain[]>('/email/domains'),
   addDomain:        (clientId: string, domain: string) =>
                       post<EmailDomain>('/email/domains', { clientId, domain }),
+  patchDomain:      (id: string, dkimPublicKey: string) =>
+                      patch<EmailDomain>(`/email/domains/${id}`, { dkimPublicKey }),
   deleteDomain:     (id: string) => del<void>(`/email/domains/${id}`),
   domainDns:        (id: string) => get<PostalDnsRecord>(`/email/domains/${id}/dns`),
   verifyDomain:     (id: string) =>
-                      post<{ queued: boolean; message: string }>(`/email/domains/${id}/verify`, {}),
+                      post<{ queued?: boolean; checked?: boolean; message?: string }>(`/email/domains/${id}/verify`, {}),
+  markDomainVerified: (id: string) =>
+                      post<{ verified: boolean }>(`/email/domains/${id}/mark-verified`, {}),
 
   listTemplates:    (clientId?: string) =>
                       get<EmailTemplate[]>(`/email/templates${clientId ? `?clientId=${clientId}` : ''}`),
@@ -326,6 +330,47 @@ export const emailApi = {
   listSuppressed:   (clientId?: string) =>
                       get<EmailSuppressed[]>(`/email/contacts/suppression${clientId ? `?clientId=${clientId}` : ''}`),
   removeSuppressed: (id: string) => del<void>(`/email/contacts/suppression/${id}`),
+}
+
+// ── Email Automation types ────────────────────────────────────────────────────
+
+export interface EmailAutomationFlow {
+  id:             string
+  clientId:       string
+  clientName:     string
+  name:           string
+  triggerKey:     string | null
+  status:         'active' | 'archived'
+  totalEnrolled:  number
+  totalCompleted: number
+  createdAt:      string
+  updatedAt:      string
+}
+
+export interface EmailAutomationStep {
+  id:            string
+  flowId:        string
+  stepIndex:     number
+  stepType:      'send_email' | 'wait'
+  templateId:    string | null
+  domainId:      string | null
+  fromName:      string | null
+  fromEmail:     string | null
+  delayMinutes:  number
+}
+
+export const emailAutomationApi = {
+  list:     (clientId?: string) =>
+    get<EmailAutomationFlow[]>(`/email/automations${clientId ? `?clientId=${clientId}` : ''}`),
+  get:      (id: string) => get<EmailAutomationFlow & { steps: EmailAutomationStep[] }>(`/email/automations/${id}`),
+  create:   (data: {
+    clientId: string; name: string
+    steps: { stepType: 'send_email' | 'wait'; templateId?: string; domainId?: string; fromName?: string; fromEmail?: string; delayMinutes?: number }[]
+  }) => post<EmailAutomationFlow>('/email/automations', data),
+  archive:  (id: string) => del<void>(`/email/automations/${id}`),
+  enroll:   (id: string, contacts: { email: string; firstName?: string; lastName?: string }[]) =>
+    post<{ enrolled: number }>(`/email/automations/${id}/enroll`, contacts),
+  enrollments: (id: string) => get<unknown[]>(`/email/automations/${id}/enrollments`),
 }
 
 export interface AIEngineConfig {

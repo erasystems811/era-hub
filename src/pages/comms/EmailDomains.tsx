@@ -27,13 +27,16 @@ function HealthBar({ domain }: { domain: EmailDomain }) {
   )
 }
 
-function DomainDnsPanel({ domain }: { domain: EmailDomain }) {
+function DomainDnsPanel({ domain, onUpdated }: { domain: EmailDomain; onUpdated: (d: EmailDomain) => void }) {
   const [dns, setDns]       = useState<PostalDnsRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]   = useState('')
   const [copied, setCopied] = useState<string | null>(null)
   const [verifying, setVerifying] = useState(false)
   const [verifyMsg, setVerifyMsg] = useState('')
+  const [dkimKey, setDkimKey]     = useState(domain.dkimPublicKey ?? '')
+  const [savingKey, setSavingKey] = useState(false)
+  const [marking, setMarking]     = useState(false)
 
   useEffect(() => {
     emailApi.domainDns(domain.id)
@@ -52,11 +55,38 @@ function DomainDnsPanel({ domain }: { domain: EmailDomain }) {
     setVerifying(true); setVerifyMsg('')
     try {
       const res = await emailApi.verifyDomain(domain.id)
-      setVerifyMsg(res.message)
+      setVerifyMsg(res.message ?? (res.checked ? 'DNS checked — flags updated.' : 'Check queued.'))
     } catch {
       setVerifyMsg('Verification request failed.')
     } finally {
       setVerifying(false)
+    }
+  }
+
+  const saveDkimKey = async () => {
+    setSavingKey(true)
+    try {
+      const updated = await emailApi.patchDomain(domain.id, dkimKey)
+      onUpdated(updated)
+      setVerifyMsg('DKIM key saved.')
+    } catch {
+      setVerifyMsg('Failed to save key.')
+    } finally {
+      setSavingKey(false)
+    }
+  }
+
+  const markVerified = async () => {
+    if (!window.confirm('Mark all DNS records as verified? Only do this after confirming DNS is actually set up.')) return
+    setMarking(true)
+    try {
+      await emailApi.markDomainVerified(domain.id)
+      onUpdated({ ...domain, spfVerified: true, dkimVerified: true, dmarcVerified: true, mxVerified: true, verified: true })
+      setVerifyMsg('Domain marked as fully verified.')
+    } catch {
+      setVerifyMsg('Failed.')
+    } finally {
+      setMarking(false)
     }
   }
 
@@ -92,6 +122,42 @@ function DomainDnsPanel({ domain }: { domain: EmailDomain }) {
           </button>
         </div>
       </div>
+
+      {/* DKIM public key input */}
+      <div className="rounded-xl border border-white/07 bg-white/[0.02] px-4 py-3 space-y-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">DKIM Public Key</p>
+        <p className="text-[10px] text-muted-foreground/50">Paste the DKIM public key from your Postal admin (Domains → DKIM settings).</p>
+        <div className="flex gap-2">
+          <input
+            value={dkimKey}
+            onChange={e => setDkimKey(e.target.value)}
+            placeholder="v=DKIM1; k=rsa; p=MIIBIj…"
+            className="flex-1 px-3 py-2 rounded-lg bg-[hsl(262_20%_11%)] border border-white/06 text-xs font-mono text-foreground placeholder:text-muted-foreground/30 focus:outline-none"
+          />
+          <button
+            onClick={() => void saveDkimKey()}
+            disabled={savingKey}
+            className="px-3 py-2 rounded-lg text-xs font-semibold text-white disabled:opacity-50 shrink-0"
+            style={{ background: '#C4286F' }}
+          >
+            {savingKey ? '…' : 'Save'}
+          </button>
+        </div>
+      </div>
+
+      {/* Manual verify override */}
+      {!domain.verified && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-amber-500/15 bg-amber-500/05">
+          <p className="flex-1 text-xs text-amber-400">Once DNS records are live at your registrar, use "Mark verified" to confirm setup.</p>
+          <button
+            onClick={() => void markVerified()}
+            disabled={marking}
+            className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition disabled:opacity-50"
+          >
+            {marking ? '…' : 'Mark verified'}
+          </button>
+        </div>
+      )}
 
       {records.map(r => (
         <div
@@ -273,7 +339,12 @@ export function EmailDomains() {
                   </div>
                 </div>
 
-                {open && <DomainDnsPanel domain={d} />}
+                {open && (
+                  <DomainDnsPanel
+                    domain={d}
+                    onUpdated={updated => setDomains(prev => prev.map(x => x.id === updated.id ? updated : x))}
+                  />
+                )}
               </div>
             )
           })}

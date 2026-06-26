@@ -74,11 +74,12 @@ import { AIEngine }       from './pages/comms/AIEngine'
 import { AIClientConfig } from './pages/comms/AIClientConfig'
 import { AILogs }         from './pages/comms/AILogs'
 import { AITemplates }    from './pages/comms/AITemplates'
-import { EmailOverview }  from './pages/comms/EmailOverview'
-import { EmailTemplates } from './pages/comms/EmailTemplates'
-import { EmailCampaigns } from './pages/comms/EmailCampaigns'
-import { EmailContacts }  from './pages/comms/EmailContacts'
-import { EmailDomains }   from './pages/comms/EmailDomains'
+import { EmailOverview }    from './pages/comms/EmailOverview'
+import { EmailTemplates }   from './pages/comms/EmailTemplates'
+import { EmailCampaigns }   from './pages/comms/EmailCampaigns'
+import { EmailContacts }    from './pages/comms/EmailContacts'
+import { EmailDomains }     from './pages/comms/EmailDomains'
+import { EmailAutomations } from './pages/comms/EmailAutomations'
 import { VoiceComingSoon } from './pages/comms/VoiceComingSoon'
 import { Broadcasts }     from './pages/comms/Broadcasts'
 import { Automations }    from './pages/comms/Automations'
@@ -132,6 +133,7 @@ function ProtectedApp() {
         <Route path="/comms/email/templates"     element={<EmailTemplates />} />
         <Route path="/comms/email/campaigns"     element={<EmailCampaigns />} />
         <Route path="/comms/email/contacts"      element={<EmailContacts />} />
+        <Route path="/comms/email/automations"  element={<EmailAutomations />} />
         <Route path="/comms/email/domains"       element={<EmailDomains />} />
         <Route path="/comms/broadcasts"           element={<Broadcasts />} />
         <Route path="/comms/automations"          element={<Automations />} />
