@@ -364,7 +364,7 @@ export function Sessions() {
                             <Send className="w-3.5 h-3.5" />
                           </button>
                         )}
-                        {(s.status === 'pending_qr' || s.status === 'disconnected') && (
+                        {(s.status === 'pending_qr' || s.status === 'disconnected' || s.status === 'connecting') && (
                           <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-teal-400 hover:bg-teal-500/10 transition"
                             onClick={() => setQrModal({ sessionId: s.id, phoneNumber: s.phoneNumber })}
                             title={s.status === 'pending_qr' ? 'Show QR' : 'Reconnect'}>
@@ -458,7 +458,7 @@ export function Sessions() {
                   setTestLoading(true)
                   try {
                     await commsApi.sendTestMessage(testModal.id, testTo, testContent)
-                    alert('Message sent!')
+                    alert('Queued ✓  —  arrives within a few seconds (anti-spam jitter applied).')
                     setTestModal(null)
                   } catch (e) { alert('Error: ' + (e as Error).message) }
                   finally { setTestLoading(false) }

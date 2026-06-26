@@ -35,7 +35,7 @@ const put  = <T>(p: string, b: unknown) => req<T>(p, { method: 'PUT', body: JSON
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export type SessionStatus =
-  'pending_qr' | 'warming_up' | 'connected' | 'disconnected' | 'flagged' | 'banned'
+  'pending_qr' | 'connecting' | 'warming_up' | 'connected' | 'disconnected' | 'flagged' | 'banned'
 
 export interface Session {
   id: string; phoneNumber: string; status: SessionStatus
