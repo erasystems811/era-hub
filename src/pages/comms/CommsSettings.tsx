@@ -123,6 +123,22 @@ export function CommsSettings() {
                 <p className="text-[11px] text-muted-foreground mt-1.5">Paste the new zrok URL here any time it changes — no need to redeploy.</p>
               </div>
 
+              {/* zrok start command */}
+              {(() => {
+                const token = apiUrl.match(/https?:\/\/([^.]+)\.share\.zrok\.io/)?.[1]
+                if (!token) return null
+                const cmd = `zrok share reserved ${token}`
+                return (
+                  <div className="rounded-xl bg-black/30 border border-white/06 px-4 py-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Start zrok command — run this in Termux</p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 text-sm text-teal font-mono">{cmd}</code>
+                      <CopyBtn text={cmd} id="zrok-cmd" />
+                    </div>
+                  </div>
+                )
+              })()}
+
               <div className="flex items-start gap-3 rounded-xl px-4 py-3" style={{ background: 'rgba(239,200,100,0.07)', border: '1px solid rgba(239,200,100,0.15)' }}>
                 <Mail className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
                 <div>
