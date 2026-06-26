@@ -1,24 +1,6 @@
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-# bust cache on every new commit
-ARG RAILWAY_GIT_COMMIT_SHA=dev
-RUN echo "commit=$RAILWAY_GIT_COMMIT_SHA"
-COPY . .
-
-ARG VITE_PATIENT_API_URL
-ARG VITE_COMMS_API_URL
-ARG VITE_COMMS_OPERATOR_SECRET
-ENV VITE_PATIENT_API_URL=$VITE_PATIENT_API_URL
-ENV VITE_COMMS_API_URL=$VITE_COMMS_API_URL
-ENV VITE_COMMS_OPERATOR_SECRET=$VITE_COMMS_OPERATOR_SECRET
-
-RUN npm run build
-
 FROM node:20-alpine
 WORKDIR /app
-COPY --from=builder /app/dist ./dist
+COPY dist ./dist
 COPY server.js .
 EXPOSE 8080
 CMD ["node", "server.js"]
