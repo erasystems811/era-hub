@@ -150,7 +150,10 @@ export const commsApi = {
     post<Client>('/clients', data),
   updateClient: (id: string, data: Partial<Pick<Client, 'name' | 'planId' | 'active' | 'contactEmail' | 'contactPhone'>>) =>
     patch<Client>(`/clients/${id}`, data),
-  deleteClient: (id: string) => del<void>(`/clients/${id}`),
+  deleteClient:    (id: string) => del<void>(`/clients/${id}`),
+  warnClient:      (id: string, reason?: string) => post<void>(`/clients/${id}/warn`, { reason }),
+  suspendClient:   (id: string, reason?: string) => post<void>(`/clients/${id}/suspend`, { reason }),
+  unsuspendClient: (id: string) => post<void>(`/clients/${id}/unsuspend`, {}),
 
   createApiKey: (clientId: string, label: string, scopes: string[]) =>
     post<{ id: string; key: string; label: string; scopes: string[] }>(`/clients/${clientId}/api-keys`, { label, scopes }),
@@ -336,4 +339,226 @@ export interface AIEngineConfig {
 export const aiEngineApi = {
   getConfig:  ()                       => get<AIEngineConfig>('/ai-config'),
   saveConfig: (data: AIEngineConfig)   => put<void>('/ai-config', data),
+}
+
+// ── Broadcasts ────────────────────────────────────────────────────────────────
+
+export interface Broadcast {
+  id:               string
+  clientId:         string
+  clientName:       string
+  sessionId:        string
+  sessionPhone:     string
+  name:             string
+  content:          string
+  contentType:      string
+  status:           'draft' | 'sending' | 'sent' | 'cancelled'
+  totalRecipients:  number
+  totalSent:        number
+  totalFailed:      number
+  createdAt:        string
+}
+
+export interface BroadcastRecipient {
+  id:          string
+  phoneNumber: string
+  name:        string | null
+  status:      'pending' | 'sent' | 'failed'
+  messageId:   string | null
+  error:       string | null
+  sentAt:      string | null
+}
+
+export interface BroadcastDetail extends Broadcast {
+  recipients: BroadcastRecipient[]
+}
+
+export const broadcastApi = {
+  list:   (clientId?: string) =>
+    get<Broadcast[]>(`/broadcasts${clientId ? `?clientId=${clientId}` : ''}`),
+
+  get: (id: string) => get<BroadcastDetail>(`/broadcasts/${id}`),
+
+  create: (data: {
+    clientId: string; sessionId: string; name: string
+    content: string; contentType?: string
+    recipients?: { phoneNumber: string; name?: string }[]
+  }) => post<{ id: string; createdAt: string }>('/broadcasts', data),
+
+  addRecipients: (id: string, recipients: { phoneNumber: string; name?: string }[]) =>
+    post<{ added: number; invalid: number }>(`/broadcasts/${id}/recipients`, { recipients }),
+
+  send:   (id: string) => post<{ queued: number }>(`/broadcasts/${id}/send`, {}),
+  cancel: (id: string) => post<{ cancelled: boolean }>(`/broadcasts/${id}/cancel`, {}),
+  delete: (id: string) => del<void>(`/broadcasts/${id}`),
+}
+
+// ── Automations ───────────────────────────────────────────────────────────────
+
+export type AutomationStatus = 'active' | 'paused' | 'archived'
+export type AutomationTriggerType = 'api' | 'manual'
+export type StepType = 'send_message' | 'wait'
+export type EnrollmentStatus = 'active' | 'completed' | 'cancelled'
+
+export interface AutomationStep {
+  id:           string
+  stepOrder:    number
+  stepType:     StepType
+  content:      string | null
+  contentType:  string
+  delayMinutes: number
+}
+
+export interface AutomationFlow {
+  id:             string
+  name:           string
+  description:    string | null
+  triggerType:    AutomationTriggerType
+  triggerKey:     string | null
+  status:         AutomationStatus
+  totalEnrolled:  number
+  totalCompleted: number
+  createdAt:      string
+  clientName:     string
+  sessionPhone:   string
+}
+
+export interface AutomationFlowDetail extends AutomationFlow {
+  steps: AutomationStep[]
+  enrollmentStats: { total: number; active: number; completed: number }
+}
+
+export interface AutomationEnrollment {
+  id:          string
+  phoneNumber: string
+  name:        string | null
+  currentStep: number
+  status:      EnrollmentStatus
+  nextStepAt:  string | null
+  createdAt:   string
+}
+
+export const automationApi = {
+  list: (clientId?: string) =>
+    get<AutomationFlow[]>(`/automations${clientId ? `?clientId=${clientId}` : ''}`),
+
+  get: (id: string) => get<AutomationFlowDetail>(`/automations/${id}`),
+
+  create: (data: {
+    clientId: string; sessionId: string; name: string; description?: string
+    triggerType?: AutomationTriggerType
+    steps?: { stepType: StepType; content?: string; contentType?: string; delayMinutes?: number }[]
+  }) => post<{ id: string; triggerKey: string | null; createdAt: string }>('/automations', data),
+
+  update: (id: string, data: { status?: AutomationStatus; name?: string; description?: string }) =>
+    patch<void>(`/automations/${id}`, data),
+
+  delete: (id: string) => del<void>(`/automations/${id}`),
+
+  enroll: (id: string, contacts: { phoneNumber: string; name?: string }[]) =>
+    post<{ enrolled: number }>(`/automations/${id}/enroll`, { contacts }),
+
+  listEnrollments: (id: string) =>
+    get<AutomationEnrollment[]>(`/automations/${id}/enrollments`),
+}
+
+// ── AI Reply Profile (per business) ──────────────────────────────────────────
+
+export interface AIReplyProfile {
+  exists:             boolean
+  aiReply:            boolean
+  persona:            string
+  tone:               string
+  systemPrompt:       string
+  permittedTopics:    string[]
+  prohibitedTopics:   string[]
+  escalationTriggers: string[]
+  maxTokens:          number
+  temperature:        number
+}
+
+export const aiProfileApi = {
+  get:  (clientId: string) => get<AIReplyProfile>(`/clients/${clientId}/ai-profile`),
+
+  save: (clientId: string, data: Partial<AIReplyProfile>) =>
+    put<void>(`/clients/${clientId}/ai-profile`, data),
+}
+
+// ── Content Moderation ────────────────────────────────────────────────────────
+
+export interface ModerationRule {
+  id:        string
+  keyword:   string
+  action:    'flag' | 'warn' | 'suspend'
+  severity:  string
+  createdAt: string
+}
+
+export interface ModerationEvent {
+  id:             string
+  clientId:       string
+  clientName:     string
+  matchedKeyword: string
+  actionTaken:    string
+  content:        string
+  resolved:       boolean
+  createdAt:      string
+}
+
+// ── Subscriptions & Revenue ───────────────────────────────────────────────────
+
+export interface Subscription {
+  id:                 string
+  clientId:           string
+  clientName:         string
+  planName:           string
+  status:             'trial' | 'active' | 'past_due' | 'cancelled' | 'suspended'
+  trialEndsAt:        string | null
+  currentPeriodStart: string | null
+  currentPeriodEnd:   string | null
+  amount:             number | null
+  currency:           string
+  createdAt:          string
+}
+
+export interface RevenueSnapshot {
+  mrr:                 number
+  activeSubscriptions: number
+  trialSubscriptions:  number
+  byStatus:            Record<string, { count: number; amount: number }>
+  byPlan:              { planName: string; count: number }[]
+}
+
+export const subscriptionApi = {
+  list:   (clientId?: string) =>
+    get<Subscription[]>(`/subscriptions${clientId ? `?clientId=${clientId}` : ''}`),
+  update: (id: string, data: { status?: string; trialEndsAt?: string }) =>
+    patch<void>(`/subscriptions/${id}`, data),
+  revenue: () => get<RevenueSnapshot>('/revenue'),
+}
+
+export interface MessageTemplate {
+  id:        string
+  name:      string
+  category:  string
+  content:   string
+  variables: string[]
+  isGlobal:  boolean
+  createdAt?: string
+}
+
+export const messageTemplatesApi = {
+  list:   () => get<MessageTemplate[]>('/message-templates'),
+  create: (data: { name: string; category?: string; content: string; variables?: string[] }) =>
+    post<MessageTemplate>('/message-templates', data),
+  delete: (id: string) => del<void>(`/message-templates/${id}`),
+}
+
+export const moderationApi = {
+  listRules:    () => get<ModerationRule[]>('/moderation/rules'),
+  createRule:   (data: { keyword: string; action?: string; severity?: string }) =>
+    post<ModerationRule>('/moderation/rules', data),
+  deleteRule:   (id: string) => del<void>(`/moderation/rules/${id}`),
+  listEvents:   () => get<ModerationEvent[]>('/moderation/events'),
+  resolveEvent: (id: string) => post<void>(`/moderation/events/${id}/resolve`, {}),
 }

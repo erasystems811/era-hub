@@ -39,8 +39,10 @@ import { HandoffModule }      from './pages/business-panel/HandoffModule'
 import { VoiceNotesModule }   from './pages/business-panel/VoiceNotesModule'
 import { InboxModule }        from './pages/business-panel/InboxModule'
 import { AnalyticsModule }    from './pages/business-panel/AnalyticsModule'
-import { BizSettingsPage }    from './pages/business-panel/BizSettingsPage'
-import { BizEmailPage }      from './pages/business-panel/BizEmailPage'
+import { BizSettingsPage }        from './pages/business-panel/BizSettingsPage'
+import { BizEmailPage }          from './pages/business-panel/BizEmailPage'
+import { WhatsAppConnectModule } from './pages/business-panel/WhatsAppConnectModule'
+import { AutoReplyModule }       from './pages/business-panel/AutoReplyModule'
 
 // ERA Core
 import { CoreChat }     from './pages/core/CoreChat'
@@ -78,6 +80,12 @@ import { EmailCampaigns } from './pages/comms/EmailCampaigns'
 import { EmailContacts }  from './pages/comms/EmailContacts'
 import { EmailDomains }   from './pages/comms/EmailDomains'
 import { VoiceComingSoon } from './pages/comms/VoiceComingSoon'
+import { Broadcasts }     from './pages/comms/Broadcasts'
+import { Automations }    from './pages/comms/Automations'
+import { Moderation }     from './pages/comms/Moderation'
+import { Revenue }        from './pages/comms/Revenue'
+import { OptOuts }        from './pages/comms/OptOuts'
+import { AIReplyConfig }  from './pages/comms/AIReplyConfig'
 
 function ProtectedApp() {
   return (
@@ -125,6 +133,12 @@ function ProtectedApp() {
         <Route path="/comms/email/campaigns"     element={<EmailCampaigns />} />
         <Route path="/comms/email/contacts"      element={<EmailContacts />} />
         <Route path="/comms/email/domains"       element={<EmailDomains />} />
+        <Route path="/comms/broadcasts"           element={<Broadcasts />} />
+        <Route path="/comms/automations"          element={<Automations />} />
+        <Route path="/comms/moderation"           element={<Moderation />} />
+        <Route path="/comms/revenue"              element={<Revenue />} />
+        <Route path="/comms/optouts"              element={<OptOuts />} />
+        <Route path="/comms/ai-engine"            element={<AIReplyConfig />} />
         <Route path="/comms/voice"               element={<VoiceComingSoon />} />
 
         {/* ERA Core */}
@@ -159,8 +173,10 @@ function BizApp() {
         <Route path="/biz/voice-notes"    element={<VoiceNotesModule />} />
         <Route path="/biz/inbox"          element={<InboxModule />} />
         <Route path="/biz/analytics"      element={<AnalyticsModule />} />
-        <Route path="/biz/settings"       element={<BizSettingsPage />} />
+        <Route path="/biz/settings"         element={<BizSettingsPage />} />
         <Route path="/biz/email"          element={<BizEmailPage />} />
+        <Route path="/biz/connect"        element={<WhatsAppConnectModule />} />
+        <Route path="/biz/auto-reply"     element={<AutoReplyModule />} />
         <Route path="*"                   element={<Navigate to="/biz/dashboard" replace />} />
       </Routes>
     </BizLayout>

@@ -3,6 +3,7 @@ import { useNavigate, useLocation, NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Book, MessageSquare, Clock, Zap, Users,
   Mic, Inbox, BarChart2, Settings, LogOut, ChevronLeft, ChevronRight, Mail,
+  Smartphone, Bot,
 } from 'lucide-react'
 import { bizApi, clearBizToken, type BizProfile, type ModuleConfig } from './business-api'
 
@@ -14,8 +15,10 @@ interface NavItem {
 }
 
 const NAV_ALWAYS: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Overview',  href: '/biz/dashboard' },
-  { icon: Settings,        label: 'Settings',  href: '/biz/settings'  },
+  { icon: LayoutDashboard, label: 'Overview',        href: '/biz/dashboard'  },
+  { icon: Smartphone,      label: 'Connect WhatsApp', href: '/biz/connect'    },
+  { icon: Bot,             label: 'Auto-Reply',       href: '/biz/auto-reply' },
+  { icon: Settings,        label: 'Settings',         href: '/biz/settings'   },
 ]
 
 const NAV_MODULES: NavItem[] = [

@@ -4,7 +4,7 @@ import {
   ChevronRight, AlertCircle, Pencil, BarChart2, KeyRound, Save,
 } from 'lucide-react'
 import { StatusDot } from '../../components/StatusDot'
-import { commsApi, Client, ClientDetail, ApiKey, Plan } from '../../lib/comms-api'
+import { commsApi, type Client, type ClientDetail, type ApiKey, type Plan } from '../../lib/comms-api'
 import { fmtDate, fmtNumber } from '../../lib/utils'
 import { pageCache } from '../../lib/cache'
 import { useToast } from '../../components/Toast'
@@ -223,19 +223,51 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
                     </div>
                   )}
 
-                  {/* Suspend / Restore */}
-                  <button
-                    className={`w-full text-sm py-2.5 rounded-xl font-medium transition-colors border ${
-                      detail.active
-                        ? 'border-amber-500/25 text-amber-400 hover:bg-amber-500/10'
-                        : 'border-teal/25 text-teal hover:bg-teal/10'
-                    }`}
-                    onClick={toggleActive} disabled={saving}
-                  >
-                    {saving
-                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin inline mr-1.5" />Saving…</>
-                      : detail.active ? 'Suspend access' : 'Restore access'}
-                  </button>
+                  {/* Moderation actions */}
+                  <div className="flex gap-2">
+                    <button
+                      disabled={saving}
+                      onClick={async () => {
+                        const reason = prompt('Warning reason (optional):') ?? undefined
+                        setSaving(true)
+                        try {
+                          await commsApi.warnClient(detail.id, reason)
+                          toast('Warning issued', 'success'); reload(detail.id)
+                        } catch (e) { toast((e as Error).message, 'error') }
+                        finally { setSaving(false) }
+                      }}
+                      className="flex-1 py-2 rounded-xl text-xs font-semibold border border-orange-500/25 text-orange-400 hover:bg-orange-500/10 transition-colors disabled:opacity-40"
+                    >
+                      Issue Warning
+                    </button>
+                    <button
+                      disabled={saving}
+                      onClick={async () => {
+                        const isSuspended = !detail.active
+                        if (!isSuspended && !confirm(`Suspend "${detail.name}"?`)) return
+                        setSaving(true)
+                        try {
+                          if (isSuspended) {
+                            await commsApi.unsuspendClient(detail.id)
+                            toast('Account reinstated', 'success')
+                          } else {
+                            const reason = prompt('Suspension reason:') ?? 'Operator action'
+                            await commsApi.suspendClient(detail.id, reason)
+                            toast('Account suspended', 'success')
+                          }
+                          reload(detail.id); onUpdated()
+                        } catch (e) { toast((e as Error).message, 'error') }
+                        finally { setSaving(false) }
+                      }}
+                      className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors border disabled:opacity-40 ${
+                        detail.active
+                          ? 'border-red-500/25 text-red-400 hover:bg-red-500/10'
+                          : 'border-teal/25 text-teal hover:bg-teal/10'
+                      }`}
+                    >
+                      {detail.active ? 'Suspend' : 'Reinstate'}
+                    </button>
+                  </div>
 
                   {/* Danger zone */}
                   <div className="pt-2 border-t border-white/05">

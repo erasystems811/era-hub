@@ -225,4 +225,32 @@ export const bizApi = {
   sendCampaign:   (id: string) => post<{ launched: boolean; queued: number }>(`/email/campaigns/${id}/send`, {}),
   cancelCampaign: (id: string) => post<{ cancelled: boolean }>(`/email/campaigns/${id}/cancel`, {}),
   deleteCampaign: (id: string) => del<void>(`/email/campaigns/${id}`),
+
+  // WhatsApp self-connect
+  connectWhatsApp: (phoneNumber: string) =>
+    post<{ sessionId: string; connectToken: string; expiresAt: string; qrWsUrl: string }>('/connect-whatsapp', { phoneNumber }),
+  listWhatsAppSessions: () => get<{ id: string; phoneNumber: string; status: string; connectedAt: string | null; createdAt: string }[]>('/whatsapp-sessions'),
+
+  // AI auto-reply profile
+  getAiProfile: () => get<{
+    exists: boolean; aiReply: boolean; persona: string; tone: string; systemPrompt: string
+    permittedTopics: string[]; prohibitedTopics: string[]; escalationTriggers: string[]
+    maxTokens: number; temperature: number
+  }>('/ai-profile'),
+  saveAiProfile: (data: Record<string, unknown>) => req<void>('/ai-profile', { method: 'PUT', body: JSON.stringify(data) }),
+
+  // Subscription
+  getSubscription: () => get<{ id?: string; status: string; planName?: string; trialEndsAt?: string | null; amount?: number | null; currency?: string; currentPeriodEnd?: string | null }>('/subscription'),
+
+  // Message templates
+  listMessageTemplates: () => get<{ id: string; name: string; category: string; content: string; variables: string[]; isGlobal: boolean }[]>('/message-templates'),
+  createMessageTemplate: (d: { name: string; category?: string; content: string; variables?: string[] }) =>
+    post<{ id: string; name: string; category: string; content: string; variables: string[] }>('/message-templates', d),
+
+  // Opt-outs
+  listOptOuts: () => get<{ phoneNumber: string; optedOutAt: string | null; updatedAt: string }[]>('/optouts'),
+
+  // Automations + broadcasts (read-only)
+  listAutomations: () => get<{ id: string; name: string; status: string; totalEnrolled: number; totalCompleted: number; createdAt: string }[]>('/automations'),
+  listBroadcasts:  () => get<{ id: string; name: string; status: string; totalRecipients: number; totalSent: number; createdAt: string }[]>('/broadcasts'),
 }
