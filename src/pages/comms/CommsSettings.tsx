@@ -1,23 +1,40 @@
 import { useState, useEffect } from 'react'
-import { Eye, EyeOff, Server, Globe, Copy, Check, Key, ExternalLink, Mail, AlertTriangle, CheckCircle2, ShieldAlert, Settings2 } from 'lucide-react'
-import { COMMS_API, COMMS_SECRET } from '../../lib/config'
+import { Eye, EyeOff, Server, Globe, Copy, Check, Key, ExternalLink, Mail, AlertTriangle, CheckCircle2, ShieldAlert, Settings2, Save } from 'lucide-react'
+import { getCommsApi, saveCommsApi, COMMS_SECRET } from '../../lib/config'
 import { FailsafeContent } from './Failsafe'
+import { useToast } from '../../components/Toast'
 
 const HUB = 'https://hub.erasystems.com.ng'
 
 type Tab = 'config' | 'failsafe'
 
 export function CommsSettings() {
-  const [tab, setTab]           = useState<Tab>('config')
-  const [showSecret, setShowSecret] = useState(false)
-  const [copied, setCopied]     = useState('')
-  const [apiStatus, setApiStatus] = useState<'checking' | 'ok' | 'error'>('checking')
+  const toast = useToast()
+  const [tab, setTab]               = useState<Tab>('config')
+  const [showSecret, setShowSecret]  = useState(false)
+  const [copied, setCopied]          = useState('')
+  const [apiStatus, setApiStatus]    = useState<'checking' | 'ok' | 'error'>('checking')
+  const [apiUrl, setApiUrl]          = useState(getCommsApi)
+  const [urlSaved, setUrlSaved]      = useState(false)
 
-  useEffect(() => {
-    fetch(`${COMMS_API}/health`, { method: 'GET' })
+  const checkStatus = (url: string) => {
+    setApiStatus('checking')
+    fetch(`${url}/health`)
       .then(r => setApiStatus(r.ok ? 'ok' : 'error'))
       .catch(() => setApiStatus('error'))
-  }, [])
+  }
+
+  useEffect(() => { checkStatus(getCommsApi()) }, [])
+
+  const saveUrl = () => {
+    const clean = apiUrl.trim().replace(/\/+$/, '')
+    saveCommsApi(clean)
+    setApiUrl(clean)
+    setUrlSaved(true)
+    setTimeout(() => setUrlSaved(false), 2000)
+    checkStatus(clean)
+    toast('API URL saved — page will use new URL immediately', 'success')
+  }
 
   function copy(text: string, key: string) {
     void navigator.clipboard.writeText(text).then(() => {
@@ -83,14 +100,27 @@ export function CommsSettings() {
             </div>
 
             <div className="space-y-3">
-              <div className="flex items-center justify-between py-2 border-b border-white/05">
-                <div>
+              <div className="py-2 border-b border-white/05">
+                <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-medium text-foreground">ERA Comms API</p>
-                  <p className="text-xs text-muted-foreground font-mono">{COMMS_API}</p>
+                  {apiStatus === 'checking' && <span className="text-xs text-muted-foreground">Checking…</span>}
+                  {apiStatus === 'ok'       && <span className="flex items-center gap-1.5 text-xs text-teal font-semibold"><CheckCircle2 className="w-3.5 h-3.5" /> Live</span>}
+                  {apiStatus === 'error'    && <span className="flex items-center gap-1.5 text-xs text-red-400 font-semibold"><AlertTriangle className="w-3.5 h-3.5" /> Unreachable</span>}
                 </div>
-                {apiStatus === 'checking' && <span className="text-xs text-muted-foreground">Checking…</span>}
-                {apiStatus === 'ok'       && <span className="flex items-center gap-1.5 text-xs text-teal font-semibold"><CheckCircle2 className="w-3.5 h-3.5" /> Live</span>}
-                {apiStatus === 'error'    && <span className="flex items-center gap-1.5 text-xs text-red-400 font-semibold"><AlertTriangle className="w-3.5 h-3.5" /> Unreachable</span>}
+                <div className="flex gap-2">
+                  <input
+                    className="flex-1 px-3 py-2 rounded-xl bg-[hsl(262_20%_11%)] border border-white/[0.06] text-foreground text-sm font-mono focus:outline-none focus:border-primary/40"
+                    value={apiUrl}
+                    onChange={e => setApiUrl(e.target.value)}
+                    placeholder="https://xxxxxxxx.share.zrok.io"
+                    onKeyDown={e => e.key === 'Enter' && saveUrl()}
+                  />
+                  <button onClick={saveUrl} className="btn-primary shrink-0 flex items-center gap-1.5 px-3 text-sm">
+                    {urlSaved ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
+                    {urlSaved ? 'Saved' : 'Save'}
+                  </button>
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1.5">Paste the new zrok URL here any time it changes — no need to redeploy.</p>
               </div>
 
               <div className="flex items-start gap-3 rounded-xl px-4 py-3" style={{ background: 'rgba(239,200,100,0.07)', border: '1px solid rgba(239,200,100,0.15)' }}>
@@ -112,16 +142,6 @@ export function CommsSettings() {
                 <Key className="w-3.5 h-3.5 text-primary" />
               </div>
               <h3 className="text-sm font-semibold text-foreground">API Configuration</h3>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-1.5 block">API Endpoint</label>
-              <div className="flex gap-2">
-                <div className="flex-1 px-3.5 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/[0.06] text-foreground text-sm font-mono truncate">
-                  {COMMS_API || '(not configured)'}
-                </div>
-                <CopyBtn text={COMMS_API} id="api" />
-              </div>
             </div>
 
             <div>

@@ -1,7 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const env = (import.meta as any).env as Record<string, string>
 export const PATIENT_API  = env.VITE_PATIENT_API_URL  ?? ''
-export const COMMS_API    = env.VITE_COMMS_API_URL    ?? ''
+
+// COMMS_API: env var baked at build time, but overridable via localStorage
+// so the zrok URL can be updated without redeploying the app.
+export function getCommsApi(): string {
+  return localStorage.getItem('era_comms_url') || env.VITE_COMMS_API_URL || ''
+}
+export function saveCommsApi(url: string) {
+  localStorage.setItem('era_comms_url', url.replace(/\/+$/, ''))
+}
+// Keep COMMS_API as a named export that reads live from localStorage
+export const COMMS_API    = getCommsApi()
 export const COMMS_SECRET = env.VITE_COMMS_OPERATOR_SECRET ?? ''
 
 // ERA Core URL and secret — env var takes priority, then localStorage, then empty

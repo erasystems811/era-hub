@@ -1,6 +1,7 @@
-import { COMMS_API, COMMS_SECRET } from './config'
+import { getCommsApi, COMMS_SECRET } from './config'
 
 async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
+  const COMMS_API = getCommsApi()
   if (!COMMS_API) throw new Error('ERA Comms API is not configured. Contact your administrator.')
   const res = await fetch(`${COMMS_API}/v1/admin${path}`, {
     ...opts,
@@ -189,7 +190,7 @@ export const commsApi = {
 }
 
 export function commsQrSocket(sessionId: string): WebSocket {
-  const base = COMMS_API.replace(/^http/, 'ws')
+  const base = getCommsApi().replace(/^http/, 'ws')
   return new WebSocket(`${base}/v1/admin/sessions/${sessionId}/qr?secret=${encodeURIComponent(COMMS_SECRET)}`)
 }
 
