@@ -216,14 +216,9 @@ function IssueCard({ issue }: { issue: Issue }) {
   )
 }
 
-export function Failsafe() {
+export function FailsafeContent() {
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <h1 className="page-title">Failsafe Guide</h1>
-        <p className="caption mt-0.5">Things that can go wrong with ERA Comms and exactly what to do. Click any issue to expand.</p>
-      </div>
-
+    <div className="space-y-4">
       <div className="rounded-2xl border border-amber-500/20 bg-amber-500/05 px-5 py-4 flex gap-3">
         <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
         <div>

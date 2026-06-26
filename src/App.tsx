@@ -78,7 +78,6 @@ import { EmailCampaigns } from './pages/comms/EmailCampaigns'
 import { EmailContacts }  from './pages/comms/EmailContacts'
 import { EmailDomains }   from './pages/comms/EmailDomains'
 import { VoiceComingSoon } from './pages/comms/VoiceComingSoon'
-import { Failsafe }       from './pages/comms/Failsafe'
 
 function ProtectedApp() {
   return (
@@ -127,7 +126,6 @@ function ProtectedApp() {
         <Route path="/comms/email/contacts"      element={<EmailContacts />} />
         <Route path="/comms/email/domains"       element={<EmailDomains />} />
         <Route path="/comms/voice"               element={<VoiceComingSoon />} />
-        <Route path="/comms/failsafe"            element={<Failsafe />} />
 
         {/* ERA Core */}
         <Route path="/core" element={<Navigate to="/core/chat" replace />} />
