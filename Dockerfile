@@ -2,6 +2,9 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
+# bust cache on every new commit
+ARG RAILWAY_GIT_COMMIT_SHA=dev
+RUN echo "commit=$RAILWAY_GIT_COMMIT_SHA"
 COPY . .
 
 ARG VITE_PATIENT_API_URL
