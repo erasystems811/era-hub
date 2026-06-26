@@ -16,6 +16,7 @@ interface NavItem {
   children?: NavItem[]
   accent?: 'pink' | 'teal'
   badge?: string
+  defaultOpen?: boolean
 }
 
 const NAV: NavItem[] = [
@@ -53,6 +54,7 @@ const NAV: NavItem[] = [
     label: 'ERA Comms',
     icon: <MessageSquare className="w-4 h-4" />,
     accent: 'pink',
+    defaultOpen: true,
     children: [
       { path: '/comms/dashboard',    label: 'Dashboard',      icon: <LayoutDashboard className="w-4 h-4" />, accent: 'pink' },
       { path: '/comms/businesses',  label: 'Businesses',     icon: <Users className="w-4 h-4" />,           accent: 'pink' },
@@ -82,7 +84,7 @@ const ACCENT = {
 function NavGroup({ item }: { item: NavItem }) {
   const { pathname } = useLocation()
   const isActive = pathname.startsWith(item.path) && item.path !== '/'
-  const [open, setOpen] = useState(isActive)
+  const [open, setOpen] = useState(isActive || !!item.defaultOpen)
   const accent = ACCENT[item.accent ?? 'pink']
 
   useEffect(() => { if (isActive) setOpen(true) }, [isActive])
