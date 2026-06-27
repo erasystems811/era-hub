@@ -27,7 +27,7 @@ function loadMessages(id: string): Message[] {
   try { return JSON.parse(localStorage.getItem(msgKey(id)) ?? '[]') } catch { return [] }
 }
 function saveMessages(id: string, msgs: Message[]) { localStorage.setItem(msgKey(id), JSON.stringify(msgs)) }
-function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36) }
+function uid() { return crypto.randomUUID() }
 
 import { getCoreApi } from '../../lib/config'
 import { coreFetch } from '../../lib/coreFetch'
