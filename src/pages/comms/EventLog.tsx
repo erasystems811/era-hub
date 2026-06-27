@@ -12,14 +12,14 @@ type EventGroup =
 const EVENT_GROUPS: Record<EventGroup, string[]> = {
   all:      [],
   sessions: ['session_connected','session_disconnected','session_reconnected','session_otp_sent','session_otp_verified','session_created','session_deleted'],
-  messages: ['message_received','message_sent','message_failed','message_queued'],
+  messages: ['message_received','message_sent','message_failed','message_queued','broadcast_completed','broadcast_message_failed','automation_triggered','automation_message_sent','automation_message_failed'],
   ai:       ['scenario_triggered','kb_queried','ai_response_generated','ai_error'],
   handoffs: ['handoff_triggered','human_took_over','handoff_resolved','returned_to_ai'],
   voice:    ['voice_note_received','transcription_done','transcription_failed'],
-  business: ['business_created','business_updated','business_suspended','business_deleted','plan_changed','request_submitted','request_approved','request_rejected'],
+  business: ['business_created','business_updated','business_suspended','business_unsuspended','business_deleted','plan_changed','plan_created','plan_updated','plan_deleted','request_submitted','request_approved','request_rejected','moderation_triggered'],
   keys:     ['api_key_generated','api_key_viewed','api_key_expired','api_key_revoked'],
   billing:  ['usage_recorded','limit_reached','limit_warning','invoice_generated','payment_received','payment_failed'],
-  errors:   ['error','ai_error','message_failed','transcription_failed'],
+  errors:   ['error','ai_error','message_failed','transcription_failed','broadcast_message_failed'],
 }
 
 function formatEventType(t: string) {
