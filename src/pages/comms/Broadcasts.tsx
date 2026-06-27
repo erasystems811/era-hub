@@ -8,16 +8,22 @@ import { useToast } from '../../components/Toast'
 import { normalizePhoneList } from '../../components/PhoneInput'
 import { EmptyState } from '../../components/EmptyState'
 
-const STATUS_COLOURS: Record<string, string> = {
-  draft:     'bg-white/10 text-white/50',
-  sending:   'bg-yellow-500/15 text-yellow-400',
-  sent:      'bg-teal/15 text-teal',
-  cancelled: 'bg-red-500/15 text-red-400',
-}
-
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, hasFailed }: { status: string; hasFailed?: boolean }) {
+  if (status === 'sent' && hasFailed) {
+    return (
+      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400">
+        partial
+      </span>
+    )
+  }
+  const styles: Record<string, string> = {
+    draft:     'bg-white/10 text-white/50',
+    sending:   'bg-yellow-500/15 text-yellow-400',
+    sent:      'bg-teal/15 text-teal',
+    cancelled: 'bg-red-500/15 text-red-400',
+  }
   return (
-    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${STATUS_COLOURS[status] ?? 'bg-white/10 text-white/50'}`}>
+    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${styles[status] ?? 'bg-white/10 text-white/50'}`}>
       {status}
     </span>
   )
@@ -153,7 +159,7 @@ export function Broadcasts() {
   const [savingCreate, setSavingCreate] = useState(false)
   const [savingEdit, setSavingEdit]     = useState(false)
   const [editPhones, setEditPhones]     = useState('')
-  const [loadingEdit, setLoadingEdit]   = useState(false)
+  const [loadingEdit, setLoadingEdit]   = useState<string | null>(null)
 
   async function load() {
     setLoading(true)
@@ -279,7 +285,7 @@ export function Broadcasts() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-sm font-semibold text-foreground truncate">{b.name}</span>
-                  <StatusBadge status={b.status} />
+                  <StatusBadge status={b.status} hasFailed={b.totalFailed > 0} />
                   <span className="text-[10px] text-muted-foreground/50 ml-1">{b.clientName}</span>
                 </div>
                 <p className="text-xs text-muted-foreground truncate max-w-md">{b.content}</p>
@@ -309,18 +315,21 @@ export function Broadcasts() {
                 {b.status === 'draft' && (
                   <>
                     <button onClick={async () => {
-                        setEditBroadcast(b)
-                        setEditPhones('')
-                        setLoadingEdit(true)
+                        setLoadingEdit(b.id)
                         try {
                           const detail = await broadcastApi.get(b.id)
                           setEditPhones(detail.recipients.map(r => r.phoneNumber).join('\n'))
-                        } catch { /* leave blank */ }
-                        finally { setLoadingEdit(false) }
+                        } catch {
+                          setEditPhones('')
+                        } finally {
+                          setLoadingEdit(null)
+                        }
+                        setEditBroadcast(b)
                       }}
-                      className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/05 transition-colors"
+                      disabled={loadingEdit === b.id}
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/05 transition-colors disabled:opacity-40"
                       title="Edit broadcast">
-                      <Pencil className="w-3.5 h-3.5" />
+                      {loadingEdit === b.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Pencil className="w-3.5 h-3.5" />}
                     </button>
                     <button onClick={() => void send(b.id)} disabled={sending === b.id}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-50"
@@ -373,11 +382,11 @@ export function Broadcasts() {
           initialSessionId=""
           initialName={editBroadcast.name}
           initialContent={editBroadcast.content}
-          initialPhones={loadingEdit ? 'Loading recipients…' : editPhones}
-          saving={savingEdit || loadingEdit}
+          initialPhones={editPhones}
+          saving={savingEdit}
           onSubmit={handleEdit}
           onClose={() => { setEditBroadcast(null); setEditPhones('') }}
-          submitLabel={loadingEdit ? 'Loading…' : 'Save Changes'}
+          submitLabel="Save Changes"
         />
       )}
     </div>
