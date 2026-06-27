@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './contexts/auth'
 import { Layout } from './components/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -189,8 +189,7 @@ function BizApp() {
 
 export default function App() {
   const { isAuthenticated } = useAuth()
-
-  const path = window.location.pathname
+  const { pathname: path } = useLocation()
 
   // Public routes — no auth required
   if (path.startsWith('/apply')) {
