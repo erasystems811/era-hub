@@ -60,8 +60,10 @@ const CONNECT_NAV = [
 ]
 
 const CORE_NAV = [
-  { icon: Brain,    label: 'Chat',    href: '/core/chat',   sub: 'Talk to ERA Core' },
-  { icon: Database, label: 'Memory',  href: '/core/memory', sub: 'What Core knows about you' },
+  { icon: Brain,    label: 'Chat',     href: '/core/chat',     sub: 'Talk to ERA Core' },
+  { icon: Database, label: 'Memory',   href: '/core/memory',   sub: 'What Core knows about you' },
+  { icon: FileSearch, label: 'Import', href: '/core/import',   sub: 'Import your conversations' },
+  { icon: Settings, label: 'Settings', href: '/core/settings', sub: 'Connect ERA Core' },
 ]
 
 const PRODUCTS = {
