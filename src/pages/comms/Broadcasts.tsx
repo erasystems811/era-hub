@@ -152,6 +152,8 @@ export function Broadcasts() {
   const [duplicating, setDuplicating] = useState<string | null>(null)
   const [savingCreate, setSavingCreate] = useState(false)
   const [savingEdit, setSavingEdit]     = useState(false)
+  const [editPhones, setEditPhones]     = useState('')
+  const [loadingEdit, setLoadingEdit]   = useState(false)
 
   async function load() {
     setLoading(true)
@@ -306,7 +308,16 @@ export function Broadcasts() {
               <div className="flex items-center gap-1.5 shrink-0">
                 {b.status === 'draft' && (
                   <>
-                    <button onClick={() => setEditBroadcast(b)}
+                    <button onClick={async () => {
+                        setEditBroadcast(b)
+                        setEditPhones('')
+                        setLoadingEdit(true)
+                        try {
+                          const detail = await broadcastApi.get(b.id)
+                          setEditPhones(detail.recipients.map(r => r.phoneNumber).join('\n'))
+                        } catch { /* leave blank */ }
+                        finally { setLoadingEdit(false) }
+                      }}
                       className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/05 transition-colors"
                       title="Edit broadcast">
                       <Pencil className="w-3.5 h-3.5" />
@@ -362,10 +373,11 @@ export function Broadcasts() {
           initialSessionId=""
           initialName={editBroadcast.name}
           initialContent={editBroadcast.content}
-          saving={savingEdit}
+          initialPhones={loadingEdit ? 'Loading recipients…' : editPhones}
+          saving={savingEdit || loadingEdit}
           onSubmit={handleEdit}
-          onClose={() => setEditBroadcast(null)}
-          submitLabel="Save Changes"
+          onClose={() => { setEditBroadcast(null); setEditPhones('') }}
+          submitLabel={loadingEdit ? 'Loading…' : 'Save Changes'}
         />
       )}
     </div>
