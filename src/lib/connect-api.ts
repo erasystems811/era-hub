@@ -135,4 +135,25 @@ export const connectApi = {
       : ''
     return get<{ events: ConnectEvent[]; total: number; limit: number; offset: number }>(`/events${qs}`)
   },
+
+  // Sandbox testing — inject fake data into the hospital's local database.
+  // ERAConnect picks up the command on its next config poll (within ~60s),
+  // inserts the row locally, and syncs it to ERA Patient on the next DB poll.
+  // Requires these two routes on the era-comms-api:
+  //   POST /v1/admin/connect/instances/:id/sandbox/inject-patient
+  //   POST /v1/admin/connect/instances/:id/sandbox/inject-treatment
+  sandboxInjectPatient: (instanceId: string, data: {
+    firstName: string
+    lastName: string
+    phone: string
+    dateOfBirth?: string
+  }) => post<{ ok: boolean }>(`/instances/${instanceId}/sandbox/inject-patient`, data),
+
+  sandboxInjectTreatment: (instanceId: string, data: {
+    medication: string
+    dosage: string
+    timing: string
+    duration: string
+    doctorName: string
+  }) => post<{ ok: boolean }>(`/instances/${instanceId}/sandbox/inject-treatment`, data),
 }

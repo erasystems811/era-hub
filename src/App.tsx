@@ -55,6 +55,7 @@ import { ConnectHome }           from './pages/connect/ConnectHome'
 import { ConnectInstances }      from './pages/connect/ConnectInstances'
 import { ConnectEvents }         from './pages/connect/ConnectEvents'
 import { ConnectInstanceDetail } from './pages/connect/ConnectInstanceDetail'
+import { ConnectSandbox }        from './pages/connect/ConnectSandbox'
 
 // ERA Comms
 import { CommsDashboard } from './pages/comms/CommsDashboard'
@@ -155,6 +156,7 @@ function ProtectedApp() {
         <Route path="/connect/instances"          element={<ConnectInstances />} />
         <Route path="/connect/instances/:id"      element={<ConnectInstanceDetail />} />
         <Route path="/connect/events"             element={<ConnectEvents />} />
+        <Route path="/connect/sandbox"            element={<ConnectSandbox />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

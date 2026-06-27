@@ -53,9 +53,10 @@ const COMMS_NAV = [
 ]
 
 const CONNECT_NAV = [
-  { icon: Activity,   label: 'Overview',   href: '/connect',            sub: 'Instance status & totals' },
-  { icon: Wifi,       label: 'Instances',  href: '/connect/instances',  sub: 'Hospital installations' },
-  { icon: ScrollText, label: 'Activity',   href: '/connect/events',     sub: 'Full sync event log' },
+  { icon: Activity,      label: 'Overview',  href: '/connect',            sub: 'Instance status & totals' },
+  { icon: Wifi,          label: 'Instances', href: '/connect/instances',  sub: 'Hospital installations' },
+  { icon: ScrollText,    label: 'Activity',  href: '/connect/events',     sub: 'Full sync event log' },
+  { icon: FlaskConical,  label: 'Sandbox',   href: '/connect/sandbox',    sub: 'Inject & test live sync' },
 ]
 
 const CORE_NAV = [
