@@ -8,6 +8,7 @@ import { commsApi, type Client, type ClientDetail, type ApiKey, type Plan } from
 import { fmtDate, fmtNumber } from '../../lib/utils'
 import { pageCache } from '../../lib/cache'
 import { useToast } from '../../components/Toast'
+import { PhoneInput } from '../../components/PhoneInput'
 
 type DrawerTab = 'overview' | 'edit' | 'keys'
 
@@ -313,7 +314,7 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
 
                     <div>
                       <label className={LABEL}>Contact phone</label>
-                      <input className={FIELD} type="tel" value={editPhone} onChange={e => setEditPhone(e.target.value)} placeholder="+234 800 000 0000" />
+                      <PhoneInput value={editPhone} onChange={setEditPhone} inputClassName={FIELD} />
                     </div>
                   </div>
 
@@ -581,7 +582,7 @@ function CreateBusinessModal({ plans, onCreated, onClose }: {
             </div>
             <div>
               <label className={LABEL}>Contact phone <span className="text-muted-foreground/40 normal-case font-normal">(optional)</span></label>
-              <input className={FIELD} placeholder="+234…" value={phone} onChange={e => setPhone(e.target.value)} />
+              <PhoneInput value={phone} onChange={setPhone} inputClassName={FIELD} />
             </div>
           </div>
           {error && <p className="text-xs text-red-400">{error}</p>}

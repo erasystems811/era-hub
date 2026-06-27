@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Wifi, CheckCircle2, AlertCircle, Loader2, ChevronLeft, Mail } from 'lucide-react'
 import { commsApi, Client } from '../../lib/comms-api'
+import { PhoneInput } from '../../components/PhoneInput'
 
 type Step = 'send' | 'verify' | 'done'
 
@@ -122,13 +123,7 @@ export function ConnectSession() {
 
           <div>
             <label className={LABEL}>WhatsApp number to connect</label>
-            <input
-              className={FIELD}
-              type="tel"
-              placeholder="+234 800 000 0000"
-              value={phone}
-              onChange={e => setPhone(e.target.value)}
-            />
+            <PhoneInput value={phone} onChange={setPhone} inputClassName={FIELD} />
           </div>
 
           <div>

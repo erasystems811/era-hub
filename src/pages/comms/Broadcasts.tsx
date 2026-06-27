@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { broadcastApi, commsApi, type Broadcast, type Client } from '../../lib/comms-api'
 import { useToast } from '../../components/Toast'
+import { normalizePhoneList } from '../../components/PhoneInput'
 
 const STATUS_COLOURS: Record<string, string> = {
   draft:     'bg-white/10 text-white/50',
@@ -53,11 +54,7 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
     if (!clientId || !sessionId || !name.trim() || !content.trim()) {
       showToast('Please fill all required fields', 'error'); return
     }
-    const recipients = phones
-      .split(/[\n,]+/)
-      .map(p => p.trim())
-      .filter(Boolean)
-      .map(phoneNumber => ({ phoneNumber }))
+    const recipients = normalizePhoneList(phones)
 
     setSaving(true)
     try {
@@ -131,15 +128,16 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
 
           <div>
             <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
-              Recipients (optional) — one per line or comma-separated E.164
+              Recipients (optional) — one per line or comma-separated
             </label>
             <textarea
               value={phones}
               onChange={e => setPhones(e.target.value)}
               rows={3}
-              placeholder="+2348012345678&#10;+2348087654321"
+              placeholder={"08012345678\n+2348087654321\n8099990000"}
               className="w-full px-3 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/06 text-sm font-mono text-foreground placeholder:text-muted-foreground/40 resize-none"
             />
+            <p className="text-[10px] text-muted-foreground/50 mt-1">Local (08012345678) and international (+2348012345678) formats both accepted</p>
           </div>
         </div>
 

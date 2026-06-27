@@ -154,7 +154,9 @@ export function AIAgentSignup() {
                           style={{ background: 'hsl(262 20% 11%)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(237,233,245,0.5)' }}>
                           +234
                         </span>
-                        <input className={FIELD} type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="800 000 0000" required />
+                        <input className={FIELD} type="tel" inputMode="numeric" value={phone}
+                          onChange={e => { let v = e.target.value.replace(/\D/g, ''); if (v.startsWith('0')) v = v.slice(1); setPhone(v) }}
+                          placeholder="801 234 5678" required />
                       </div>
                     </div>
                   </>
@@ -170,7 +172,9 @@ export function AIAgentSignup() {
                           style={{ background: 'hsl(262 20% 11%)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(237,233,245,0.5)' }}>
                           +234
                         </span>
-                        <input className={FIELD} type="tel" value={waNumber} onChange={e => setWaNumber(e.target.value)} placeholder="800 000 0000" required />
+                        <input className={FIELD} type="tel" inputMode="numeric" value={waNumber}
+                          onChange={e => { let v = e.target.value.replace(/\D/g, ''); if (v.startsWith('0')) v = v.slice(1); setWaNumber(v) }}
+                          placeholder="801 234 5678" required />
                       </div>
                       <p className="text-[11px] mt-2" style={{ color: 'rgba(237,233,245,0.4)' }}>
                         This is the number your customers will message. You'll receive a verification code on this number.

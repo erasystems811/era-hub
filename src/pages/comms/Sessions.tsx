@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, Smartphone, RefreshCw, X, Loader2, KeyRound, UserCircle2, Upload, Hash, Send, ShieldOff, QrCode, Trash2 } from 'lucide-react'
 import { StatusDot } from '../../components/StatusDot'
 import { QRModal } from '../../components/QRModal'
+import { PhoneInput } from '../../components/PhoneInput'
 import { commsApi, Session, Client } from '../../lib/comms-api'
 import { timeAgo, fmtNumber } from '../../lib/utils'
 import { pageCache } from '../../lib/cache'
@@ -58,7 +59,7 @@ function AddSessionModal({ clients, onClose, onCreated }: {
           </div>
           <div>
             <label className="label">WhatsApp number</label>
-            <input className="input" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+2348012345678" />
+            <PhoneInput value={phone} onChange={setPhone} />
           </div>
           <div>
             <label className="label">Role</label>
@@ -439,12 +440,14 @@ export function Sessions() {
           <div className="bg-[#1a1729] border border-white/10 rounded-2xl p-6 w-full max-w-sm">
             <h2 className="text-base font-semibold text-white mb-1">Send test message</h2>
             <p className="text-xs text-white/40 mb-4">Via {testModal.phoneNumber}</p>
-            <input
-              className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/20 mb-2"
-              placeholder="Send to: +2348012345678"
-              value={testTo}
-              onChange={e => setTestTo(e.target.value)}
-            />
+            <div className="mb-2">
+              <PhoneInput
+                value={testTo}
+                onChange={setTestTo}
+                placeholder="801 234 5678"
+                inputClassName="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/20"
+              />
+            </div>
             <textarea
               className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/20 mb-3 resize-none"
               rows={3}
@@ -480,12 +483,13 @@ export function Sessions() {
 
             {!pairingCode ? (
               <>
-                <input
-                  className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/20 mb-3"
-                  placeholder="+2348012345678"
-                  value={pairingPhone}
-                  onChange={e => setPairingPhone(e.target.value)}
-                />
+                <div className="mb-3">
+                  <PhoneInput
+                    value={pairingPhone}
+                    onChange={setPairingPhone}
+                    inputClassName="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/20"
+                  />
+                </div>
                 <div className="flex gap-2">
                   <button onClick={() => setPairingModal(null)} className="flex-1 py-2 rounded-xl border border-white/10 text-sm text-white/50 hover:text-white transition">Cancel</button>
                   <button

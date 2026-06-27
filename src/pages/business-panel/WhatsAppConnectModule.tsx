@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { Loader2, Smartphone, CheckCircle2, RefreshCw, Wifi, WifiOff } from 'lucide-react'
 import { bizApi } from './business-api'
 import { getCommsApi } from '../../lib/config'
+import { PhoneInput } from '../../components/PhoneInput'
 
 type Session = { id: string; phoneNumber: string; status: string; connectedAt: string | null; createdAt: string }
 
@@ -172,12 +173,12 @@ export function WhatsAppConnectModule() {
         <h3 className="text-sm font-semibold text-foreground">Add a New Number</h3>
         <div>
           <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
-            Your WhatsApp Number (E.164)
+            Your WhatsApp Number
           </label>
-          <input
-            value={phone} onChange={e => setPhone(e.target.value)}
-            placeholder="+2348012345678"
-            className="w-full px-3 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/06 text-sm text-foreground placeholder:text-muted-foreground/40 font-mono"
+          <PhoneInput
+            value={phone}
+            onChange={setPhone}
+            inputClassName="w-full px-3 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/06 text-sm text-foreground placeholder:text-muted-foreground/40"
           />
           {error && <p className="text-xs text-red-400 mt-1.5">{error}</p>}
         </div>

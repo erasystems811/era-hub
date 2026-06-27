@@ -622,8 +622,9 @@ export function HospitalDetail() {
               <FieldLabel label="Contact phone">
                 <div className="relative">
                   <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                  <input className="input pl-10" type="text" value={contactPhone}
-                    onChange={e => setContactPhone(e.target.value)} placeholder="+2348000000000" />
+                  <input className="input pl-10" type="tel" inputMode="numeric" value={contactPhone}
+                    onChange={e => setContactPhone(e.target.value.replace(/[^\d+]/g, ''))}
+                    placeholder="+2348012345678" />
                 </div>
               </FieldLabel>
             </div>
@@ -702,8 +703,9 @@ export function HospitalDetail() {
               hint="Shown in automated patient emails so patients know how to reach the hospital directly.">
               <div className="relative">
                 <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                <input className="input pl-10" type="text" value={hospitalPhone}
-                  onChange={e => setHospitalPhone(e.target.value)} placeholder="+2348012345678" />
+                <input className="input pl-10" type="tel" inputMode="numeric" value={hospitalPhone}
+                  onChange={e => setHospitalPhone(e.target.value.replace(/[^\d+]/g, ''))}
+                  placeholder="+2348012345678" />
               </div>
             </FieldLabel>
           </div>
@@ -726,7 +728,7 @@ export function HospitalDetail() {
                 ? 'WhatsApp always uses a phone number as the sender. Enter in international format, e.g. +2348012345678. Each hospital should have their own dedicated WhatsApp number registered with Termii.'
                 : "What patients see as the sender on their phone. Leave blank to use Termii's shared pool number (works immediately). Or enter a dedicated phone number or short name (e.g. CityClinic, max 11 chars) — approval takes a few days."}
             >
-              <input className="input" type="text" value={termiiSenderId}
+              <input className="input" type="tel" inputMode={notifChannel === 'whatsapp' ? 'numeric' : 'text'} value={termiiSenderId}
                 onChange={e => setTermiiSenderId(e.target.value)}
                 placeholder={notifChannel === 'whatsapp' ? '+2348012345678' : '+2348012345678 or HospitalName'} />
             </FieldLabel>

@@ -141,8 +141,15 @@ export function DeveloperSignup() {
 
                 <div>
                   <label className={LABEL}>Contact phone <span style={{ color: 'rgba(237,233,245,0.3)', fontWeight: 400, textTransform: 'none', letterSpacing: 'normal' }}>(optional)</span></label>
-                  <input className={FIELD} type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                    placeholder="+234 800 000 0000" />
+                  <div className="flex gap-2">
+                    <span className="flex items-center px-3 rounded-xl text-sm font-medium shrink-0"
+                      style={{ background: 'hsl(262 20% 11%)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(237,233,245,0.5)' }}>
+                      +234
+                    </span>
+                    <input className={FIELD} type="tel" inputMode="numeric" value={phone}
+                      onChange={e => { let v = e.target.value.replace(/\D/g, ''); if (v.startsWith('0')) v = v.slice(1); setPhone(v) }}
+                      placeholder="801 234 5678" />
+                  </div>
                 </div>
 
                 <div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Save, X } from 'lucide-react'
 import { bizApi, type HandoffConfig } from './business-api'
+import { PhoneInput } from '../../components/PhoneInput'
 
 const INPUT = 'w-full px-3.5 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/[0.10] text-foreground text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/15 transition-all'
 const LABEL = 'text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-1.5 block'
@@ -130,9 +131,7 @@ export function HandoffModule() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={LABEL}>Alert via WhatsApp</label>
-            <input className={INPUT} placeholder="+234 800 000 0000"
-              value={cfg.alertWhatsApp}
-              onChange={e => set('alertWhatsApp', e.target.value)} />
+            <PhoneInput value={cfg.alertWhatsApp} onChange={v => set('alertWhatsApp', v)} inputClassName={INPUT} />
           </div>
           <div>
             <label className={LABEL}>Alert via email</label>
