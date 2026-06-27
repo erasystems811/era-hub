@@ -178,18 +178,21 @@ export function CoreChat() {
         buf = parts.pop() ?? ''
         for (const part of parts) {
           if (!part.startsWith('data: ')) continue
+          let data: Record<string, unknown>
           try {
-            const data = JSON.parse(part.slice(6))
-            if (data.text) {
-              fullText += data.text
-              setStreamText(fullText)
-            }
-            if (data.done) {
-              finalSessionId = data.session_id ?? sid
-            }
-            if (data.error) throw new Error(data.error)
-          } catch (parseErr) {
-            // skip malformed SSE line
+            data = JSON.parse(part.slice(6))
+          } catch {
+            continue  // skip malformed SSE line
+          }
+          if (typeof data.text === 'string') {
+            fullText += data.text
+            setStreamText(fullText)
+          }
+          if (data.done) {
+            finalSessionId = (data.session_id as string) ?? sid
+          }
+          if (data.error) {
+            throw new Error(data.error as string)
           }
         }
       }
