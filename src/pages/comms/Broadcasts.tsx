@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import {
   Loader2, Upload, Plus, Send, X, Users, CheckCircle2,
-  AlertCircle, Clock, Trash2, Pencil, Copy,
+  AlertCircle, Clock, Trash2, Pencil, Copy, ChevronDown, ChevronUp,
 } from 'lucide-react'
-import { broadcastApi, commsApi, type Broadcast, type Client } from '../../lib/comms-api'
+import { broadcastApi, commsApi, type Broadcast, type BroadcastDetail, type Client } from '../../lib/comms-api'
 import { useToast } from '../../components/Toast'
 import { normalizePhoneList } from '../../components/PhoneInput'
 import { EmptyState } from '../../components/EmptyState'
@@ -158,8 +158,11 @@ export function Broadcasts() {
   const [duplicating, setDuplicating] = useState<string | null>(null)
   const [savingCreate, setSavingCreate] = useState(false)
   const [savingEdit, setSavingEdit]     = useState(false)
-  const [editPhones, setEditPhones]     = useState('')
-  const [loadingEdit, setLoadingEdit]   = useState<string | null>(null)
+  const [editPhones, setEditPhones]         = useState('')
+  const [loadingEdit, setLoadingEdit]       = useState<string | null>(null)
+  const [expandedId, setExpandedId]         = useState<string | null>(null)
+  const [detail, setDetail]                 = useState<BroadcastDetail | null>(null)
+  const [loadingDetail, setLoadingDetail]   = useState(false)
 
   async function load() {
     setLoading(true)
@@ -276,11 +279,20 @@ export function Broadcasts() {
         />
       ) : (
         <div className="space-y-2">
-          {broadcasts.map(b => (
-            <div key={b.id} className="rounded-2xl border border-white/06 bg-card p-4 flex items-center gap-4 hover:border-white/10 transition-colors">
+          {broadcasts.map(b => {
+            const isExpanded = expandedId === b.id
+            const stripeColor = b.status === 'sent' && b.totalFailed > 0 ? '#EAB308'
+              : b.status === 'sent' ? '#4AA89D'
+              : b.status === 'sending' ? '#EAB308'
+              : b.status === 'cancelled' ? '#ef4444'
+              : 'rgba(255,255,255,0.12)'
+
+            return (
+            <div key={b.id} className="rounded-2xl border border-white/06 bg-card overflow-hidden hover:border-white/10 transition-colors">
+              {/* Main row */}
+              <div className="p-4 flex items-center gap-4">
               {/* Status stripe */}
-              <div className="w-1 self-stretch rounded-full shrink-0"
-                style={{ background: b.status === 'sent' ? '#4AA89D' : b.status === 'sending' ? '#EAB308' : b.status === 'cancelled' ? '#ef4444' : 'rgba(255,255,255,0.12)' }} />
+              <div className="w-1 self-stretch rounded-full shrink-0" style={{ background: stripeColor }} />
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
@@ -357,9 +369,58 @@ export function Broadcasts() {
                     Resend
                   </button>
                 )}
+
+                {/* Expand / collapse recipient list */}
+                <button
+                  onClick={async () => {
+                    if (isExpanded) { setExpandedId(null); setDetail(null); return }
+                    setExpandedId(b.id)
+                    setDetail(null)
+                    setLoadingDetail(true)
+                    try { setDetail(await broadcastApi.get(b.id)) }
+                    catch { /* ignore */ }
+                    finally { setLoadingDetail(false) }
+                  }}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/05 transition-colors"
+                  title="Show recipients">
+                  {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </button>
               </div>
+              </div>{/* end main row */}
+
+              {/* Recipient detail panel */}
+              {isExpanded && (
+                <div className="border-t border-white/05 bg-black/20 px-5 py-3">
+                  {loadingDetail ? (
+                    <div className="flex items-center gap-2 py-2">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Loading recipients…</span>
+                    </div>
+                  ) : !detail ? (
+                    <p className="text-xs text-muted-foreground py-1">Failed to load recipients.</p>
+                  ) : detail.recipients.length === 0 ? (
+                    <p className="text-xs text-muted-foreground py-1">No recipients added yet.</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {detail.recipients.map(r => (
+                        <div key={r.id} className="flex items-center gap-3">
+                          {r.status === 'sent'    && <CheckCircle2 className="w-3.5 h-3.5 text-teal shrink-0" />}
+                          {r.status === 'failed'  && <AlertCircle  className="w-3.5 h-3.5 text-red-400 shrink-0" />}
+                          {r.status === 'pending' && <Clock        className="w-3.5 h-3.5 text-yellow-400 shrink-0" />}
+                          <span className="text-xs font-mono text-foreground">{r.phoneNumber}</span>
+                          {r.name && <span className="text-[10px] text-muted-foreground/60">{r.name}</span>}
+                          {r.status === 'failed' && r.error && (
+                            <span className="text-[10px] text-red-400/80 truncate max-w-xs" title={r.error}>{r.error}</span>
+                          )}
+                          {r.status === 'pending' && <span className="text-[10px] text-yellow-400/70">queued</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          ))}
+          )})}
         </div>
       )}
 
