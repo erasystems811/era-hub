@@ -184,12 +184,14 @@ function FlowDetailPanel({ flow, onClose, onChanged }: {
 
 function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const showToast = useToast()
-  const [clients, setClients]     = useState<Client[]>([])
-  const [clientId, setClientId]   = useState('')
-  const [sessionId, setSessionId] = useState('')
-  const [name, setName]           = useState('')
-  const [description, setDescription] = useState('')
-  const [triggerType, setTriggerType] = useState<'manual' | 'api'>('manual')
+  const [clients, setClients]           = useState<Client[]>([])
+  const [clientId, setClientId]         = useState('')
+  const [sessionId, setSessionId]       = useState('')
+  const [sessions, setSessions]         = useState<{ id: string; phoneNumber: string }[]>([])
+  const [loadingSessions, setLoadingSessions] = useState(false)
+  const [name, setName]                 = useState('')
+  const [description, setDescription]  = useState('')
+  const [triggerType, setTriggerType]  = useState<'manual' | 'api'>('manual')
   type Step = { stepType: 'send_message' | 'wait'; content: string; contentType: string; delayMinutes: number }
   const [steps, setSteps] = useState<Step[]>([
     { stepType: 'send_message', content: '', contentType: 'text', delayMinutes: 0 },
@@ -199,6 +201,18 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
   useEffect(() => {
     commsApi.listClients().then(setClients).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (!clientId) { setSessions([]); setSessionId(''); return }
+    setLoadingSessions(true)
+    commsApi.getClient(clientId)
+      .then(detail => {
+        setSessions(detail.sessions.map(s => ({ id: s.id, phoneNumber: s.phoneNumber })))
+        setSessionId(detail.sessions[0]?.id ?? '')
+      })
+      .catch(() => {})
+      .finally(() => setLoadingSessions(false))
+  }, [clientId])
 
   function addStep() {
     setSteps(prev => [...prev, { stepType: 'send_message', content: '', contentType: 'text', delayMinutes: 1440 }])
@@ -243,9 +257,15 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
           </div>
 
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Session ID *</label>
-            <input value={sessionId} onChange={e => setSessionId(e.target.value)} placeholder="Paste session UUID"
-              className="w-full px-3 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/06 text-sm text-foreground placeholder:text-muted-foreground/40" />
+            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">WhatsApp Number *</label>
+            <select value={sessionId} onChange={e => setSessionId(e.target.value)}
+              disabled={!clientId || loadingSessions}
+              className="w-full px-3 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/06 text-sm text-foreground disabled:opacity-50">
+              {!clientId && <option value="">Pick a business first…</option>}
+              {clientId && loadingSessions && <option value="">Loading numbers…</option>}
+              {clientId && !loadingSessions && sessions.length === 0 && <option value="">No numbers connected</option>}
+              {sessions.map(s => <option key={s.id} value={s.id}>{s.phoneNumber}</option>)}
+            </select>
           </div>
 
           <div>

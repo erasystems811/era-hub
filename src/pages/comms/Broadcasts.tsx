@@ -23,21 +23,31 @@ function StatusBadge({ status }: { status: string }) {
 
 function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const showToast = useToast()
-  const [clients, setClients]     = useState<Client[]>([])
-  const [clientId, setClientId]   = useState('')
-  const [sessionId, setSessionId] = useState('')
-  const [name, setName]           = useState('')
-  const [content, setContent]     = useState('')
-  const [phones, setPhones]       = useState('')
-  const [saving, setSaving]       = useState(false)
+  const [clients, setClients]       = useState<Client[]>([])
+  const [clientId, setClientId]     = useState('')
+  const [sessionId, setSessionId]   = useState('')
+  const [sessions, setSessions]     = useState<{ id: string; phoneNumber: string }[]>([])
+  const [loadingSessions, setLoadingSessions] = useState(false)
+  const [name, setName]             = useState('')
+  const [content, setContent]       = useState('')
+  const [phones, setPhones]         = useState('')
+  const [saving, setSaving]         = useState(false)
 
   useEffect(() => {
     commsApi.listClients().then(setClients).catch(() => {})
   }, [])
 
-  const sessions = clients.find(c => c.id === clientId)
-    ? [] // we load from full client detail if needed — for now just require clientId + manual sessionId
-    : []
+  useEffect(() => {
+    if (!clientId) { setSessions([]); setSessionId(''); return }
+    setLoadingSessions(true)
+    commsApi.getClient(clientId)
+      .then(detail => {
+        setSessions(detail.sessions.map(s => ({ id: s.id, phoneNumber: s.phoneNumber })))
+        setSessionId(detail.sessions[0]?.id ?? '')
+      })
+      .catch(() => {})
+      .finally(() => setLoadingSessions(false))
+  }, [clientId])
 
   async function submit() {
     if (!clientId || !sessionId || !name.trim() || !content.trim()) {
@@ -84,13 +94,18 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
           </div>
 
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Session ID *</label>
-            <input
+            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">WhatsApp Number *</label>
+            <select
               value={sessionId}
               onChange={e => setSessionId(e.target.value)}
-              placeholder="Paste session UUID"
-              className="w-full px-3 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/06 text-sm text-foreground placeholder:text-muted-foreground/40"
-            />
+              disabled={!clientId || loadingSessions}
+              className="w-full px-3 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/06 text-sm text-foreground disabled:opacity-50"
+            >
+              {!clientId && <option value="">Pick a business first…</option>}
+              {clientId && loadingSessions && <option value="">Loading numbers…</option>}
+              {clientId && !loadingSessions && sessions.length === 0 && <option value="">No numbers connected</option>}
+              {sessions.map(s => <option key={s.id} value={s.id}>{s.phoneNumber}</option>)}
+            </select>
           </div>
 
           <div>
