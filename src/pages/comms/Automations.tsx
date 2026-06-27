@@ -9,6 +9,7 @@ import {
 } from '../../lib/comms-api'
 import { useToast } from '../../components/Toast'
 import { normalizePhoneList } from '../../components/PhoneInput'
+import { EmptyState } from '../../components/EmptyState'
 
 const STATUS_COLOURS: Record<string, string> = {
   active: 'bg-teal/15 text-teal',
@@ -393,13 +394,13 @@ export function Automations() {
       {loading ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
       ) : flows.length === 0 ? (
-        <div className="text-center py-20">
-          <Zap className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
-          <p className="text-sm text-muted-foreground">No automation flows yet</p>
-          <button onClick={() => setShowCreate(true)} className="mt-3 text-sm font-medium" style={{ color: '#C4286F' }}>
-            Create your first flow →
-          </button>
-        </div>
+        <EmptyState
+          icon={<Zap className="w-full h-full" />}
+          title="No automation flows yet"
+          description="Automate your WhatsApp conversations — enroll contacts and send them a timed sequence of messages without manual effort."
+          action={{ label: 'Create first flow', onClick: () => setShowCreate(true) }}
+          accent="#C4286F"
+        />
       ) : (
         <div className="space-y-2">
           {flows.map(f => (

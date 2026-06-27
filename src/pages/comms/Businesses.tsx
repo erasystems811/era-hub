@@ -9,6 +9,7 @@ import { fmtDate, fmtNumber } from '../../lib/utils'
 import { pageCache } from '../../lib/cache'
 import { useToast } from '../../components/Toast'
 import { PhoneInput } from '../../components/PhoneInput'
+import { EmptyState } from '../../components/EmptyState'
 
 type DrawerTab = 'overview' | 'edit' | 'keys'
 
@@ -665,12 +666,13 @@ export function Businesses() {
           <Loader2 className="w-4 h-4 animate-spin" /> Loading businesses…
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-white/07 bg-card flex flex-col items-center justify-center py-16 gap-3">
-          <Users className="w-10 h-10 text-muted-foreground/20" />
-          <p className="font-semibold text-foreground">{search ? 'No businesses match your search' : 'No businesses yet'}</p>
-          <p className="caption text-sm">{search ? 'Try a different name or slug' : 'Onboard your first business to start managing comms'}</p>
-          {!search && <button className="btn-primary mt-1" onClick={() => setShowCreate(true)}>Add first business</button>}
-        </div>
+        <EmptyState
+          icon={<Users className="w-full h-full" />}
+          title={search ? 'No businesses match your search' : 'No businesses yet'}
+          description={search ? 'Try a different name or slug.' : 'Onboard your first business to manage their WhatsApp comms, automations, and billing from one place.'}
+          action={!search ? { label: 'Add first business', onClick: () => setShowCreate(true) } : undefined}
+          accent="#4AA89D"
+        />
       ) : (
         <div className="rounded-2xl border border-white/07 bg-card overflow-hidden">
           <div className="overflow-x-auto">

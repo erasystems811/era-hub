@@ -433,6 +433,12 @@ export const broadcastApi = {
   addRecipients: (id: string, recipients: { phoneNumber: string; name?: string }[]) =>
     post<{ added: number; invalid: number }>(`/broadcasts/${id}/recipients`, { recipients }),
 
+  edit: (id: string, data: { name?: string; content?: string; recipients?: { phoneNumber: string }[] }) =>
+    patch<{ id: string }>(`/broadcasts/${id}`, data),
+
+  duplicate: (id: string) =>
+    post<{ id: string; createdAt: string }>(`/broadcasts/${id}/duplicate`, {}),
+
   send:   (id: string) => post<{ queued: number }>(`/broadcasts/${id}/send`, {}),
   cancel: (id: string) => post<{ cancelled: boolean }>(`/broadcasts/${id}/cancel`, {}),
   delete: (id: string) => del<void>(`/broadcasts/${id}`),

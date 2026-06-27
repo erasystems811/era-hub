@@ -4,6 +4,7 @@ import { Plus, Smartphone, RefreshCw, X, Loader2, KeyRound, UserCircle2, Upload,
 import { StatusDot } from '../../components/StatusDot'
 import { QRModal } from '../../components/QRModal'
 import { PhoneInput } from '../../components/PhoneInput'
+import { EmptyState } from '../../components/EmptyState'
 import { commsApi, Session, Client } from '../../lib/comms-api'
 import { timeAgo, fmtNumber } from '../../lib/utils'
 import { pageCache } from '../../lib/cache'
@@ -315,12 +316,13 @@ export function Sessions() {
           <Loader2 className="w-4 h-4 animate-spin" /> Loading sessions…
         </div>
       ) : sessions.length === 0 ? (
-        <div className="rounded-2xl border border-white/07 bg-card flex flex-col items-center justify-center py-16 gap-3">
-          <Smartphone className="w-10 h-10 text-muted-foreground/20" />
-          <p className="font-semibold text-foreground">No WhatsApp numbers connected yet</p>
-          <p className="caption text-sm">Connect the first number to start sending messages</p>
-          <button className="btn-primary mt-1" onClick={() => setShowAdd(true)}>Connect a number</button>
-        </div>
+        <EmptyState
+          icon={<Smartphone className="w-full h-full" />}
+          title="No WhatsApp numbers connected yet"
+          description="Connect a WhatsApp number to start sending messages, automations, and broadcasts to your customers."
+          action={{ label: 'Connect a number', onClick: () => setShowAdd(true) }}
+          accent="#4AA89D"
+        />
       ) : (
         <div className="rounded-2xl border border-white/07 bg-card overflow-hidden">
           <div className="overflow-x-auto">

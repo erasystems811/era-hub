@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
   Loader2, Upload, Plus, Send, X, Users, CheckCircle2,
-  AlertCircle, Clock, ChevronRight, Trash2,
+  AlertCircle, Clock, Trash2, Pencil, Copy,
 } from 'lucide-react'
 import { broadcastApi, commsApi, type Broadcast, type Client } from '../../lib/comms-api'
 import { useToast } from '../../components/Toast'
 import { normalizePhoneList } from '../../components/PhoneInput'
+import { EmptyState } from '../../components/EmptyState'
 
 const STATUS_COLOURS: Record<string, string> = {
   draft:     'bg-white/10 text-white/50',
@@ -22,136 +23,118 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const showToast = useToast()
+const MODAL_FIELD = "w-full px-3 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/06 text-sm text-foreground placeholder:text-muted-foreground/40"
+const MODAL_LABEL = "text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1"
+
+interface BroadcastFormProps {
+  title: string
+  initialName?: string
+  initialContent?: string
+  initialPhones?: string
+  showBusinessPicker?: boolean  // false when editing (business can't change)
+  initialClientId?: string
+  initialSessionId?: string
+  saving: boolean
+  onSubmit: (data: { name: string; content: string; phones: string; clientId: string; sessionId: string }) => void
+  onClose: () => void
+  submitLabel: string
+}
+
+function BroadcastForm({
+  title, initialName = '', initialContent = '', initialPhones = '',
+  showBusinessPicker = true, initialClientId = '', initialSessionId = '',
+  saving, onSubmit, onClose, submitLabel,
+}: BroadcastFormProps) {
   const [clients, setClients]       = useState<Client[]>([])
-  const [clientId, setClientId]     = useState('')
-  const [sessionId, setSessionId]   = useState('')
+  const [clientId, setClientId]     = useState(initialClientId)
+  const [sessionId, setSessionId]   = useState(initialSessionId)
   const [sessions, setSessions]     = useState<{ id: string; phoneNumber: string }[]>([])
   const [loadingSessions, setLoadingSessions] = useState(false)
-  const [name, setName]             = useState('')
-  const [content, setContent]       = useState('')
-  const [phones, setPhones]         = useState('')
-  const [saving, setSaving]         = useState(false)
+  const [name, setName]             = useState(initialName)
+  const [content, setContent]       = useState(initialContent)
+  const [phones, setPhones]         = useState(initialPhones)
 
   useEffect(() => {
-    commsApi.listClients().then(setClients).catch(() => {})
-  }, [])
+    if (showBusinessPicker) commsApi.listClients().then(setClients).catch(() => {})
+  }, [showBusinessPicker])
 
   useEffect(() => {
     if (!clientId) { setSessions([]); setSessionId(''); return }
     setLoadingSessions(true)
     commsApi.getClient(clientId)
       .then(detail => {
-        setSessions(detail.sessions.map(s => ({ id: s.id, phoneNumber: s.phoneNumber })))
-        setSessionId(detail.sessions[0]?.id ?? '')
+        const s = detail.sessions.map(s => ({ id: s.id, phoneNumber: s.phoneNumber }))
+        setSessions(s)
+        setSessionId(prev => prev || (s[0]?.id ?? ''))
       })
       .catch(() => {})
       .finally(() => setLoadingSessions(false))
   }, [clientId])
 
-  async function submit() {
-    if (!clientId || !sessionId || !name.trim() || !content.trim()) {
-      showToast('Please fill all required fields', 'error'); return
-    }
-    const recipients = normalizePhoneList(phones)
-
-    setSaving(true)
-    try {
-      await broadcastApi.create({ clientId, sessionId, name: name.trim(), content: content.trim(), recipients })
-      showToast('Broadcast created', 'success')
-      onCreated()
-      onClose()
-    } catch (e) {
-      showToast((e as Error).message, 'error')
-    } finally {
-      setSaving(false)
-    }
-  }
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-card shadow-card-lg p-6 space-y-4">
+      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-card shadow-card-lg p-6 space-y-4 max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-foreground">New Broadcast</h2>
+          <h2 className="text-base font-bold text-foreground">{title}</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="space-y-3">
+          {showBusinessPicker && (
+            <>
+              <div>
+                <label className={MODAL_LABEL}>Business *</label>
+                <select value={clientId} onChange={e => setClientId(e.target.value)} className={MODAL_FIELD}>
+                  <option value="">Select business…</option>
+                  {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className={MODAL_LABEL}>WhatsApp Number *</label>
+                <select value={sessionId} onChange={e => setSessionId(e.target.value)}
+                  disabled={!clientId || loadingSessions} className={`${MODAL_FIELD} disabled:opacity-50`}>
+                  {!clientId && <option value="">Pick a business first…</option>}
+                  {clientId && loadingSessions && <option value="">Loading numbers…</option>}
+                  {clientId && !loadingSessions && sessions.length === 0 && <option value="">No numbers connected</option>}
+                  {sessions.map(s => <option key={s.id} value={s.id}>{s.phoneNumber}</option>)}
+                </select>
+              </div>
+            </>
+          )}
+
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Business *</label>
-            <select
-              value={clientId}
-              onChange={e => setClientId(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/06 text-sm text-foreground"
-            >
-              <option value="">Select business…</option>
-              {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <label className={MODAL_LABEL}>Broadcast Name *</label>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. June Promo" className={MODAL_FIELD} />
           </div>
 
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">WhatsApp Number *</label>
-            <select
-              value={sessionId}
-              onChange={e => setSessionId(e.target.value)}
-              disabled={!clientId || loadingSessions}
-              className="w-full px-3 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/06 text-sm text-foreground disabled:opacity-50"
-            >
-              {!clientId && <option value="">Pick a business first…</option>}
-              {clientId && loadingSessions && <option value="">Loading numbers…</option>}
-              {clientId && !loadingSessions && sessions.length === 0 && <option value="">No numbers connected</option>}
-              {sessions.map(s => <option key={s.id} value={s.id}>{s.phoneNumber}</option>)}
-            </select>
+            <label className={MODAL_LABEL}>Message *</label>
+            <textarea value={content} onChange={e => setContent(e.target.value)} rows={4}
+              placeholder="Type your message here…" className={`${MODAL_FIELD} resize-none`} />
+            <p className="text-[10px] text-muted-foreground/50 mt-1">{content.length} characters</p>
           </div>
 
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Broadcast Name *</label>
-            <input
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="e.g. June Promo"
-              className="w-full px-3 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/06 text-sm text-foreground placeholder:text-muted-foreground/40"
-            />
-          </div>
-
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Message *</label>
-            <textarea
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              rows={4}
-              placeholder="Type your message here…"
-              className="w-full px-3 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/06 text-sm text-foreground placeholder:text-muted-foreground/40 resize-none"
-            />
-          </div>
-
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
-              Recipients (optional) — one per line or comma-separated
-            </label>
-            <textarea
-              value={phones}
-              onChange={e => setPhones(e.target.value)}
-              rows={3}
+            <label className={MODAL_LABEL}>Recipients — one per line or comma-separated</label>
+            <textarea value={phones} onChange={e => setPhones(e.target.value)} rows={3}
               placeholder={"08012345678\n+2348087654321\n8099990000"}
-              className="w-full px-3 py-2.5 rounded-xl bg-[hsl(262_20%_11%)] border border-white/06 text-sm font-mono text-foreground placeholder:text-muted-foreground/40 resize-none"
-            />
-            <p className="text-[10px] text-muted-foreground/50 mt-1">Local (08012345678) and international (+2348012345678) formats both accepted</p>
+              className={`${MODAL_FIELD} font-mono resize-none`} />
+            <p className="text-[10px] text-muted-foreground/50 mt-1">
+              Local (08012345678) and international (+2348012345678) formats both accepted
+            </p>
           </div>
         </div>
 
         <div className="flex gap-3 pt-1">
-          <button onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={onClose}
+            className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-sm text-muted-foreground hover:text-foreground transition-colors">
             Cancel
           </button>
-          <button
-            onClick={submit}
+          <button onClick={() => onSubmit({ name, content, phones, clientId, sessionId })}
             disabled={saving}
             className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity disabled:opacity-50"
-            style={{ background: '#C4286F' }}
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Create Broadcast'}
+            style={{ background: '#C4286F' }}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : submitLabel}
           </button>
         </div>
       </div>
@@ -164,20 +147,56 @@ export function Broadcasts() {
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([])
   const [loading, setLoading]       = useState(true)
   const [showCreate, setShowCreate] = useState(false)
+  const [editBroadcast, setEditBroadcast] = useState<Broadcast | null>(null)
   const [sending, setSending]       = useState<string | null>(null)
+  const [duplicating, setDuplicating] = useState<string | null>(null)
+  const [savingCreate, setSavingCreate] = useState(false)
+  const [savingEdit, setSavingEdit]     = useState(false)
 
   async function load() {
     setLoading(true)
-    try {
-      setBroadcasts(await broadcastApi.list())
-    } catch (e) {
-      showToast((e as Error).message, 'error')
-    } finally {
-      setLoading(false)
-    }
+    try { setBroadcasts(await broadcastApi.list()) }
+    catch (e) { showToast((e as Error).message, 'error') }
+    finally { setLoading(false) }
   }
 
   useEffect(() => { void load() }, [])
+
+  async function handleCreate({ name, content, phones, clientId, sessionId }: {
+    name: string; content: string; phones: string; clientId: string; sessionId: string
+  }) {
+    if (!clientId || !sessionId || !name.trim() || !content.trim()) {
+      showToast('Please fill all required fields', 'error'); return
+    }
+    setSavingCreate(true)
+    try {
+      await broadcastApi.create({ clientId, sessionId, name: name.trim(), content: content.trim(), recipients: normalizePhoneList(phones) })
+      showToast('Broadcast created', 'success')
+      setShowCreate(false)
+      void load()
+    } catch (e) { showToast((e as Error).message, 'error') }
+    finally { setSavingCreate(false) }
+  }
+
+  async function handleEdit({ name, content, phones }: {
+    name: string; content: string; phones: string; clientId: string; sessionId: string
+  }) {
+    if (!editBroadcast || !name.trim() || !content.trim()) {
+      showToast('Name and message are required', 'error'); return
+    }
+    setSavingEdit(true)
+    try {
+      await broadcastApi.edit(editBroadcast.id, {
+        name: name.trim(),
+        content: content.trim(),
+        recipients: phones.trim() ? normalizePhoneList(phones) : undefined,
+      })
+      showToast('Broadcast updated', 'success')
+      setEditBroadcast(null)
+      void load()
+    } catch (e) { showToast((e as Error).message, 'error') }
+    finally { setSavingEdit(false) }
+  }
 
   async function send(id: string) {
     setSending(id)
@@ -185,11 +204,18 @@ export function Broadcasts() {
       const res = await broadcastApi.send(id)
       showToast(`Queued ${res.queued} messages`, 'success')
       void load()
-    } catch (e) {
-      showToast((e as Error).message, 'error')
-    } finally {
-      setSending(null)
-    }
+    } catch (e) { showToast((e as Error).message, 'error') }
+    finally { setSending(null) }
+  }
+
+  async function duplicate(b: Broadcast) {
+    setDuplicating(b.id)
+    try {
+      await broadcastApi.duplicate(b.id)
+      showToast(`"${b.name}" duplicated as draft`, 'success')
+      void load()
+    } catch (e) { showToast((e as Error).message, 'error') }
+    finally { setDuplicating(null) }
   }
 
   async function cancel(id: string) {
@@ -197,9 +223,7 @@ export function Broadcasts() {
       await broadcastApi.cancel(id)
       showToast('Broadcast cancelled', 'success')
       void load()
-    } catch (e) {
-      showToast((e as Error).message, 'error')
-    }
+    } catch (e) { showToast((e as Error).message, 'error') }
   }
 
   async function remove(id: string) {
@@ -208,9 +232,7 @@ export function Broadcasts() {
       await broadcastApi.delete(id)
       showToast('Deleted', 'success')
       void load()
-    } catch (e) {
-      showToast((e as Error).message, 'error')
-    }
+    } catch (e) { showToast((e as Error).message, 'error') }
   }
 
   return (
@@ -226,11 +248,9 @@ export function Broadcasts() {
             <p className="text-xs text-muted-foreground">Bulk WhatsApp campaigns</p>
           </div>
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
+        <button onClick={() => setShowCreate(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
-          style={{ background: '#C4286F' }}
-        >
+          style={{ background: '#C4286F' }}>
           <Plus className="w-3.5 h-3.5" /> New Broadcast
         </button>
       </div>
@@ -239,69 +259,83 @@ export function Broadcasts() {
       {loading ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
       ) : broadcasts.length === 0 ? (
-        <div className="text-center py-20">
-          <Upload className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
-          <p className="text-sm text-muted-foreground">No broadcasts yet</p>
-          <button onClick={() => setShowCreate(true)} className="mt-3 text-sm font-medium" style={{ color: '#C4286F' }}>
-            Create your first broadcast →
-          </button>
-        </div>
+        <EmptyState
+          icon={<Upload className="w-full h-full" />}
+          title="No broadcasts yet"
+          description="Send a message to hundreds of contacts at once. Create your first broadcast campaign to get started."
+          action={{ label: 'Create broadcast', onClick: () => setShowCreate(true) }}
+          accent="#C4286F"
+        />
       ) : (
         <div className="space-y-2">
           {broadcasts.map(b => (
-            <div key={b.id} className="rounded-2xl border border-white/06 bg-card p-4 flex items-center gap-4">
+            <div key={b.id} className="rounded-2xl border border-white/06 bg-card p-4 flex items-center gap-4 hover:border-white/10 transition-colors">
+              {/* Status stripe */}
+              <div className="w-1 self-stretch rounded-full shrink-0"
+                style={{ background: b.status === 'sent' ? '#4AA89D' : b.status === 'sending' ? '#EAB308' : b.status === 'cancelled' ? '#ef4444' : 'rgba(255,255,255,0.12)' }} />
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-sm font-semibold text-foreground truncate">{b.name}</span>
                   <StatusBadge status={b.status} />
+                  <span className="text-[10px] text-muted-foreground/50 ml-1">{b.clientName}</span>
                 </div>
-                <p className="text-xs text-muted-foreground truncate">{b.content}</p>
+                <p className="text-xs text-muted-foreground truncate max-w-md">{b.content}</p>
                 <div className="flex items-center gap-4 mt-2">
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <Users className="w-3 h-3" /> {b.totalRecipients} recipients
                   </span>
-                  <span className="text-xs text-teal flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> {b.totalSent} sent
-                  </span>
+                  {b.totalSent > 0 && (
+                    <span className="text-xs text-teal flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> {b.totalSent} sent
+                    </span>
+                  )}
                   {b.totalFailed > 0 && (
                     <span className="text-xs text-red-400 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" /> {b.totalFailed} failed
                     </span>
                   )}
-                  <span className="text-xs text-muted-foreground">{b.clientName}</span>
+                  {b.status === 'sending' && (
+                    <span className="text-xs text-yellow-400 flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> Sending…
+                    </span>
+                  )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1.5 shrink-0">
                 {b.status === 'draft' && (
                   <>
-                    <button
-                      onClick={() => void send(b.id)}
-                      disabled={sending === b.id}
+                    <button onClick={() => setEditBroadcast(b)}
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/05 transition-colors"
+                      title="Edit broadcast">
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => void send(b.id)} disabled={sending === b.id}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-50"
-                      style={{ background: '#C4286F' }}
-                    >
+                      style={{ background: '#C4286F' }}>
                       {sending === b.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
                       Send
                     </button>
-                    <button
-                      onClick={() => void remove(b.id)}
-                      className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 transition-colors"
-                    >
+                    <button onClick={() => void remove(b.id)}
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </>
                 )}
                 {b.status === 'sending' && (
-                  <button
-                    onClick={() => void cancel(b.id)}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border border-white/10 text-muted-foreground hover:text-foreground"
-                  >
+                  <button onClick={() => void cancel(b.id)}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border border-white/10 text-muted-foreground hover:text-foreground">
                     <X className="w-3 h-3" /> Cancel
                   </button>
                 )}
-                {b.status === 'sent' && (
-                  <span className="text-xs text-teal flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Done</span>
+                {(b.status === 'sent' || b.status === 'cancelled') && (
+                  <button onClick={() => void duplicate(b)} disabled={duplicating === b.id}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/05 transition-colors disabled:opacity-50"
+                    title="Duplicate as new draft">
+                    {duplicating === b.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Copy className="w-3 h-3" />}
+                    Resend
+                  </button>
                 )}
               </div>
             </div>
@@ -309,7 +343,31 @@ export function Broadcasts() {
         </div>
       )}
 
-      {showCreate && <CreateModal onClose={() => setShowCreate(false)} onCreated={() => void load()} />}
+      {showCreate && (
+        <BroadcastForm
+          title="New Broadcast"
+          showBusinessPicker
+          saving={savingCreate}
+          onSubmit={handleCreate}
+          onClose={() => setShowCreate(false)}
+          submitLabel="Create Broadcast"
+        />
+      )}
+
+      {editBroadcast && (
+        <BroadcastForm
+          title={`Edit — ${editBroadcast.name}`}
+          showBusinessPicker={false}
+          initialClientId={editBroadcast.clientId}
+          initialSessionId=""
+          initialName={editBroadcast.name}
+          initialContent={editBroadcast.content}
+          saving={savingEdit}
+          onSubmit={handleEdit}
+          onClose={() => setEditBroadcast(null)}
+          submitLabel="Save Changes"
+        />
+      )}
     </div>
   )
 }
