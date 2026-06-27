@@ -11,11 +11,19 @@ function TempPasswordModal({
   businessName,
   email,
   tempPassword,
+  emailSent,
+  whatsappSent,
+  whatsappNote,
+  contactPhone,
   onClose,
 }: {
   businessName: string
   email: string
   tempPassword: string
+  emailSent: boolean
+  whatsappSent: boolean
+  whatsappNote: string
+  contactPhone: string | null
   onClose: () => void
 }) {
   const [copied, setCopied] = useState<'email' | 'pwd' | null>(null)
@@ -26,6 +34,8 @@ function TempPasswordModal({
       setTimeout(() => setCopied(null), 2000)
     })
   }
+
+  const allSent = emailSent && (whatsappSent || !contactPhone)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -41,12 +51,34 @@ function TempPasswordModal({
           </div>
         </div>
 
-        {/* Instructions */}
-        <div className="rounded-xl bg-teal/8 border border-teal/15 px-4 py-3 text-xs text-teal/90 leading-relaxed">
-          Share these two things with the business owner. They use them to log in at{' '}
-          <span className="font-mono font-semibold">/biz/login</span>.
-          The password is shown <span className="font-semibold">once only</span> — copy it now.
+        {/* Delivery status */}
+        <div className={`rounded-xl border px-4 py-3 space-y-1.5 ${allSent ? 'bg-teal/8 border-teal/15' : 'bg-amber-500/8 border-amber-500/15'}`}>
+          <div className="flex items-center gap-2 text-xs">
+            {emailSent
+              ? <CheckCircle2 className="w-3.5 h-3.5 text-teal shrink-0" />
+              : <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+            <span className={emailSent ? 'text-teal/90' : 'text-amber-400'}>
+              {emailSent ? `Email sent to ${email}` : `Email not sent — Postal may not be configured`}
+            </span>
+          </div>
+          {contactPhone && (
+            <div className="flex items-center gap-2 text-xs">
+              {whatsappSent
+                ? <CheckCircle2 className="w-3.5 h-3.5 text-teal shrink-0" />
+                : <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+              <span className={whatsappSent ? 'text-teal/90' : 'text-amber-400'}>
+                {whatsappSent ? `WhatsApp sent to ${contactPhone}` : whatsappNote}
+              </span>
+            </div>
+          )}
         </div>
+
+        {/* Manual share reminder if anything failed */}
+        {!allSent && (
+          <div className="rounded-xl bg-white/4 border border-white/08 px-4 py-3 text-xs text-muted-foreground leading-relaxed">
+            Share the credentials below directly with the business owner since automatic delivery did not complete.
+          </div>
+        )}
 
         {/* Email */}
         <div>
@@ -281,7 +313,7 @@ function RequestCard({
   )
 }
 
-type ApprovalResult = { businessName: string; email: string; tempPassword: string }
+type ApprovalResult = { businessName: string; email: string; tempPassword: string; emailSent: boolean; whatsappSent: boolean; whatsappNote: string; contactPhone: string | null }
 type PageSection = 'applications' | 'pipeline'
 
 function pipelineStage(c: Client): { label: string; style: string } {
@@ -336,9 +368,13 @@ export function Requests() {
     pageCache.bust('comms:requests')
     if (result && req) {
       setApprovalResult({
-        businessName: req.businessName,
-        email: req.contactEmail,
-        tempPassword: result.tempPassword,
+        businessName:  req.businessName,
+        email:         req.contactEmail,
+        tempPassword:  result.tempPassword,
+        emailSent:     result.emailSent ?? false,
+        whatsappSent:  result.whatsappSent ?? false,
+        whatsappNote:  result.whatsappNote ?? '',
+        contactPhone:  req.contactPhone ?? null,
       })
     }
   }
@@ -370,6 +406,10 @@ export function Requests() {
           businessName={approvalResult.businessName}
           email={approvalResult.email}
           tempPassword={approvalResult.tempPassword}
+          emailSent={approvalResult.emailSent}
+          whatsappSent={approvalResult.whatsappSent}
+          whatsappNote={approvalResult.whatsappNote}
+          contactPhone={approvalResult.contactPhone}
           onClose={() => setApprovalResult(null)}
         />
       )}
