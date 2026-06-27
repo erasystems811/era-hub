@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { Upload, CheckCircle, XCircle, Loader, Brain } from 'lucide-react'
 import JSZip from 'jszip'
-import { CORE_API, CORE_SECRET } from '../../lib/config'
+import { getCoreApi, getCoreSecret } from '../../lib/config'
 
 const PURPLE = '#9B7FD4'
 const BATCH = 20
@@ -80,9 +80,9 @@ async function uploadBulk(
   for (let i = 0; i < conversations.length; i += BATCH) {
     const batch = conversations.slice(i, i + BATCH)
     try {
-      const res = await fetch(`${CORE_API}/v1/ingest/bulk`, {
+      const res = await fetch(`${getCoreApi()}/v1/ingest/bulk`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-core-secret': CORE_SECRET },
+        headers: { 'Content-Type': 'application/json', 'x-core-secret': getCoreSecret() },
         body: JSON.stringify({ conversations: batch }),
       })
       if (res.ok) {
@@ -98,9 +98,9 @@ async function uploadBulk(
   }
 
   // Trigger memory extraction
-  await fetch(`${CORE_API}/v1/ingest/process`, {
+  await fetch(`${getCoreApi()}/v1/ingest/process`, {
     method: 'POST',
-    headers: { 'x-core-secret': CORE_SECRET },
+    headers: { 'x-core-secret': getCoreSecret() },
   }).catch(() => {})
 
   return { ingested, errors }
