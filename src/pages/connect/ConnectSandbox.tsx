@@ -81,6 +81,7 @@ export function ConnectSandbox() {
   const [instances,      setInstances]      = useState<ConnectInstance[]>([])
   const [instanceId,     setInstanceId]     = useState('')
   const [loadingInst,    setLoadingInst]    = useState(true)
+  const [instError,      setInstError]      = useState('')
 
   const [patient,        setPatient]        = useState({ ...DEFAULT_PATIENT })
   const [treatment,      setTreatment]      = useState({ ...DEFAULT_TREATMENT })
@@ -103,7 +104,9 @@ export function ConnectSandbox() {
         setInstances(list)
         if (list.length === 1) setInstanceId(list[0].id)
       })
-      .catch(() => {})
+      .catch((e: unknown) => {
+        setInstError(e instanceof Error ? e.message : 'Failed to load instances')
+      })
       .finally(() => setLoadingInst(false))
   }, [])
 
@@ -187,9 +190,14 @@ export function ConnectSandbox() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="w-4 h-4 animate-spin" /> Loading instances...
           </div>
+        ) : instError ? (
+          <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2">
+            <p className="text-sm text-red-400 font-medium">Could not reach era-comms API</p>
+            <p className="text-xs text-red-400/70 mt-0.5">{instError}</p>
+          </div>
         ) : instances.length === 0 ? (
           <p className="text-sm text-muted-foreground/60">
-            No hospital instances found. ERAConnect must be running and connected first.
+            No hospital instances found. ERAConnect must be running and have connected at least once.
           </p>
         ) : (
           <div className="flex items-center gap-4">
