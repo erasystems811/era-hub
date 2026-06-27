@@ -1,18 +1,18 @@
 import { useState, useRef, useCallback } from 'react'
-import { Upload, CheckCircle, XCircle, Loader, Brain } from 'lucide-react'
+import { Upload, CheckCircle, XCircle, Loader, Brain, FileText, Trash2 } from 'lucide-react'
 import JSZip from 'jszip'
 import { getCoreApi, getCoreSecret } from '../../lib/config'
+
+const PURPLE = '#9B7FD4'
+const BATCH = 20
 
 function getCoreBase(): string {
   return import.meta.env.DEV ? getCoreApi() : '/api/core'
 }
 
-const PURPLE = '#9B7FD4'
-const BATCH = 20
-
 // --- Claude export transformer ---
 function transformClaude(raw: unknown[]) {
-  return raw
+  return (raw as any[])
     .map((conv: any) => {
       const messages = (conv.chat_messages ?? [])
         .filter((m: any) => m.text?.trim())
@@ -29,7 +29,7 @@ function transformClaude(raw: unknown[]) {
         messages,
       }
     })
-    .filter(c => c.messages.length > 0)
+    .filter((c: any) => c.messages.length > 0)
 }
 
 // --- ChatGPT export transformer ---
@@ -44,24 +44,20 @@ function walkMapping(mapping: Record<string, any>, nodeId: string, out: any[]) {
       .join('')
       .trim()
     if (content && (role === 'user' || role === 'assistant')) {
-      out.push({
-        role: role === 'user' ? 'human' : 'assistant',
-        content,
-        position: out.length,
-      })
+      out.push({ role: role === 'user' ? 'human' : 'assistant', content, position: out.length })
     }
   }
   for (const child of node.children ?? []) walkMapping(mapping, child, out)
 }
 
 function transformChatGPT(raw: unknown[]) {
-  return raw
+  return (raw as any[])
     .map((conv: any) => {
       const mapping: Record<string, any> = conv.mapping ?? {}
       const nodes = Object.values(mapping)
-      const rootNode = nodes.find(n => !n.parent || !mapping[n.parent])
+      const rootNode = nodes.find((n: any) => !n.parent || !mapping[n.parent])
       const messages: any[] = []
-      if (rootNode) walkMapping(mapping, rootNode.id, messages)
+      if (rootNode) walkMapping(mapping, (rootNode as any).id, messages)
       return {
         platform: 'chatgpt' as const,
         external_id: conv.id ?? undefined,
@@ -70,7 +66,18 @@ function transformChatGPT(raw: unknown[]) {
         messages,
       }
     })
-    .filter(c => c.messages.length > 0)
+    .filter((c: any) => c.messages.length > 0)
+}
+
+// --- Parse a single file ---
+async function parseFile(file: File, platform: 'claude' | 'chatgpt'): Promise<unknown[]> {
+  if (file.name.endsWith('.zip')) {
+    const zip = await JSZip.loadAsync(file)
+    const jsonFile = zip.file('conversations.json')
+    if (!jsonFile) throw new Error('conversations.json not found inside ZIP')
+    return JSON.parse(await jsonFile.async('string')) as unknown[]
+  }
+  return JSON.parse(await file.text()) as unknown[]
 }
 
 // --- Upload in batches ---
@@ -80,7 +87,6 @@ async function uploadBulk(
 ): Promise<{ ingested: number; errors: number }> {
   let ingested = 0
   let errors = 0
-
   for (let i = 0; i < conversations.length; i += BATCH) {
     const batch = conversations.slice(i, i + BATCH)
     try {
@@ -90,8 +96,7 @@ async function uploadBulk(
         body: JSON.stringify({ conversations: batch }),
       })
       if (res.ok) {
-        const data = await res.json() as { ingested: number }
-        ingested += data.ingested
+        ingested += ((await res.json()) as { ingested: number }).ingested
       } else {
         errors += batch.length
       }
@@ -100,34 +105,27 @@ async function uploadBulk(
     }
     onProgress(Math.min(i + BATCH, conversations.length), conversations.length)
   }
-
-  // Trigger memory extraction
   await fetch(`${getCoreBase()}/v1/ingest/process`, {
     method: 'POST',
     headers: { 'x-core-secret': getCoreSecret() },
   }).catch(() => {})
-
   return { ingested, errors }
 }
 
-// --- Parse a dropped file ---
-async function parseFile(file: File, platform: 'claude' | 'chatgpt'): Promise<unknown[]> {
-  if (file.name.endsWith('.zip')) {
-    const zip = await JSZip.loadAsync(file)
-    const jsonFile = zip.file('conversations.json')
-    if (!jsonFile) throw new Error('conversations.json not found inside ZIP')
-    const text = await jsonFile.async('string')
-    return JSON.parse(text) as unknown[]
-  }
-  const text = await file.text()
-  return JSON.parse(text) as unknown[]
+// --- Types ---
+interface ImportRecord {
+  id: string
+  fileName: string
+  platform: 'claude' | 'chatgpt'
+  ingested: number
+  errors: number
+  at: string
 }
 
-type Status = 'idle' | 'parsing' | 'uploading' | 'done' | 'error'
-
-interface PlatformState {
-  status: Status
-  file: File | null
+interface FileJob {
+  file: File
+  platform: 'claude' | 'chatgpt'
+  status: 'queued' | 'parsing' | 'uploading' | 'done' | 'error'
   total: number
   done: number
   ingested: number
@@ -135,47 +133,63 @@ interface PlatformState {
   errorMsg: string
 }
 
-const defaultState = (): PlatformState => ({
-  status: 'idle', file: null, total: 0, done: 0, ingested: 0, errors: 0, errorMsg: '',
-})
-
 export function CoreImport() {
-  const [claude, setClaude] = useState<PlatformState>(defaultState())
-  const [chatgpt, setChatgpt] = useState<PlatformState>(defaultState())
+  const [jobs, setJobs] = useState<FileJob[]>([])
+  const [history, setHistory] = useState<ImportRecord[]>([])
+  const [processing, setProcessing] = useState(false)
   const claudeRef = useRef<HTMLInputElement>(null)
   const chatgptRef = useRef<HTMLInputElement>(null)
 
-  const handle = useCallback(async (file: File, platform: 'claude' | 'chatgpt') => {
-    const set = platform === 'claude' ? setClaude : setChatgpt
+  const updateJob = (id: string, patch: Partial<FileJob>) =>
+    setJobs(prev => prev.map((j, i) => (i === parseInt(id) ? { ...j, ...patch } : j)))
 
-    set(s => ({ ...s, status: 'parsing', file, errorMsg: '' }))
+  const runJobs = useCallback(async (newJobs: FileJob[]) => {
+    if (processing) return
+    setProcessing(true)
+    const startIndex = jobs.length
+    setJobs(prev => [...prev, ...newJobs])
 
-    try {
-      const raw = await parseFile(file, platform)
-      const conversations = platform === 'claude' ? transformClaude(raw) : transformChatGPT(raw)
+    for (let i = 0; i < newJobs.length; i++) {
+      const idx = startIndex + i
+      const job = newJobs[i]
 
-      set(s => ({ ...s, status: 'uploading', total: conversations.length, done: 0 }))
+      setJobs(prev => prev.map((j, k) => k === idx ? { ...j, status: 'parsing' } : j))
 
-      const result = await uploadBulk(conversations, (done, total) => {
-        set(s => ({ ...s, done, total }))
-      })
+      try {
+        const raw = await parseFile(job.file, job.platform)
+        const conversations = job.platform === 'claude' ? transformClaude(raw) : transformChatGPT(raw)
 
-      set(s => ({ ...s, status: 'done', ingested: result.ingested, errors: result.errors }))
-    } catch (err) {
-      set(s => ({ ...s, status: 'error', errorMsg: err instanceof Error ? err.message : 'Failed' }))
+        setJobs(prev => prev.map((j, k) => k === idx ? { ...j, status: 'uploading', total: conversations.length } : j))
+
+        const result = await uploadBulk(conversations, (done, total) =>
+          setJobs(prev => prev.map((j, k) => k === idx ? { ...j, done, total } : j))
+        )
+
+        setJobs(prev => prev.map((j, k) => k === idx ? { ...j, status: 'done', ingested: result.ingested, errors: result.errors } : j))
+        setHistory(prev => [{
+          id: crypto.randomUUID(),
+          fileName: job.file.name,
+          platform: job.platform,
+          ingested: result.ingested,
+          errors: result.errors,
+          at: new Date().toLocaleTimeString(),
+        }, ...prev])
+      } catch (err) {
+        setJobs(prev => prev.map((j, k) => k === idx ? { ...j, status: 'error', errorMsg: err instanceof Error ? err.message : 'Failed' } : j))
+      }
     }
-  }, [])
+    setProcessing(false)
+  }, [jobs, processing])
 
-  const onDrop = useCallback((e: React.DragEvent, platform: 'claude' | 'chatgpt') => {
-    e.preventDefault()
-    const file = e.dataTransfer.files[0]
-    if (file) void handle(file, platform)
-  }, [handle])
+  const addFiles = useCallback((files: FileList | null, platform: 'claude' | 'chatgpt') => {
+    if (!files || files.length === 0) return
+    const newJobs: FileJob[] = Array.from(files).map(file => ({
+      file, platform, status: 'queued', total: 0, done: 0, ingested: 0, errors: 0, errorMsg: '',
+    }))
+    void runJobs(newJobs)
+  }, [runJobs])
 
-  const onFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, platform: 'claude' | 'chatgpt') => {
-    const file = e.target.files?.[0]
-    if (file) void handle(file, platform)
-  }, [handle])
+  const clearDone = () => setJobs(prev => prev.filter(j => j.status === 'queued' || j.status === 'parsing' || j.status === 'uploading'))
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-6">
@@ -186,45 +200,113 @@ export function CoreImport() {
         </div>
         <div>
           <h1 className="text-base font-bold text-foreground">Import Conversations</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Drop your export files — ERA Core learns from them</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Drop as many files as you want — ERA Core learns from all of them</p>
         </div>
       </div>
 
-      <div className="space-y-4">
+      {/* Drop zones */}
+      <div className="space-y-4 mb-8">
         <DropZone
-          platform="claude"
           label="Claude"
-          hint="Export from Claude.ai → Settings → Export data"
-          accepts=".json,.zip"
-          state={claude}
+          color={PURPLE}
+          hint="Drop one or more .json or .zip exports from Claude.ai"
           inputRef={claudeRef}
-          onDrop={e => onDrop(e, 'claude')}
-          onClick={() => claudeRef.current?.click()}
-          onChange={e => onFileChange(e, 'claude')}
+          onFiles={files => addFiles(files, 'claude')}
         />
         <DropZone
-          platform="chatgpt"
           label="ChatGPT"
-          hint="Export from ChatGPT → Settings → Data controls → Export — drop the ZIP or extracted conversations.json"
-          accepts=".json,.zip"
-          state={chatgpt}
+          color="#4DBFB3"
+          hint="Drop one or more .zip or conversations.json exports from ChatGPT"
           inputRef={chatgptRef}
-          onDrop={e => onDrop(e, 'chatgpt')}
-          onClick={() => chatgptRef.current?.click()}
-          onChange={e => onFileChange(e, 'chatgpt')}
+          onFiles={files => addFiles(files, 'chatgpt')}
         />
       </div>
 
-      <div className="mt-8 rounded-xl px-5 py-4 space-y-2" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+      {/* Active / completed jobs */}
+      {jobs.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>Files</p>
+            <button onClick={clearDone} className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>Clear done</button>
+          </div>
+          <div className="space-y-2">
+            {jobs.map((job, i) => {
+              const color = job.platform === 'claude' ? PURPLE : '#4DBFB3'
+              const progress = job.total > 0 ? Math.round((job.done / job.total) * 100) : 0
+              return (
+                <div key={i} className="rounded-xl px-4 py-3 flex items-start gap-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
+                    {job.status === 'done'    && <CheckCircle className="w-3.5 h-3.5" style={{ color: '#22c55e' }} />}
+                    {job.status === 'error'   && <XCircle className="w-3.5 h-3.5" style={{ color: '#f87171' }} />}
+                    {(job.status === 'parsing' || job.status === 'uploading') && <Loader className="w-3.5 h-3.5 animate-spin" style={{ color }} />}
+                    {job.status === 'queued'  && <FileText className="w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.3)' }} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate" style={{ color: 'rgba(255,255,255,0.75)' }}>{job.file.name}</p>
+                    {job.status === 'queued'   && <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>Queued</p>}
+                    {job.status === 'parsing'  && <p className="text-[11px] mt-0.5" style={{ color }}>Reading file…</p>}
+                    {job.status === 'uploading' && (
+                      <div className="mt-1.5">
+                        <div className="flex justify-between mb-1">
+                          <p className="text-[11px]" style={{ color }}>Uploading {job.done} / {job.total}</p>
+                          <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{progress}%</p>
+                        </div>
+                        <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                          <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, background: color }} />
+                        </div>
+                      </div>
+                    )}
+                    {job.status === 'done' && (
+                      <p className="text-[11px] mt-0.5" style={{ color: '#22c55e' }}>
+                        {job.ingested} ingested{job.errors > 0 ? ` · ${job.errors} failed` : ''}
+                      </p>
+                    )}
+                    {job.status === 'error' && <p className="text-[11px] mt-0.5" style={{ color: '#f87171' }}>{job.errorMsg}</p>}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* History */}
+      {history.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>Session history</p>
+            <button onClick={() => setHistory([])} className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
+              <Trash2 className="w-3 h-3 inline mr-1" />Clear
+            </button>
+          </div>
+          <div className="space-y-1.5">
+            {history.map(r => (
+              <div key={r.id} className="rounded-lg px-3 py-2 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full shrink-0" style={{ background: `${r.platform === 'claude' ? PURPLE : '#4DBFB3'}18`, color: r.platform === 'claude' ? PURPLE : '#4DBFB3' }}>
+                    {r.platform}
+                  </span>
+                  <p className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.55)' }}>{r.fileName}</p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0 ml-3">
+                  <span className="text-xs text-green-400">{r.ingested} in</span>
+                  {r.errors > 0 && <span className="text-xs text-red-400">{r.errors} err</span>}
+                  <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.2)' }}>{r.at}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* How to export */}
+      <div className="rounded-xl px-5 py-4 space-y-2" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
         <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.45)' }}>How to export</p>
         <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.30)' }}>
           <span style={{ color: PURPLE }}>Claude:</span> claude.ai → Settings → Privacy → Export data → download JSON
         </p>
         <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.30)' }}>
-          <span style={{ color: '#4DBFB3' }}>ChatGPT:</span> chatgpt.com → Settings → Data controls → Export data → download ZIP and drop it directly here
-        </p>
-        <p className="text-xs leading-relaxed mt-1" style={{ color: 'rgba(255,255,255,0.20)' }}>
-          After import, ERA Core automatically extracts your principles, thinking style, preferences, and decision patterns from every conversation.
+          <span style={{ color: '#4DBFB3' }}>ChatGPT:</span> chatgpt.com → Settings → Data controls → Export data → download ZIP
         </p>
       </div>
     </div>
@@ -232,91 +314,37 @@ export function CoreImport() {
 }
 
 interface DropZoneProps {
-  platform: 'claude' | 'chatgpt'
   label: string
+  color: string
   hint: string
-  accepts: string
-  state: PlatformState
   inputRef: React.RefObject<HTMLInputElement>
-  onDrop: (e: React.DragEvent) => void
-  onClick: () => void
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onFiles: (files: FileList | null) => void
 }
 
-function DropZone({ platform, label, hint, accepts, state, inputRef, onDrop, onClick, onChange }: DropZoneProps) {
+function DropZone({ label, color, hint, inputRef, onFiles }: DropZoneProps) {
   const [dragging, setDragging] = useState(false)
-  const color = platform === 'claude' ? PURPLE : '#4DBFB3'
-  const { status, total, done, ingested, errors, errorMsg } = state
-
-  const progress = total > 0 ? Math.round((done / total) * 100) : 0
 
   return (
     <div
-      onClick={status === 'idle' || status === 'error' ? onClick : undefined}
-      onDrop={e => { setDragging(false); onDrop(e) }}
+      onClick={() => inputRef.current?.click()}
+      onDrop={e => { e.preventDefault(); setDragging(false); onFiles(e.dataTransfer.files) }}
       onDragOver={e => { e.preventDefault(); setDragging(true) }}
       onDragLeave={() => setDragging(false)}
-      className="rounded-2xl transition-all"
+      className="rounded-2xl cursor-pointer transition-all"
       style={{
         border: `1.5px dashed ${dragging ? color : 'rgba(255,255,255,0.10)'}`,
         background: dragging ? `${color}08` : 'rgba(255,255,255,0.025)',
-        cursor: status === 'idle' || status === 'error' ? 'pointer' : 'default',
-        padding: '28px 24px',
+        padding: '22px 24px',
       }}
     >
-      <input
-        ref={inputRef}
-        type="file"
-        accept={accepts}
-        className="hidden"
-        onChange={onChange}
-      />
-
+      <input ref={inputRef} type="file" accept=".json,.zip" multiple className="hidden" onChange={e => onFiles(e.target.files)} />
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
-          {status === 'idle' && <Upload className="w-4 h-4" style={{ color }} />}
-          {(status === 'parsing' || status === 'uploading') && <Loader className="w-4 h-4 animate-spin" style={{ color }} />}
-          {status === 'done' && <CheckCircle className="w-4 h-4" style={{ color: '#22c55e' }} />}
-          {status === 'error' && <XCircle className="w-4 h-4" style={{ color: '#f87171' }} />}
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
+          <Upload className="w-4 h-4" style={{ color }} />
         </div>
-
-        <div className="flex-1 min-w-0">
+        <div>
           <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>{label}</p>
-
-          {status === 'idle' && (
-            <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.30)' }}>
-              Drop file or click to browse · .json or .zip
-            </p>
-          )}
-
-          {status === 'parsing' && (
-            <p className="text-xs mt-0.5" style={{ color }}>Reading file…</p>
-          )}
-
-          {status === 'uploading' && (
-            <div className="mt-2">
-              <div className="flex justify-between mb-1">
-                <p className="text-xs" style={{ color }}>Uploading {done} / {total} conversations</p>
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>{progress}%</p>
-              </div>
-              <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{ width: `${progress}%`, background: color }}
-                />
-              </div>
-            </div>
-          )}
-
-          {status === 'done' && (
-            <p className="text-xs mt-0.5" style={{ color: '#22c55e' }}>
-              {ingested} conversations ingested{errors > 0 ? ` · ${errors} failed` : ''} · ERA Core is learning
-            </p>
-          )}
-
-          {status === 'error' && (
-            <p className="text-xs mt-0.5" style={{ color: '#f87171' }}>{errorMsg} — click to try again</p>
-          )}
+          <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.30)' }}>{hint}</p>
         </div>
       </div>
     </div>
