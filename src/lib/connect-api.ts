@@ -123,13 +123,14 @@ export const connectApi = {
     status?: string
     from?: string
     to?: string
+    hideRoutine?: boolean
     limit?: number
     offset?: number
   }) => {
     const qs = params
       ? '?' + new URLSearchParams(
           Object.entries(params)
-            .filter(([, v]) => v !== undefined && v !== '')
+            .filter(([, v]) => v !== undefined && v !== '' && v !== false)
             .map(([k, v]) => [k, String(v)])
         ).toString()
       : ''
