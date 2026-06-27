@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from 'react'
-import { Upload, CheckCircle, XCircle, Loader, Brain, FileText, Trash2 } from 'lucide-react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { Upload, CheckCircle, XCircle, Loader, Brain, FileText, RefreshCw } from 'lucide-react'
 import JSZip from 'jszip'
 import { getCoreApi, getCoreSecret } from '../../lib/config'
 
@@ -113,13 +113,14 @@ async function uploadBulk(
 }
 
 // --- Types ---
-interface ImportRecord {
+interface DbConversation {
   id: string
-  fileName: string
   platform: 'claude' | 'chatgpt'
-  ingested: number
-  errors: number
-  at: string
+  title: string | null
+  message_count: number
+  processed: boolean
+  happened_at: string | null
+  ingested_at: string
 }
 
 interface FileJob {
@@ -133,15 +134,35 @@ interface FileJob {
   errorMsg: string
 }
 
+async function fetchDbHistory(): Promise<DbConversation[]> {
+  try {
+    const res = await fetch(`${getCoreBase()}/v1/ingest/conversations?limit=200`, {
+      headers: { 'x-core-secret': getCoreSecret() },
+    })
+    if (!res.ok) return []
+    return res.json() as Promise<DbConversation[]>
+  } catch {
+    return []
+  }
+}
+
 export function CoreImport() {
   const [jobs, setJobs] = useState<FileJob[]>([])
-  const [history, setHistory] = useState<ImportRecord[]>([])
+  const [dbHistory, setDbHistory] = useState<DbConversation[]>([])
+  const [historyLoading, setHistoryLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const claudeRef = useRef<HTMLInputElement>(null)
   const chatgptRef = useRef<HTMLInputElement>(null)
 
-  const updateJob = (id: string, patch: Partial<FileJob>) =>
-    setJobs(prev => prev.map((j, i) => (i === parseInt(id) ? { ...j, ...patch } : j)))
+  useEffect(() => {
+    setHistoryLoading(true)
+    fetchDbHistory().then(rows => { setDbHistory(rows); setHistoryLoading(false) })
+  }, [])
+
+  const refreshHistory = () => {
+    setHistoryLoading(true)
+    fetchDbHistory().then(rows => { setDbHistory(rows); setHistoryLoading(false) })
+  }
 
   const runJobs = useCallback(async (newJobs: FileJob[]) => {
     if (processing) return
@@ -166,14 +187,7 @@ export function CoreImport() {
         )
 
         setJobs(prev => prev.map((j, k) => k === idx ? { ...j, status: 'done', ingested: result.ingested, errors: result.errors } : j))
-        setHistory(prev => [{
-          id: crypto.randomUUID(),
-          fileName: job.file.name,
-          platform: job.platform,
-          ingested: result.ingested,
-          errors: result.errors,
-          at: new Date().toLocaleTimeString(),
-        }, ...prev])
+        refreshHistory()
       } catch (err) {
         setJobs(prev => prev.map((j, k) => k === idx ? { ...j, status: 'error', errorMsg: err instanceof Error ? err.message : 'Failed' } : j))
       }
@@ -189,7 +203,7 @@ export function CoreImport() {
     void runJobs(newJobs)
   }, [runJobs])
 
-  const clearDone = () => setJobs(prev => prev.filter(j => j.status === 'queued' || j.status === 'parsing' || j.status === 'uploading'))
+  const clearDone = () => setJobs(prev => prev.filter(j => j.status !== 'done' && j.status !== 'error'))
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-6">
@@ -270,34 +284,55 @@ export function CoreImport() {
         </div>
       )}
 
-      {/* History */}
-      {history.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>Session history</p>
-            <button onClick={() => setHistory([])} className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
-              <Trash2 className="w-3 h-3 inline mr-1" />Clear
-            </button>
+      {/* DB History */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>All imported conversations</p>
+            {dbHistory.length > 0 && (
+              <p className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                {dbHistory.length} total · {dbHistory.filter(r => r.processed).length} processed
+              </p>
+            )}
           </div>
-          <div className="space-y-1.5">
-            {history.map(r => (
-              <div key={r.id} className="rounded-lg px-3 py-2 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full shrink-0" style={{ background: `${r.platform === 'claude' ? PURPLE : '#4DBFB3'}18`, color: r.platform === 'claude' ? PURPLE : '#4DBFB3' }}>
+          <button onClick={refreshHistory} className="flex items-center gap-1 text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
+            <RefreshCw className={`w-3 h-3 ${historyLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
+
+        {historyLoading && (
+          <div className="flex items-center justify-center py-8">
+            <Loader className="w-4 h-4 animate-spin" style={{ color: 'rgba(255,255,255,0.2)' }} />
+          </div>
+        )}
+
+        {!historyLoading && dbHistory.length === 0 && (
+          <p className="text-xs py-4 text-center" style={{ color: 'rgba(255,255,255,0.2)' }}>No conversations imported yet</p>
+        )}
+
+        {!historyLoading && dbHistory.length > 0 && (
+          <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+            {dbHistory.map(r => {
+              const color = r.platform === 'claude' ? PURPLE : '#4DBFB3'
+              const date = new Date(r.ingested_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })
+              return (
+                <div key={r.id} className="rounded-lg px-3 py-2.5 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full shrink-0 font-medium" style={{ background: `${color}18`, color }}>
                     {r.platform}
                   </span>
-                  <p className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.55)' }}>{r.fileName}</p>
+                  <p className="text-xs flex-1 truncate" style={{ color: 'rgba(255,255,255,0.55)' }}>{r.title ?? 'Untitled'}</p>
+                  <span className="text-[10px] shrink-0" style={{ color: 'rgba(255,255,255,0.22)' }}>{r.message_count} msgs</span>
+                  <span className={`text-[10px] shrink-0 ${r.processed ? 'text-green-500' : 'text-yellow-500'}`}>
+                    {r.processed ? 'learned' : 'pending'}
+                  </span>
+                  <span className="text-[10px] shrink-0" style={{ color: 'rgba(255,255,255,0.18)' }}>{date}</span>
                 </div>
-                <div className="flex items-center gap-3 shrink-0 ml-3">
-                  <span className="text-xs text-green-400">{r.ingested} in</span>
-                  {r.errors > 0 && <span className="text-xs text-red-400">{r.errors} err</span>}
-                  <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.2)' }}>{r.at}</span>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* How to export */}
       <div className="rounded-xl px-5 py-4 space-y-2" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
