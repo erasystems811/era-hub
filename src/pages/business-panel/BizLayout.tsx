@@ -52,6 +52,9 @@ export function BizLayout({ children }: Props) {
       .finally(() => { if (isInitial) setLoading(false) })
   }
 
+  // Re-check status on every page navigation
+  useEffect(() => { checkStatus() }, [location.pathname]) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     checkStatus(true)
 
