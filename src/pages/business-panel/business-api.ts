@@ -18,6 +18,7 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const ct = res.headers.get('content-type') ?? ''
   if (!res.ok) {
     if (res.status === 401) { clearBizToken(); throw new Error('Session expired. Please sign in again.') }
+    if (res.status === 403) { clearBizToken(); throw new Error('Your account has been suspended. Contact support.') }
     const err = ct.includes('application/json')
       ? await res.json().catch(() => ({ error: res.statusText }))
       : { error: `${res.status} ${res.statusText}` }
