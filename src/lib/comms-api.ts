@@ -179,7 +179,7 @@ export const commsApi = {
 
   // Business onboarding requests
   listRequests:   () => get<OnboardingRequest[]>('/requests'),
-  approveRequest: (id: string) => post<{ clientId: string; tempPassword: string; emailSent: boolean; whatsappSent: boolean; whatsappNote: string }>(`/requests/${id}/approve`, {}),
+  approveRequest: (id: string) => post<{ clientId: string; tier: string; tempPassword?: string; keyPreview?: string; emailSent: boolean; whatsappSent: boolean; whatsappNote: string }>(`/requests/${id}/approve`, {}),
   rejectRequest:  (id: string, reason?: string) => post<void>(`/requests/${id}/reject`, { reason }),
 
   monitoring: () => get<MonitoringSnapshot>('/monitoring'),
