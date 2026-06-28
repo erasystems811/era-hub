@@ -204,14 +204,24 @@ export default function App() {
   if (path === '/biz/login') return <BizLogin />
   if (path.startsWith('/biz/'))   return <BizApp />
 
-  // Redirect business users who accidentally land on the operator URL
-  if (!isAuthenticated && localStorage.getItem('era_biz_token')) {
-    return <Navigate to="/biz/dashboard" replace />
+  // Operator hub — secret path only. Anyone who isn't already authenticated
+  // and tries any other URL just gets sent to the biz login. No hint that
+  // an operator hub exists.
+  if (path.startsWith('/era-sys')) {
+    return (
+      <ToastProvider>
+        {isAuthenticated ? <ProtectedApp /> : <Login />}
+      </ToastProvider>
+    )
   }
 
+  // Everything else (including /) → biz login
+  if (!isAuthenticated) return <Navigate to="/biz/login" replace />
+
+  // Authenticated operator hitting a non-/era-sys path → send to hub home
   return (
     <ToastProvider>
-      {isAuthenticated ? <ProtectedApp /> : <Login />}
+      <ProtectedApp />
     </ToastProvider>
   )
 }
