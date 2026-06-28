@@ -31,6 +31,7 @@ const NAV_MODULES: NavItem[] = [
   { icon: Inbox,        label: 'Inbox',          href: '/biz/inbox',          moduleKey: 'conversationInbox' },
   { icon: BarChart2,    label: 'Analytics',      href: '/biz/analytics',      moduleKey: 'analytics'         },
   { icon: Mail,         label: 'Email',          href: '/biz/email',          moduleKey: 'emailCampaigns'    },
+  { icon: Zap,          label: 'Automations',    href: '/biz/automations',    moduleKey: 'automations'       },
 ]
 
 interface Props { children: React.ReactNode }

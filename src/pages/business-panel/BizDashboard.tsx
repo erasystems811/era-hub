@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Book, MessageSquare, Clock, Zap, Users, Mic, Inbox, BarChart2, Mail,
+  Book, MessageSquare, Clock, Zap, Users, Mic, Inbox, BarChart2, Mail, CalendarClock,
 } from 'lucide-react'
 import { bizApi, type BizProfile, type ModuleConfig } from './business-api'
 
@@ -25,6 +25,7 @@ const MODULES: ModuleDef[] = [
   { key: 'conversationInbox', icon: Inbox,        label: 'Inbox',           desc: 'Monitor and join live chats',               href: '/biz/inbox'         },
   { key: 'analytics',         icon: BarChart2,    label: 'Analytics',       desc: 'See your performance stats',                href: '/biz/analytics'     },
   { key: 'emailCampaigns',    icon: Mail,         label: 'Email Campaigns', desc: 'Send bulk emails to your customers',         href: '/biz/email'         },
+  { key: 'automations',       icon: CalendarClock,label: 'Automations',     desc: 'Proactive reminders, follow-ups and sequences', href: '/biz/automations'  },
 ]
 
 // Tailwind-safe toggle component

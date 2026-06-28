@@ -44,6 +44,7 @@ export interface ModuleConfig {
   conversationInbox: boolean
   analytics:         boolean
   emailCampaigns:    boolean
+  automations:       boolean
 }
 
 export interface BizProfile {
@@ -154,6 +155,35 @@ export interface Campaign {
   createdAt: string
 }
 
+export interface AutomationStep {
+  id: string; stepOrder: number; stepType: 'send_message' | 'wait'
+  content: string | null; contentType: string; delayMinutes: number
+}
+
+export interface AutomationStepInput {
+  stepType: 'send_message' | 'wait'; content?: string; contentType?: string; delayMinutes?: number
+}
+
+export interface AutomationFlow {
+  id: string; name: string; description: string | null
+  triggerType: 'api' | 'manual'; triggerKey: string | null
+  status: 'active' | 'paused' | 'archived'
+  totalEnrolled: number; totalCompleted: number
+  createdAt: string; sessionPhone: string
+}
+
+export interface AutomationFlowDetail extends AutomationFlow {
+  sessionId: string
+  enrollmentStats: { total: number; active: number; completed: number }
+  steps: AutomationStep[]
+}
+
+export interface AutomationEnrollment {
+  id: string; phoneNumber: string; name: string | null
+  currentStep: number; status: 'active' | 'completed' | 'cancelled'
+  nextStepAt: string; createdAt: string
+}
+
 // ── API ───────────────────────────────────────────────────────────────────────
 
 export const bizApi = {
@@ -250,7 +280,25 @@ export const bizApi = {
   // Opt-outs
   listOptOuts: () => get<{ phoneNumber: string; optedOutAt: string | null; updatedAt: string }[]>('/optouts'),
 
-  // Automations + broadcasts (read-only)
-  listAutomations: () => get<{ id: string; name: string; status: string; totalEnrolled: number; totalCompleted: number; createdAt: string }[]>('/automations'),
-  listBroadcasts:  () => get<{ id: string; name: string; status: string; totalRecipients: number; totalSent: number; createdAt: string }[]>('/broadcasts'),
+  // Broadcasts (read-only)
+  listBroadcasts: () => get<{ id: string; name: string; status: string; totalRecipients: number; totalSent: number; createdAt: string }[]>('/broadcasts'),
+
+  // Automations (full self-service)
+  listAutomations: () => get<AutomationFlow[]>('/automations'),
+  getAutomation:   (id: string) => get<AutomationFlowDetail>(`/automations/${id}`),
+  createAutomation: (data: {
+    name: string; description?: string; sessionId: string
+    triggerType: 'api' | 'manual'
+    steps: AutomationStepInput[]
+  }) => post<{ id: string; triggerKey: string | null; createdAt: string }>('/automations', data),
+  updateAutomation: (id: string, data: { name?: string; description?: string; status?: 'active' | 'paused' }) =>
+    patch<void>(`/automations/${id}`, data),
+  updateSteps: (id: string, steps: AutomationStepInput[]) =>
+    req<void>(`/automations/${id}/steps`, { method: 'PUT', body: JSON.stringify({ steps }) }),
+  deleteAutomation: (id: string) => del<void>(`/automations/${id}`),
+  enrollContacts: (id: string, contacts: { phoneNumber: string; name?: string }[]) =>
+    post<{ enrolled: number }>(`/automations/${id}/enroll`, { contacts }),
+  listEnrollments: (id: string) => get<AutomationEnrollment[]>(`/automations/${id}/enrollments`),
+  cancelEnrollment: (flowId: string, enrollmentId: string) =>
+    del<void>(`/automations/${flowId}/enrollments/${enrollmentId}`),
 }

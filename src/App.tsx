@@ -43,6 +43,7 @@ import { BizSettingsPage }        from './pages/business-panel/BizSettingsPage'
 import { BizEmailPage }          from './pages/business-panel/BizEmailPage'
 import { WhatsAppConnectModule } from './pages/business-panel/WhatsAppConnectModule'
 import { AutoReplyModule }       from './pages/business-panel/AutoReplyModule'
+import { AutomationsModule }     from './pages/business-panel/AutomationsModule'
 
 // ERA Core
 import { CoreChat }     from './pages/core/CoreChat'
@@ -181,6 +182,7 @@ function BizApp() {
         <Route path="/biz/email"          element={<BizEmailPage />} />
         <Route path="/biz/connect"        element={<WhatsAppConnectModule />} />
         <Route path="/biz/auto-reply"     element={<AutoReplyModule />} />
+        <Route path="/biz/automations"    element={<AutomationsModule />} />
         <Route path="*"                   element={<Navigate to="/biz/dashboard" replace />} />
       </Routes>
     </BizLayout>
