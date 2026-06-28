@@ -87,6 +87,11 @@ export function CoreMemory() {
   const [saving, setSaving]         = useState(false)
   const [saveMsg, setSaveMsg]       = useState<string | null>(null)
 
+  // Search & extract state
+  const [searchTerm, setSearchTerm]     = useState('')
+  const [searching, setSearching]       = useState(false)
+  const [searchResult, setSearchResult] = useState<string | null>(null)
+
   const configured = !!getCoreApi()
 
   async function load() {
@@ -120,6 +125,29 @@ export function CoreMemory() {
       setSaveMsg(e instanceof Error ? e.message : 'Failed')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function searchAndExtract() {
+    const term = searchTerm.trim()
+    if (!term) return
+    setSearching(true)
+    setSearchResult(null)
+    try {
+      const res = await coreFetch<{ conversations: number; memories: number; message?: string }>(
+        '/v1/ingest/search-extract',
+        { method: 'POST', body: JSON.stringify({ term }) }
+      )
+      if (res.conversations === 0) {
+        setSearchResult(`No messages found containing "${term}"`)
+      } else {
+        setSearchResult(`Found in ${res.conversations} conversation${res.conversations !== 1 ? 's' : ''} · ${res.memories} new memor${res.memories !== 1 ? 'ies' : 'y'} stored`)
+        void load()
+      }
+    } catch (e) {
+      setSearchResult(e instanceof Error ? e.message : 'Search failed')
+    } finally {
+      setSearching(false)
     }
   }
 
@@ -224,6 +252,41 @@ export function CoreMemory() {
             </span>
           )}
         </div>
+      </div>
+
+      {/* Search imported conversations */}
+      <div className="rounded-2xl p-4 mb-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          Search my imported chats &amp; extract memories
+        </p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={e => { setSearchTerm(e.target.value); setSearchResult(null) }}
+            onKeyDown={e => { if (e.key === 'Enter') void searchAndExtract() }}
+            placeholder='e.g. "ERA Hub" or "pricing" or "hospital"'
+            className="flex-1 rounded-xl px-4 py-2.5 text-sm outline-none"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: 'rgba(255,255,255,0.88)' }}
+          />
+          <button
+            onClick={() => void searchAndExtract()}
+            disabled={!searchTerm.trim() || searching}
+            className="px-4 py-2.5 rounded-xl text-xs font-semibold transition-all shrink-0"
+            style={{
+              background: searchTerm.trim() ? PURPLE : 'rgba(255,255,255,0.06)',
+              color: searchTerm.trim() ? 'white' : 'rgba(255,255,255,0.25)',
+              opacity: searching ? 0.6 : 1,
+            }}
+          >
+            {searching ? 'Searching…' : 'Search & Learn'}
+          </button>
+        </div>
+        {searchResult && (
+          <p className="text-xs mt-2" style={{ color: searchResult.startsWith('No') ? 'rgba(255,255,255,0.35)' : '#4ade80' }}>
+            {searchResult}
+          </p>
+        )}
       </div>
 
       {/* Mode filter */}
