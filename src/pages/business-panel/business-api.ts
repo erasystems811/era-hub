@@ -2,7 +2,10 @@ import { COMMS_API } from '../../lib/config'
 
 export const getBizToken  = () => localStorage.getItem('era_biz_token')
 export const setBizToken  = (t: string) => localStorage.setItem('era_biz_token', t)
-export const clearBizToken = () => localStorage.removeItem('era_biz_token')
+export const clearBizToken = () => {
+  localStorage.removeItem('era_biz_token')
+  window.dispatchEvent(new Event('biz:logout'))
+}
 
 async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
   if (!COMMS_API) throw new Error('ERA Comms API is not configured.')

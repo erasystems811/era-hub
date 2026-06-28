@@ -43,14 +43,38 @@ export function BizLayout({ children }: Props) {
   const [loading, setLoading]   = useState(true)
   const [collapsed, setCollapsed] = useState(false)
 
-  useEffect(() => {
+  const checkStatus = (isInitial = false) => {
     const token = localStorage.getItem('era_biz_token')
     if (!token) { navigate('/biz/login', { replace: true }); return }
     bizApi.getProfile()
       .then(p => { setProfile(p) })
       .catch(() => { clearBizToken(); navigate('/biz/login', { replace: true }) })
-      .finally(() => setLoading(false))
-  }, [navigate])
+      .finally(() => { if (isInitial) setLoading(false) })
+  }
+
+  useEffect(() => {
+    checkStatus(true)
+
+    // Re-check every 60 s — kicks suspended accounts out within a minute
+    const interval = setInterval(() => checkStatus(), 60_000)
+
+    // Re-check immediately when the user switches back to this tab
+    const onFocus = () => checkStatus()
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) checkStatus()
+    })
+
+    // Any 403 from any page clears the token and fires this event → navigate immediately
+    const onLogout = () => navigate('/biz/login', { replace: true })
+    window.addEventListener('biz:logout', onLogout)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('focus', onFocus)
+      window.removeEventListener('biz:logout', onLogout)
+    }
+  }, [navigate]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function logout() {
     clearBizToken()
