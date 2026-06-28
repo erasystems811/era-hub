@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Send, Plus, Brain, Trash2, Settings } from 'lucide-react'
+import { Send, Plus, Brain, Trash2, Settings, Globe } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { getCoreApi, getCoreSecret } from '../../lib/config'
 
@@ -68,6 +68,7 @@ export function CoreChat() {
     return first ? loadMessages(first.id) : []
   })
   const [input, setInput] = useState('')
+  const [webSearch, setWebSearch] = useState(false)
   const [streaming, setStreaming] = useState(false)
   const [streamText, setStreamText] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -157,7 +158,7 @@ export function CoreChat() {
           'Content-Type': 'application/json',
           'x-core-secret': getCoreSecret(),
         },
-        body: JSON.stringify({ session_id: sid, mode, message: text }),
+        body: JSON.stringify({ session_id: sid, mode, message: text, web_search: webSearch }),
         signal: abort.signal,
       })
 
@@ -314,8 +315,20 @@ export function CoreChat() {
             </button>
           ))}
           <span className="text-[10px] ml-2" style={{ color: 'rgba(255,255,255,0.20)' }}>
-            {mode === 'business' ? 'Claude · ERA Systems' : 'GPT-4o · Personal life'}
+            {mode === 'business' ? 'GPT-4o · ERA Systems' : 'GPT-4o · Personal life'}
           </span>
+
+          <button
+            onClick={() => setWebSearch(w => !w)}
+            className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all"
+            style={webSearch
+              ? { background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.35)', color: '#34d399' }
+              : { border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.30)' }
+            }
+          >
+            <Globe className="w-3 h-3" />
+            {webSearch ? 'Web on' : 'Web off'}
+          </button>
         </div>
 
         {/* Messages */}
