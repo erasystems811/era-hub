@@ -115,7 +115,7 @@ export function CoreMemory() {
     try {
       await coreFetch('/v1/memories', {
         method: 'POST',
-        body: JSON.stringify({ category: factCat, mode: factMode, content, confidence: 1.0 }),
+        body: { category: factCat, mode: factMode, content, confidence: 1.0 },
       })
       setFact('')
       setSaveMsg('Stored.')
@@ -136,7 +136,7 @@ export function CoreMemory() {
     try {
       const res = await coreFetch<{ conversations: number; memories: number; message?: string }>(
         '/v1/ingest/search-extract',
-        { method: 'POST', body: JSON.stringify({ term }) }
+        { method: 'POST', body: { term } }
       )
       if (res.conversations === 0) {
         setSearchResult(`No messages found containing "${term}"`)
