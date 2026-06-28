@@ -61,8 +61,8 @@ export function BizLayout({ children }: Props) {
   useEffect(() => {
     checkStatus(true)
 
-    // Re-check every 60 s — kicks suspended accounts out within a minute
-    const interval = setInterval(() => checkStatus(), 60_000)
+    // Re-check every 15 s — kicks suspended accounts out quickly
+    const interval = setInterval(() => checkStatus(), 15_000)
 
     // Re-check immediately when the user switches back to this tab
     const onFocus = () => checkStatus()

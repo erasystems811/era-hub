@@ -204,6 +204,11 @@ export default function App() {
   if (path === '/biz/login') return <BizLogin />
   if (path.startsWith('/biz/'))   return <BizApp />
 
+  // Redirect business users who accidentally land on the operator URL
+  if (!isAuthenticated && localStorage.getItem('era_biz_token')) {
+    return <Navigate to="/biz/dashboard" replace />
+  }
+
   return (
     <ToastProvider>
       {isAuthenticated ? <ProtectedApp /> : <Login />}

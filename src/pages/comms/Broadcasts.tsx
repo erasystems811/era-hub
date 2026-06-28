@@ -181,7 +181,10 @@ export function Broadcasts() {
     }
     setSavingCreate(true)
     try {
-      await broadcastApi.create({ clientId, sessionId, name: name.trim(), content: content.trim(), recipients: normalizePhoneList(phones) })
+      const res = await broadcastApi.create({ clientId, sessionId, name: name.trim(), content: content.trim(), recipients: normalizePhoneList(phones) })
+      if (res.invalidRecipients > 0) {
+        showToast(`${res.invalidRecipients} number(s) skipped — not in E.164 format (+country code required)`, 'error')
+      }
       showToast('Broadcast created', 'success')
       setShowCreate(false)
       void load()

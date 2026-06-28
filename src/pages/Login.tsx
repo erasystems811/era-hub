@@ -140,13 +140,19 @@ export function Login() {
         </form>
 
         {/* Footer */}
-        <div className="mt-10 text-center space-y-1">
+        <div className="mt-10 text-center space-y-2">
           <p className="text-[9px] text-muted-foreground/30 uppercase tracking-[0.3em]">
             Evaluate · Rebuild · Automate
           </p>
           <p className="text-[9px] text-muted-foreground/20 uppercase tracking-[0.2em]">
             Era Systems · Operator Access Only
           </p>
+          <a
+            href="/biz/login"
+            className="block text-[10px] text-muted-foreground/35 hover:text-muted-foreground/60 transition-colors mt-1"
+          >
+            Business portal →
+          </a>
         </div>
       </div>
     </div>

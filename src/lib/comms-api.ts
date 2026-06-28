@@ -428,7 +428,7 @@ export const broadcastApi = {
     clientId: string; sessionId: string; name: string
     content: string; contentType?: string
     recipients?: { phoneNumber: string; name?: string }[]
-  }) => post<{ id: string; createdAt: string }>('/broadcasts', data),
+  }) => post<{ id: string; createdAt: string; invalidRecipients: number }>('/broadcasts', data),
 
   addRecipients: (id: string, recipients: { phoneNumber: string; name?: string }[]) =>
     post<{ added: number; invalid: number }>(`/broadcasts/${id}/recipients`, { recipients }),
