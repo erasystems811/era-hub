@@ -14,6 +14,7 @@ function TempPasswordModal({
   tempPassword,
   keyPreview,
   emailSent,
+  emailError,
   whatsappSent,
   whatsappNote,
   contactPhone,
@@ -25,6 +26,7 @@ function TempPasswordModal({
   tempPassword?: string
   keyPreview?: string
   emailSent: boolean
+  emailError?: string
   whatsappSent: boolean
   whatsappNote: string
   contactPhone: string | null
@@ -32,6 +34,9 @@ function TempPasswordModal({
 }) {
   const [copied, setCopied] = useState<'email' | 'pwd' | null>(null)
   const isDeveloper = tier === 'developer'
+  const emailLabel = emailSent
+    ? isDeveloper ? `Reveal link emailed to ${email}` : `Credentials emailed to ${email}`
+    : emailError ?? 'Email not sent'
 
   function copy(text: string, key: 'email' | 'pwd') {
     void navigator.clipboard.writeText(text).then(() => {
@@ -69,9 +74,7 @@ function TempPasswordModal({
               ? <CheckCircle2 className="w-3.5 h-3.5 text-teal shrink-0" />
               : <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
             <span className={emailSent ? 'text-teal/90' : 'text-amber-400'}>
-              {isDeveloper
-                ? emailSent ? `API key reveal link emailed to ${email}` : `Email not sent — Postal may not be configured`
-                : emailSent ? `Portal access emailed to ${email}` : `Email not sent — Postal may not be configured`}
+              {emailLabel}
             </span>
           </div>
           {contactPhone && (
@@ -353,7 +356,7 @@ function RequestCard({
   )
 }
 
-type ApprovalResult = { businessName: string; email: string; tier: string; tempPassword?: string; keyPreview?: string; emailSent: boolean; whatsappSent: boolean; whatsappNote: string; contactPhone: string | null }
+type ApprovalResult = { businessName: string; email: string; tier: string; tempPassword?: string; keyPreview?: string; emailSent: boolean; emailError?: string; whatsappSent: boolean; whatsappNote: string; contactPhone: string | null }
 type PageSection = 'applications' | 'pipeline'
 
 function pipelineStage(c: Client): { label: string; style: string } {
@@ -414,6 +417,7 @@ export function Requests() {
         tempPassword:  result.tempPassword,
         keyPreview:    result.keyPreview,
         emailSent:     result.emailSent ?? false,
+        emailError:    result.emailError,
         whatsappSent:  result.whatsappSent ?? false,
         whatsappNote:  result.whatsappNote ?? '',
         contactPhone:  req.contactPhone ?? null,
@@ -451,6 +455,7 @@ export function Requests() {
           tempPassword={approvalResult.tempPassword}
           keyPreview={approvalResult.keyPreview}
           emailSent={approvalResult.emailSent}
+          emailError={approvalResult.emailError}
           whatsappSent={approvalResult.whatsappSent}
           whatsappNote={approvalResult.whatsappNote}
           contactPhone={approvalResult.contactPhone}
