@@ -47,7 +47,10 @@ export function BizLayout({ children }: Props) {
     const token = localStorage.getItem('era_biz_token')
     if (!token) { navigate('/biz/login', { replace: true }); return }
     bizApi.getProfile()
-      .then(p => { setProfile(p) })
+      .then(p => {
+        if (!p.active) { clearBizToken(); navigate('/biz/login', { replace: true }); return }
+        setProfile(p)
+      })
       .catch(() => { clearBizToken(); navigate('/biz/login', { replace: true }) })
       .finally(() => { if (isInitial) setLoading(false) })
   }
