@@ -47,12 +47,13 @@ function platformLabel(e: PlatformEvent): { label: string; icon: React.ReactNode
   if (t === 'message_sent')     {
     const isAI = meta['aiGenerated'] === true
     return isAI
-      ? { label: 'Agent sent message',   icon: <Bot className={ICON_CLS} />,             iconBg: 'bg-violet-500/15 text-violet-400' }
-      : { label: 'Message sent',         icon: <Send className={ICON_CLS} />,            iconBg: 'bg-blue-500/15 text-blue-400' }
+      ? { label: 'Agent dispatched message', icon: <Bot className={ICON_CLS} />,          iconBg: 'bg-violet-500/15 text-violet-400' }
+      : { label: 'Dispatched to WhatsApp',   icon: <Send className={ICON_CLS} />,         iconBg: 'bg-blue-500/15 text-blue-400' }
   }
-  if (t === 'message_received') return { label: 'Message received',               icon: <MessageCircle className={ICON_CLS} />,  iconBg: 'bg-white/08 text-muted-foreground' }
-  if (t === 'message_failed')   return { label: 'Message failed to send',         icon: <AlertTriangle className={ICON_CLS} />,  iconBg: 'bg-red-500/15 text-red-400' }
-  if (t === 'message_queued')   return { label: 'Message queued',                 icon: <MessageSquare className={ICON_CLS} />,  iconBg: 'bg-white/08 text-muted-foreground' }
+  if (t === 'message_received')  return { label: 'Message received',              icon: <MessageCircle className={ICON_CLS} />,  iconBg: 'bg-white/08 text-muted-foreground' }
+  if (t === 'message_delivered') return { label: 'Message delivered',             icon: <CheckCircle2 className={ICON_CLS} />,   iconBg: 'bg-green-500/15 text-green-400' }
+  if (t === 'message_failed')    return { label: 'Message failed',                icon: <AlertTriangle className={ICON_CLS} />,  iconBg: 'bg-red-500/15 text-red-400' }
+  if (t === 'message_queued')    return { label: 'Message queued',                icon: <MessageSquare className={ICON_CLS} />,  iconBg: 'bg-white/08 text-muted-foreground' }
 
   if (t === 'broadcast_completed')       return { label: 'Broadcast finished',          icon: <Radio className={ICON_CLS} />,          iconBg: 'bg-primary/15 text-primary' }
   if (t === 'broadcast_message_failed')  return { label: 'Broadcast message failed',    icon: <AlertTriangle className={ICON_CLS} />,  iconBg: 'bg-red-500/15 text-red-400' }
