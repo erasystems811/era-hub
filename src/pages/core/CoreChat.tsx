@@ -72,6 +72,7 @@ export function CoreChat() {
   const [streamText, setStreamText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -80,7 +81,8 @@ export function CoreChat() {
   }, [activeId])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const el = scrollRef.current
+    if (el) el.scrollTop = el.scrollHeight
   }, [messages, streamText, streaming])
 
   useEffect(() => {
@@ -317,9 +319,10 @@ export function CoreChat() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-4">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto">
+          <div className="flex flex-col justify-end min-h-full px-8 py-6 gap-4">
           {messages.length === 0 && !streaming && (
-            <div className="h-full flex flex-col items-center justify-center text-center select-none">
+            <div className="flex flex-col items-center justify-center text-center select-none py-20">
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5" style={{ background: `${PURPLE}18`, border: `1px solid ${PURPLE}30` }}>
                 <Brain className="w-7 h-7" style={{ color: PURPLE }} />
               </div>
@@ -372,6 +375,7 @@ export function CoreChat() {
           )}
 
           <div ref={bottomRef} />
+          </div>
         </div>
 
         {/* Input */}
