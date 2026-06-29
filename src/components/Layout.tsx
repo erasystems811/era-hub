@@ -11,7 +11,7 @@ import {
   ScrollText, ShieldAlert, Search, ClipboardList,
   Bot, LayoutTemplate, GitMerge, FileSearch, Zap,
   Mail, Send, Globe, Phone, FileText,
-  Wifi, Brain, Database,
+  Wifi, Brain, Database, FolderOpen,
 } from 'lucide-react'
 import { ChangePasswordModal } from './ChangePasswordModal'
 import { NotificationPanel } from './NotificationPanel'
@@ -66,11 +66,23 @@ const CORE_NAV = [
   { icon: Settings, label: 'Settings', href: '/core/settings', sub: 'Connect ERA Core' },
 ]
 
+const STRUCTURE_NAV = [
+  { icon: BarChart2,    label: 'Dashboard',   href: '/structure/dashboard',   sub: 'Overview & stats',          alsoActiveFor: [] },
+  { icon: Users,        label: 'Accounts',    href: '/structure/accounts',    sub: 'Create & manage clients',   alsoActiveFor: [] },
+  { icon: Activity,     label: 'Monitoring',  href: '/structure/monitoring',  sub: 'Business health & alerts',  alsoActiveFor: [] },
+  { icon: ClipboardList,label: 'Questions',   href: '/structure/questions',   sub: 'Audit question bank',       alsoActiveFor: [] },
+  { icon: FileText,     label: 'Reports',     href: '/structure/reports',     sub: 'Review & release reports',  alsoActiveFor: [] },
+  { icon: FolderOpen,   label: 'Output',      href: '/structure/output',      sub: 'Client documents',          alsoActiveFor: [] },
+  { icon: CreditCard,   label: 'Payments',    href: '/structure/payments',    sub: 'Unlock transactions',       alsoActiveFor: [] },
+  { icon: Settings,     label: 'Settings',    href: '/structure/settings',    sub: 'API & configuration',       alsoActiveFor: [] },
+]
+
 const PRODUCTS = {
-  patient: { name: 'ERA Patient', color: '#4DBFB3', accentText: 'text-teal',      activeBg: 'bg-teal/[0.22]',      nav: PATIENT_NAV },
-  comms:   { name: 'ERA Comms',   color: '#CC7896', accentText: 'text-primary',   activeBg: 'bg-primary/[0.22]',   nav: COMMS_NAV   },
-  connect: { name: 'ERA Connect', color: '#CC7896', accentText: 'text-primary',   activeBg: 'bg-primary/[0.22]',   nav: CONNECT_NAV },
-  core:    { name: 'ERA Core',    color: '#9B7FD4', accentText: 'text-[#9B7FD4]', activeBg: 'bg-[#9B7FD4]/[0.22]', nav: CORE_NAV    },
+  patient:   { name: 'ERA Patient',   color: '#4DBFB3', accentText: 'text-teal',         activeBg: 'bg-teal/[0.22]',          nav: PATIENT_NAV   },
+  comms:     { name: 'ERA Comms',     color: '#CC7896', accentText: 'text-primary',      activeBg: 'bg-primary/[0.22]',       nav: COMMS_NAV     },
+  connect:   { name: 'ERA Connect',   color: '#CC7896', accentText: 'text-primary',      activeBg: 'bg-primary/[0.22]',       nav: CONNECT_NAV   },
+  core:      { name: 'ERA Core',      color: '#9B7FD4', accentText: 'text-[#9B7FD4]',   activeBg: 'bg-[#9B7FD4]/[0.22]',    nav: CORE_NAV      },
+  structure: { name: 'ERA Structure', color: '#C9952B', accentText: 'text-[#C9952B]',   activeBg: 'bg-[#C9952B]/[0.22]',    nav: STRUCTURE_NAV },
 } as const
 
 const SB_BG     = 'rgba(14, 11, 20, 0.88)'
@@ -130,7 +142,7 @@ function HubLayout({ children }: { children: ReactNode }) {
 }
 
 /* ─── Product Layout (ERA Patient / ERA Comms — product-specific sidebar) */
-function ProductLayout({ product, children }: { product: 'patient' | 'comms' | 'connect' | 'core'; children: ReactNode }) {
+function ProductLayout({ product, children }: { product: 'patient' | 'comms' | 'connect' | 'core' | 'structure'; children: ReactNode }) {
   const { logout }       = useAuth()
   const { unreadCount }  = useNotifications()
   const { pathname }     = useLocation()
@@ -408,9 +420,10 @@ function ProductLayout({ product, children }: { product: 'patient' | 'comms' | '
 /* ─── Root export — picks the right shell based on route ─────── */
 export function Layout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation()
-  if (pathname.startsWith('/patient')) return <ProductLayout product="patient">{children}</ProductLayout>
-  if (pathname.startsWith('/comms'))   return <ProductLayout product="comms">{children}</ProductLayout>
-  if (pathname.startsWith('/connect')) return <ProductLayout product="connect">{children}</ProductLayout>
-  if (pathname.startsWith('/core'))    return <ProductLayout product="core">{children}</ProductLayout>
+  if (pathname.startsWith('/patient'))   return <ProductLayout product="patient">{children}</ProductLayout>
+  if (pathname.startsWith('/comms'))     return <ProductLayout product="comms">{children}</ProductLayout>
+  if (pathname.startsWith('/connect'))   return <ProductLayout product="connect">{children}</ProductLayout>
+  if (pathname.startsWith('/core'))      return <ProductLayout product="core">{children}</ProductLayout>
+  if (pathname.startsWith('/structure')) return <ProductLayout product="structure">{children}</ProductLayout>
   return <HubLayout>{children}</HubLayout>
 }

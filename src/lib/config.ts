@@ -29,3 +29,12 @@ export function saveCoreConfig(url: string, secret: string) {
 // Keep these as named exports for backward compatibility — they read live from localStorage
 export const CORE_API    = env.VITE_CORE_API_URL    ?? ''
 export const CORE_SECRET = env.VITE_CORE_SECRET     ?? ''
+
+// ERA Structure — business audit & structuring tool
+export function getStructureApi(): string {
+  return env.VITE_STRUCTURE_API_URL || localStorage.getItem('era_structure_url') || ''
+}
+export function saveStructureConfig(url: string) {
+  localStorage.setItem('era_structure_url', url.replace(/\/+$/, ''))
+}
+export const STRUCTURE_SECRET = env.VITE_STRUCTURE_OPERATOR_SECRET ?? ''

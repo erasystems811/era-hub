@@ -45,6 +45,16 @@ import { WhatsAppConnectModule } from './pages/business-panel/WhatsAppConnectMod
 import { AutoReplyModule }       from './pages/business-panel/AutoReplyModule'
 import { AutomationsModule }     from './pages/business-panel/AutomationsModule'
 
+// ERA Structure
+import { StructureDashboard } from './pages/structure/StructureDashboard'
+import { StructureAccounts }  from './pages/structure/StructureAccounts'
+import { StructureMonitoring }from './pages/structure/StructureMonitoring'
+import { StructureQuestions } from './pages/structure/StructureQuestions'
+import { StructureReports }   from './pages/structure/StructureReports'
+import { StructureOutput }    from './pages/structure/StructureOutput'
+import { StructurePayments }  from './pages/structure/StructurePayments'
+import { StructureSettings }  from './pages/structure/StructureSettings'
+
 // ERA Core
 import { CoreChat }     from './pages/core/CoreChat'
 import { CoreMemory }   from './pages/core/CoreMemory'
@@ -151,6 +161,17 @@ function ProtectedApp() {
         <Route path="/core/memory" element={<CoreMemory />} />
         <Route path="/core/import"    element={<CoreImport />} />
         <Route path="/core/settings"  element={<CoreSettings />} />
+
+        {/* ERA Structure */}
+        <Route path="/structure"                  element={<Navigate to="/structure/dashboard" replace />} />
+        <Route path="/structure/dashboard"        element={<StructureDashboard />} />
+        <Route path="/structure/accounts"         element={<StructureAccounts />} />
+        <Route path="/structure/monitoring"       element={<StructureMonitoring />} />
+        <Route path="/structure/questions"        element={<StructureQuestions />} />
+        <Route path="/structure/reports"          element={<StructureReports />} />
+        <Route path="/structure/output"           element={<StructureOutput />} />
+        <Route path="/structure/payments"         element={<StructurePayments />} />
+        <Route path="/structure/settings"         element={<StructureSettings />} />
 
         {/* ERA Connect */}
         <Route path="/connect"                    element={<ConnectHome />} />
