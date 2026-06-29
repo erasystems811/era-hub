@@ -21,7 +21,7 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
   }
   if (res.status === 204) return undefined as T
   if (!contentType.includes('application/json')) {
-    throw new Error('ERA Structure returned an unexpected response.')
+    throw new Error(`ERA Structure returned non-JSON (status ${res.status}, type: ${contentType || 'none'})`)
   }
   return res.json() as T
 }
