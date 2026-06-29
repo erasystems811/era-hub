@@ -32,13 +32,23 @@ export const CORE_SECRET = env.VITE_CORE_SECRET     ?? ''
 
 // ERA Structure — business audit & structuring tool
 export function getStructureApi(): string {
-  return env.VITE_STRUCTURE_API_URL || localStorage.getItem('era_structure_url') || ''
+  return localStorage.getItem('era_structure_url') || ''
 }
 export function getStructureSecret(): string {
-  return env.VITE_STRUCTURE_OPERATOR_SECRET || localStorage.getItem('era_structure_secret') || ''
+  return localStorage.getItem('era_structure_secret') || ''
 }
 export function saveStructureConfig(url: string, secret?: string) {
   localStorage.setItem('era_structure_url', url.replace(/\/+$/, ''))
   if (secret !== undefined) localStorage.setItem('era_structure_secret', secret)
 }
-export const STRUCTURE_SECRET = env.VITE_STRUCTURE_OPERATOR_SECRET ?? ''
+
+// Called once at app startup — pulls Railway env vars from server so nothing is baked into the build
+export async function loadServerConfig() {
+  try {
+    const res = await fetch('/api/config')
+    if (!res.ok) return
+    const cfg = await res.json() as { structureUrl?: string; structureSecret?: string }
+    if (cfg.structureUrl)    localStorage.setItem('era_structure_url',    cfg.structureUrl.replace(/\/+$/, ''))
+    if (cfg.structureSecret) localStorage.setItem('era_structure_secret', cfg.structureSecret)
+  } catch { /* offline or local dev — ignore */ }
+}

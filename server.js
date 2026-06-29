@@ -6,7 +6,9 @@ import { fileURLToPath } from 'node:url'
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const PORT = parseInt(process.env.PORT ?? '3000', 10)
 const DIST = join(__dirname, 'dist')
-const ERA_CORE = (process.env.ERA_CORE_URL ?? 'https://era-core-production.up.railway.app').replace(/\/$/, '')
+const ERA_CORE      = (process.env.ERA_CORE_URL        ?? 'https://era-core-production.up.railway.app').replace(/\/$/, '')
+const STRUCTURE_URL = (process.env.STRUCTURE_API_URL   ?? '').replace(/\/$/, '')
+const STRUCTURE_SEC =  process.env.STRUCTURE_OPERATOR_SECRET ?? ''
 
 const MIME = {
   '.html':  'text/html; charset=utf-8',
@@ -56,6 +58,13 @@ createServer(async (req, res) => {
       res.writeHead(502, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify({ error: 'Proxy error: ' + e.message }))
     }
+    return
+  }
+
+  // Runtime config — read by React on startup so Railway env vars work without rebuilding
+  if (urlPath === '/api/config') {
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ structureUrl: STRUCTURE_URL, structureSecret: STRUCTURE_SEC }))
     return
   }
 

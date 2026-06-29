@@ -74,7 +74,6 @@ const STRUCTURE_NAV = [
   { icon: FileText,     label: 'Reports',     href: '/structure/reports',     sub: 'Review & release reports',  alsoActiveFor: [] },
   { icon: FolderOpen,   label: 'Output',      href: '/structure/output',      sub: 'Client documents',          alsoActiveFor: [] },
   { icon: CreditCard,   label: 'Payments',    href: '/structure/payments',    sub: 'Unlock transactions',       alsoActiveFor: [] },
-  { icon: Settings,     label: 'Settings',    href: '/structure/settings',    sub: 'API & configuration',       alsoActiveFor: [] },
 ]
 
 const PRODUCTS = {

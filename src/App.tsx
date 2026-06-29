@@ -53,7 +53,6 @@ import { StructureQuestions } from './pages/structure/StructureQuestions'
 import { StructureReports }   from './pages/structure/StructureReports'
 import { StructureOutput }    from './pages/structure/StructureOutput'
 import { StructurePayments }  from './pages/structure/StructurePayments'
-import { StructureSettings }  from './pages/structure/StructureSettings'
 
 // ERA Core
 import { CoreChat }     from './pages/core/CoreChat'
@@ -171,7 +170,6 @@ function ProtectedApp() {
         <Route path="/structure/reports"          element={<StructureReports />} />
         <Route path="/structure/output"           element={<StructureOutput />} />
         <Route path="/structure/payments"         element={<StructurePayments />} />
-        <Route path="/structure/settings"         element={<StructureSettings />} />
 
         {/* ERA Connect */}
         <Route path="/connect"                    element={<ConnectHome />} />
