@@ -2,6 +2,14 @@ import { useEffect, useState } from 'react'
 import { structureApi, Document, Business } from '../../lib/structure-api'
 import { ExternalLink, Search } from 'lucide-react'
 
+function getHealth(doc: Document): 'green' | 'amber' | 'red' {
+  if (!doc.next_review_due) return 'green'
+  const daysLeft = Math.ceil((new Date(doc.next_review_due).getTime() - Date.now()) / 86400000)
+  if (daysLeft < 0) return 'red'
+  if (daysLeft <= 3) return 'amber'
+  return 'green'
+}
+
 const HEALTH_COLOR = { green: '#4DBFB3', amber: '#C9952B', red: '#ef4444' }
 const HEALTH_BG    = { green: 'bg-[#4DBFB3]/10 text-[#4DBFB3]', amber: 'bg-[#C9952B]/10 text-[#C9952B]', red: 'bg-red-500/10 text-red-400' }
 
@@ -79,26 +87,27 @@ export function StructureOutput() {
                   const daysLeft = d.next_review_due
                     ? Math.ceil((new Date(d.next_review_due).getTime() - Date.now()) / 86400000)
                     : null
+                  const health = getHealth(d)
                   return (
                     <div key={d.id} className="px-4 py-3 flex items-center gap-3">
                       <div
                         className="w-2 h-2 rounded-full shrink-0"
-                        style={{ background: HEALTH_COLOR[d.health_status] }}
+                        style={{ background: HEALTH_COLOR[health] }}
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-foreground truncate">{d.title}</p>
                         <p className="text-[11px] text-muted-foreground/40">{d.category}</p>
                       </div>
-                      <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${HEALTH_BG[d.health_status]}`}>
-                        {d.health_status}
+                      <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${HEALTH_BG[health]}`}>
+                        {health}
                       </span>
                       {daysLeft !== null && (
                         <span className={`text-[11px] tabular-nums ${daysLeft < 0 ? 'text-red-400' : daysLeft < 5 ? 'text-amber-400' : 'text-muted-foreground/40'}`}>
                           {daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d left`}
                         </span>
                       )}
-                      {d.doc_url && (
-                        <a href={d.doc_url} target="_blank" rel="noopener noreferrer"
+                      {d.google_doc_url && (
+                        <a href={d.google_doc_url} target="_blank" rel="noopener noreferrer"
                           className="p-1.5 rounded-lg text-muted-foreground/35 hover:text-[#C9952B] hover:bg-[#C9952B]/10 transition">
                           <ExternalLink className="w-3.5 h-3.5" />
                         </a>

@@ -64,7 +64,7 @@ export interface Question {
   business_type_id: string
   layer: 1 | 2
   block: string
-  text: string
+  question_text: string
   input_type: 'short-text' | 'number' | 'dropdown' | 'yes-no' | 'multi-select' | 'voice-note'
   options: string[] | null
   order_index: number
@@ -87,9 +87,10 @@ export interface Document {
   business_id: string
   title: string
   category: string
-  health_status: 'green' | 'amber' | 'red'
   next_review_due: string | null
-  doc_url: string | null
+  last_reviewed_at: string | null
+  google_doc_url: string | null
+  assigned_role: string | null
   created_at: string
   businesses: { name: string } | null
 }

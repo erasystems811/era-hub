@@ -36,7 +36,7 @@ export function StructureQuestions() {
 
   const saveQuestion = async (q: Question) => {
     try {
-      await structureApi.updateQuestion(q.id, { text: q.text, input_type: q.input_type, options: q.options, block: q.block })
+      await structureApi.updateQuestion(q.id, { question_text: q.question_text, input_type: q.input_type, options: q.options, block: q.block })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed')
     }
@@ -58,7 +58,7 @@ export function StructureQuestions() {
         business_type_id: selectedTypeId,
         layer,
         block: 'A',
-        text: 'New question',
+        question_text: 'New question',
         input_type: 'short-text',
         options: null,
         order_index: questions.length + 1,
@@ -156,8 +156,8 @@ export function StructureQuestions() {
                   <div key={q.id} className="p-4 space-y-2.5">
                     <div className="flex gap-2">
                       <input
-                        value={q.text}
-                        onChange={e => updateQuestion(q.id, { text: e.target.value })}
+                        value={q.question_text}
+                        onChange={e => updateQuestion(q.id, { question_text: e.target.value })}
                         className="flex-1 px-3 py-1.5 rounded-lg text-sm bg-white/[0.05] border border-white/10 text-foreground focus:outline-none focus:border-[#C9952B]/50"
                       />
                       <select
