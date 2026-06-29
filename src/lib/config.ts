@@ -34,7 +34,11 @@ export const CORE_SECRET = env.VITE_CORE_SECRET     ?? ''
 export function getStructureApi(): string {
   return env.VITE_STRUCTURE_API_URL || localStorage.getItem('era_structure_url') || ''
 }
-export function saveStructureConfig(url: string) {
+export function getStructureSecret(): string {
+  return env.VITE_STRUCTURE_OPERATOR_SECRET || localStorage.getItem('era_structure_secret') || ''
+}
+export function saveStructureConfig(url: string, secret?: string) {
   localStorage.setItem('era_structure_url', url.replace(/\/+$/, ''))
+  if (secret !== undefined) localStorage.setItem('era_structure_secret', secret)
 }
 export const STRUCTURE_SECRET = env.VITE_STRUCTURE_OPERATOR_SECRET ?? ''

@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { getStructureApi, saveStructureConfig, STRUCTURE_SECRET } from '../../lib/config'
+import { getStructureApi, getStructureSecret, saveStructureConfig } from '../../lib/config'
 import { Save, CheckCircle2 } from 'lucide-react'
 
 export function StructureSettings() {
   const [url, setUrl] = useState(getStructureApi)
+  const [secret, setSecret] = useState(getStructureSecret)
   const [saved, setSaved] = useState(false)
 
   const handleSave = () => {
-    saveStructureConfig(url)
+    saveStructureConfig(url, secret)
     setSaved(true)
     setTimeout(() => setSaved(false), 2500)
   }
@@ -39,11 +40,14 @@ export function StructureSettings() {
           <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/50 block mb-2">
             Operator Secret
           </label>
-          <div className="w-full px-3 py-2 rounded-lg text-sm bg-white/[0.03] border border-white/07 text-muted-foreground/40 font-mono">
-            {STRUCTURE_SECRET ? `${STRUCTURE_SECRET.slice(0, 6)}${'•'.repeat(Math.max(0, STRUCTURE_SECRET.length - 6))}` : 'Not configured — set VITE_STRUCTURE_OPERATOR_SECRET in ERA Hub env vars'}
-          </div>
+          <input
+            value={secret}
+            onChange={e => setSecret(e.target.value)}
+            placeholder="Paste your STRUCTURE_OPERATOR_SECRET here"
+            className="w-full px-3 py-2 rounded-lg text-sm bg-white/[0.05] border border-white/10 text-foreground placeholder-muted-foreground/30 focus:outline-none focus:border-[#C9952B]/50 font-mono"
+          />
           <p className="text-[11px] text-muted-foreground/35 mt-1.5">
-            Set as <code className="text-[#C9952B]">VITE_STRUCTURE_OPERATOR_SECRET</code> in ERA Hub and <code className="text-[#C9952B]">STRUCTURE_OPERATOR_SECRET</code> in ERA Structure. Must match.
+            Must match <code className="text-[#C9952B]">STRUCTURE_OPERATOR_SECRET</code> in ERA Structure Railway vars.
           </p>
         </div>
 

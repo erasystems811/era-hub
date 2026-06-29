@@ -1,4 +1,4 @@
-import { getStructureApi, STRUCTURE_SECRET } from './config'
+import { getStructureApi, getStructureSecret } from './config'
 
 async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const BASE = getStructureApi()
@@ -7,7 +7,7 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
     ...opts,
     headers: {
       'Content-Type': 'application/json',
-      'X-Operator-Secret': STRUCTURE_SECRET,
+      'X-Operator-Secret': getStructureSecret(),
       ...opts.headers,
     },
   })
