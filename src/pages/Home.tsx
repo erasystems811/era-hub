@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Building2, MessageSquare, Wifi, ArrowRight, CheckCircle, AlertTriangle, Brain } from 'lucide-react'
+import { Building2, MessageSquare, Wifi, ArrowRight, CheckCircle, AlertTriangle, Brain, ClipboardList } from 'lucide-react'
 import { patientApi, HealthCheck } from '../lib/patient-api'
 import { commsApi, MonitoringSnapshot } from '../lib/comms-api'
 import { connectApi, ConnectStats } from '../lib/connect-api'
@@ -172,6 +172,32 @@ export function Home() {
           <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(191,124,147,0.45), transparent)' }} />
         </button>
       </div>
+
+      {/* ERA Structure */}
+      <button
+        onClick={() => nav('/structure/dashboard')}
+        className="group relative text-left rounded-2xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(201,149,43,0.16)]"
+        style={{ background: 'rgba(255,255,255,0.10)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderColor: 'rgba(201,149,43,0.22)', borderTopColor: 'rgba(255,255,255,0.22)', boxShadow: '0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.18)' }}
+      >
+        <div className="absolute inset-x-0 top-0 h-40 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse 110% 100% at 50% -10%, rgba(201,149,43,0.20) 0%, transparent 75%)' }} />
+
+        <div className="relative p-5 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: 'rgba(201,149,43,0.18)', border: '1px solid rgba(201,149,43,0.35)' }}>
+            <ClipboardList className="w-5 h-5" style={{ color: '#C9952B' }} />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">ERA Structure</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Business audit, structuring and client management</p>
+          </div>
+
+          <ArrowRight className="w-4 h-4 text-muted-foreground/25 group-hover:translate-x-1 transition-all duration-200 shrink-0" style={{ color: 'rgba(201,149,43,0.4)' }} />
+        </div>
+
+        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(201,149,43,0.35), transparent)' }} />
+      </button>
 
       {/* ERA Connect */}
       <button
