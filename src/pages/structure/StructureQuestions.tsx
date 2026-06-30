@@ -151,7 +151,7 @@ export function StructureQuestions() {
           {([1, 2] as const).map(l => (
             <button key={l} onClick={() => { setLayer(l); localStorage.setItem('era_q_layer', String(l)) }}
               className={`px-4 py-1.5 text-sm font-medium transition ${layer === l ? 'bg-[#C9952B] text-background' : 'text-muted-foreground/60 hover:text-foreground hover:bg-white/5'}`}>
-              {l === 1 ? 'Assessment' : 'Observation'}
+              {l === 1 ? 'Assessment' : 'Team Interview'}
             </button>
           ))}
         </div>
