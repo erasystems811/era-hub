@@ -113,9 +113,21 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
     reload(detail.id); onUpdated()
   }
 
-  const copyText = async (text: string) => {
-    await navigator.clipboard.writeText(text)
-    setCopied(true); setTimeout(() => setCopied(false), 1500)
+  const copyText = async (text: string, label = 'Copied!') => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text)
+      } else {
+        const el = document.createElement('textarea')
+        el.value = text; el.style.position = 'fixed'; el.style.opacity = '0'
+        document.body.appendChild(el); el.select()
+        document.execCommand('copy'); document.body.removeChild(el)
+      }
+      toast(label, 'success')
+      setCopied(true); setTimeout(() => setCopied(false), 1500)
+    } catch {
+      toast('Copy failed — select the text manually', 'error')
+    }
   }
 
   const TABS: { id: DrawerTab; label: string; icon: ComponentType<{ className?: string }> }[] = [
@@ -142,12 +154,12 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
                 </h2>
                 <p className="text-xs text-muted-foreground font-mono mt-0.5">{detail?.slug ?? client.slug}</p>
                 <button
-                  onClick={() => void copyText(client.id)}
-                  className="flex items-center gap-1 text-[10px] text-muted-foreground/40 hover:text-muted-foreground font-mono mt-0.5 transition group"
-                  title="Copy client ID"
+                  onClick={() => void copyText(client.id, 'Client ID copied!')}
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground/40 hover:text-muted-foreground/80 font-mono mt-0.5 transition"
+                  title="Click to copy client ID"
                 >
                   <span className="truncate max-w-[180px]">{client.id}</span>
-                  <Copy className="w-2.5 h-2.5 shrink-0 opacity-0 group-hover:opacity-100 transition" />
+                  <Copy className="w-2.5 h-2.5 shrink-0 ml-0.5" />
                 </button>
               </div>
             </div>
