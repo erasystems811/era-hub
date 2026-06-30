@@ -152,6 +152,8 @@ export const structureApi = {
   getReportResponses: (business_id: string) => get<{ layer1: Record<string, unknown>; layer2: Record<string, unknown>; questions: { id: string; block: string; question_text: string; layer: number }[]; staff: { name: string; role: string }[] }>(`/reports/responses?business_id=${business_id}`),
   generateReportAnalysis: (business_id: string) => post<{ report: Report }>('/reports/generate', { business_id }),
   updateReportContent: (business_id: string, generated_content: unknown) => patch<{ success: boolean }>('/reports', { business_id, generated_content }),
+  regenerateSection: (business_id: string, section: string, instruction: string) =>
+    post<{ section: string; content: unknown }>('/reports/regenerate-section', { business_id, section, instruction }),
 
   // Output (documents)
   listOutput: (businessId?: string) =>

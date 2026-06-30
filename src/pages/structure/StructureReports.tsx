@@ -135,6 +135,57 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   return <p className="text-[10px] font-bold uppercase tracking-widest text-[#C9952B] mb-3">{children}</p>
 }
 
+type SectionHeaderProps = {
+  title: string
+  sectionKey: string
+  activeSection: string | null
+  instruction: string
+  running: boolean
+  onOpen: (key: string) => void
+  onClose: () => void
+  onInstructionChange: (v: string) => void
+  onRun: (key: string) => void
+}
+function SectionHeader({ title, sectionKey, activeSection, instruction, running, onOpen, onClose, onInstructionChange, onRun }: SectionHeaderProps) {
+  const isOpen = activeSection === sectionKey
+  return (
+    <div className="mb-3">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-[#C9952B]">{title}</p>
+        <button
+          onClick={() => isOpen ? onClose() : onOpen(sectionKey)}
+          className="inline-flex items-center gap-1 text-[10px] text-muted-foreground/30 hover:text-[#C9952B] transition px-1.5 py-0.5 rounded"
+        >
+          <Sparkles className="w-3 h-3" />
+          Regenerate
+        </button>
+      </div>
+      {isOpen && (
+        <div className="mt-2 rounded-lg border border-[#C9952B]/20 bg-[#C9952B]/05 p-3 space-y-2">
+          <textarea
+            value={instruction}
+            onChange={e => onInstructionChange(e.target.value)}
+            rows={2}
+            placeholder="Optional: tell it what to do differently — e.g. 'Be more specific about the sales process', 'Add more SOPs for customer service', 'The closing should be more direct about the cash problem'"
+            className="w-full bg-white/[0.05] border border-white/10 rounded px-2.5 py-1.5 text-xs text-foreground/90 resize-none focus:outline-none focus:border-[#C9952B]/50 placeholder-muted-foreground/20"
+          />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onRun(sectionKey)}
+              disabled={running}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#C9952B] text-[#0B1220] hover:bg-[#C9952B]/90 disabled:opacity-50 transition"
+            >
+              {running ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+              {running ? 'Regenerating…' : 'Run'}
+            </button>
+            <button onClick={onClose} className="text-xs text-muted-foreground/40 hover:text-foreground transition">Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 const QUADRANTS = [
   { key: 'q1_do' as const, label: 'DO NOW', sub: 'Urgent + Important', description: 'Handle these personally — today.', border: 'border-red-500/30', tag: 'bg-red-500/10 text-red-400', dot: 'bg-red-400', num: '1', numColor: 'text-red-400' },
   { key: 'q2_schedule' as const, label: 'SCHEDULE', sub: 'Important, Not Urgent', description: 'Block time for this. This is where growth lives.', border: 'border-[#4DBFB3]/30', tag: 'bg-[#4DBFB3]/10 text-[#4DBFB3]', dot: 'bg-[#4DBFB3]', num: '2', numColor: 'text-[#4DBFB3]' },
@@ -248,6 +299,11 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
   const [draft, setDraft] = useState<ReportContent>({})
   const [saving, setSaving] = useState(false)
 
+  // Per-section regeneration
+  const [activeSection, setActiveSection] = useState<string | null>(null)
+  const [sectionInstruction, setSectionInstruction] = useState('')
+  const [runningSectionRegen, setRunningSectionRegen] = useState(false)
+
   const biz = r.businesses as { name: string; owner_name: string; business_types: { name: string } | null } | null
   const content = r.generated_content as ReportContent | null
   const hasAnalysis = content && Object.keys(content).length > 0
@@ -273,6 +329,36 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
     setReleasing(true)
     try { await onRelease(r.id, notes) } finally { setReleasing(false) }
   }
+
+  const openSectionRegen = (key: string) => {
+    setSectionInstruction('')
+    setActiveSection(key)
+  }
+
+  const runSectionRegen = async (key: string) => {
+    setRunningSectionRegen(true)
+    setGenError('')
+    try {
+      const { content: newSection } = await structureApi.regenerateSection(r.business_id, key, sectionInstruction)
+      const updated = { ...(r.generated_content as ReportContent ?? {}), [key]: newSection }
+      await structureApi.updateReportContent(r.business_id, updated)
+      onUpdate({ ...r, generated_content: updated })
+      setActiveSection(null)
+    } catch (e) { setGenError(e instanceof Error ? e.message : 'Regeneration failed') }
+    finally { setRunningSectionRegen(false) }
+  }
+
+  const sectionHeaderProps = (key: string, title: string) => ({
+    title,
+    sectionKey: key,
+    activeSection: editMode ? null : activeSection,
+    instruction: sectionInstruction,
+    running: runningSectionRegen && activeSection === key,
+    onOpen: openSectionRegen,
+    onClose: () => setActiveSection(null),
+    onInstructionChange: setSectionInstruction,
+    onRun: runSectionRegen,
+  })
 
   const enterEdit = () => {
     setDraft(JSON.parse(JSON.stringify(content ?? {})))
@@ -479,7 +565,7 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   {/* ── Executive Summary ── */}
                   {c.executive_summary && (
                     <div>
-                      <SectionTitle>Executive Summary</SectionTitle>
+                      <SectionHeader {...sectionHeaderProps('executive_summary', 'Executive Summary')} />
                       {editMode ? (
                         <Card className="space-y-3">
                           <div><FieldLabel>Situation</FieldLabel><EF val={draft.executive_summary?.situation ?? ''} onChange={v => setNested('executive_summary', 'situation', v)} rows={2} /></div>
@@ -524,7 +610,7 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   {/* ── Business Snapshot ── */}
                   {c.business_snapshot && (
                     <div>
-                      <SectionTitle>Business Snapshot</SectionTitle>
+                      <SectionHeader {...sectionHeaderProps('business_snapshot', 'Business Snapshot')} />
                       {editMode ? (
                         <Card className="space-y-3">
                           <div><FieldLabel>One-line diagnosis</FieldLabel><EF val={draft.business_snapshot?.one_line_diagnosis ?? ''} onChange={v => setNested('business_snapshot', 'one_line_diagnosis', v)} rows={2} /></div>
@@ -565,7 +651,7 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   {/* ── Key Findings ── */}
                   {(Array.isArray(c.key_findings) && c.key_findings.length > 0 || editMode) && (
                     <div>
-                      <SectionTitle>Key Findings</SectionTitle>
+                      <SectionHeader {...sectionHeaderProps('key_findings', 'Key Findings')} />
                       {editMode ? (
                         <div className="space-y-3">
                           {(draft.key_findings ?? []).map((f, i) => (
@@ -604,7 +690,7 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   {/* ── Contradiction Analysis ── */}
                   {(Array.isArray(c.contradiction_analysis) && c.contradiction_analysis.length > 0 || editMode) && (
                     <div>
-                      <SectionTitle>Reality vs Perception</SectionTitle>
+                      <SectionHeader {...sectionHeaderProps('contradiction_analysis', 'Reality vs Perception')} />
                       {editMode ? (
                         <div className="space-y-2">
                           {(draft.contradiction_analysis ?? []).map((con, i) => (
@@ -648,7 +734,7 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                     if (!arr.length && !editMode) return null
                     return (
                       <div>
-                        <SectionTitle>Revenue Leakage</SectionTitle>
+                        <SectionHeader {...sectionHeaderProps('revenue_leakage', 'Revenue Leakage')} />
                         {editMode ? (
                           <div className="space-y-2">
                             {draftArr.map((l, i) => (
@@ -704,7 +790,7 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   {/* ── Structural Gaps ── */}
                   {(Array.isArray(c.structural_gaps) && c.structural_gaps.length > 0 || editMode) && (
                     <div>
-                      <SectionTitle>Structural Gaps</SectionTitle>
+                      <SectionHeader {...sectionHeaderProps('structural_gaps', 'Structural Gaps')} />
                       {editMode ? (
                         <div className="space-y-2">
                           {(draft.structural_gaps ?? []).map((g, i) => (
@@ -743,11 +829,11 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   {/* ── Priority Actions ── */}
                   {c.priority_actions && (
                     <div>
-                      <SectionTitle>Priority Action Sequence</SectionTitle>
+                      <SectionHeader {...sectionHeaderProps('priority_actions', 'Priority Action Sequence')} />
                       {editMode ? (
                         <div className="space-y-5">
                           {(['immediate', 'short_term', 'medium_term'] as const).map((tier, ti) => {
-                            const labels = ['Immediate — Week 1–2', 'Short Term — Month 1–2', 'Medium Term — Month 3–6']
+                            const labels = ['Immediate', 'Short Term', 'Medium Term']
                             const colors = ['text-red-400', 'text-orange-400', 'text-yellow-400']
                             const items = draft.priority_actions?.[tier] ?? []
                             return (
@@ -770,9 +856,9 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                         </div>
                       ) : (
                         <div className="space-y-4">
-                          <ActionTier label="Immediate — Week 1–2" color="text-red-400" items={c.priority_actions.immediate} />
-                          <ActionTier label="Short Term — Month 1–2" color="text-orange-400" items={c.priority_actions.short_term} />
-                          <ActionTier label="Medium Term — Month 3–6" color="text-yellow-400" items={c.priority_actions.medium_term} />
+                          <ActionTier label="Immediate" color="text-red-400" items={c.priority_actions.immediate} />
+                          <ActionTier label="Short Term" color="text-orange-400" items={c.priority_actions.short_term} />
+                          <ActionTier label="Medium Term" color="text-yellow-400" items={c.priority_actions.medium_term} />
                         </div>
                       )}
                     </div>
@@ -781,7 +867,7 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   {/* ── SOP List ── */}
                   {(Array.isArray(c.sop_list) && c.sop_list.length > 0 || editMode) && (
                     <div>
-                      <SectionTitle>SOPs to Document</SectionTitle>
+                      <SectionHeader {...sectionHeaderProps('sop_list', 'SOPs to Document')} />
                       {editMode ? (
                         <div className="space-y-1.5">
                           {(draft.sop_list ?? []).map((s, i) => (
@@ -819,7 +905,7 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   {/* ── Delegation Readiness ── */}
                   {(Array.isArray(c.delegation_readiness) && c.delegation_readiness.length > 0 || editMode) && (
                     <div>
-                      <SectionTitle>Delegation Readiness</SectionTitle>
+                      <SectionHeader {...sectionHeaderProps('delegation_readiness', 'Delegation Readiness')} />
                       {editMode ? (
                         <div className="space-y-2">
                           {(draft.delegation_readiness ?? []).map((d, i) => (
@@ -854,7 +940,7 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   {/* ── 90-Day Vision ── */}
                   {(Array.isArray(c.vision_90_days) && c.vision_90_days.length > 0 || editMode) && (
                     <div>
-                      <SectionTitle>90-Day Structured Vision</SectionTitle>
+                      <SectionHeader {...sectionHeaderProps('vision_90_days', '90-Day Structured Vision')} />
                       {editMode ? (
                         <Card className="space-y-2">
                           {(draft.vision_90_days ?? []).map((v, i) => (
@@ -882,7 +968,7 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   {/* ── Closing Assessment ── */}
                   {(c.closing_assessment || editMode) && (
                     <div>
-                      <SectionTitle>Consultant's Assessment</SectionTitle>
+                      <SectionHeader {...sectionHeaderProps('closing_assessment', "Consultant's Assessment")} />
                       {editMode ? (
                         <Card className="border-[#C9952B]/20">
                           <EF val={draft.closing_assessment ?? ''} onChange={v => setTop('closing_assessment', v)} rows={6} />
@@ -895,10 +981,10 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                     </div>
                   )}
 
-                  {/* ── Eisenhower Matrix (view only) ── */}
+                  {/* ── Eisenhower Matrix ── */}
                   {c.eisenhower_matrix && (
                     <div>
-                      <SectionTitle>Priority Matrix — How to Structure Your Time</SectionTitle>
+                      <SectionHeader {...sectionHeaderProps('eisenhower_matrix', 'Priority Matrix — How to Structure Your Time')} />
                       <EisenhowerMatrix
                         matrix={c.eisenhower_matrix}
                         businessName={biz?.name ?? ''}
@@ -910,7 +996,7 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   {/* ── Org Structure ── */}
                   {(c.org_structure || editMode) && (
                     <div>
-                      <SectionTitle>Organisational Structure</SectionTitle>
+                      <SectionHeader {...sectionHeaderProps('org_structure', 'Organisational Structure')} />
                       {editMode ? (
                         <div className="space-y-4">
                           {/* Current */}
@@ -1085,7 +1171,7 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   {/* ── Process Map ── */}
                   {(Array.isArray(c.process_map) && c.process_map.length > 0 || editMode) && (
                     <div>
-                      <SectionTitle>Process Map</SectionTitle>
+                      <SectionHeader {...sectionHeaderProps('process_map', 'Process Map')} />
                       {editMode ? (
                         <div className="space-y-4">
                           {(draft.process_map ?? []).map((proc, pi) => (
