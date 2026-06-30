@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { structureApi, Question, BusinessType } from '../../lib/structure-api'
-import { Plus, Save, Trash2, Sparkles } from 'lucide-react'
+import { Plus, Save, Trash2, Sparkles, X } from 'lucide-react'
 
 const INPUT_TYPES = ['short-text', 'number', 'dropdown', 'yes-no', 'multi-select', 'voice-note'] as const
 
@@ -198,11 +198,9 @@ export function StructureQuestions() {
                       />
                     </div>
                     {(q.input_type === 'dropdown' || q.input_type === 'multi-select') && (
-                      <input
-                        value={q.options?.join(', ') ?? ''}
-                        onChange={e => updateQuestion(q.id, { options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
-                        placeholder="Options: Yes, No, Sometimes…"
-                        className="w-full px-3 py-1.5 rounded-lg text-sm bg-white/[0.05] border border-white/10 text-muted-foreground/70 placeholder-muted-foreground/30 focus:outline-none focus:border-[#C9952B]/40"
+                      <OptionsEditor
+                        options={q.options ?? []}
+                        onChange={opts => updateQuestion(q.id, { options: opts })}
                       />
                     )}
                     <div className="flex gap-2">
@@ -222,6 +220,44 @@ export function StructureQuestions() {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+function OptionsEditor({ options, onChange }: { options: string[]; onChange: (v: string[]) => void }) {
+  const [draft, setDraft] = useState('')
+  const add = () => {
+    const val = draft.trim()
+    if (!val || options.includes(val)) return
+    onChange([...options, val])
+    setDraft('')
+  }
+  return (
+    <div className="space-y-2">
+      <p className="text-[11px] text-muted-foreground/40 uppercase tracking-wider">Options</p>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map(o => (
+          <span key={o} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-white/[0.07] border border-white/10 text-foreground">
+            {o}
+            <button onClick={() => onChange(options.filter(x => x !== o))} className="text-muted-foreground/40 hover:text-red-400 transition ml-0.5">
+              <X className="w-3 h-3" />
+            </button>
+          </span>
+        ))}
+        {options.length === 0 && <span className="text-xs text-muted-foreground/30">No options yet</span>}
+      </div>
+      <div className="flex gap-2">
+        <input
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && add()}
+          placeholder="Type an option and press Enter…"
+          className="flex-1 px-3 py-1.5 rounded-lg text-sm bg-white/[0.05] border border-white/10 text-foreground placeholder-muted-foreground/30 focus:outline-none focus:border-[#C9952B]/50"
+        />
+        <button onClick={add} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-[#C9952B]/30 text-[#C9952B] hover:bg-[#C9952B]/10 transition">
+          Add
+        </button>
+      </div>
     </div>
   )
 }
