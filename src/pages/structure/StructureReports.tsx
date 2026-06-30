@@ -26,6 +26,7 @@ const PRIORITY_STYLE: Record<string, string> = {
   Standard: 'bg-white/05 text-muted-foreground/50',
 }
 
+type MatrixTask = { task?: string; source?: string; note?: string }
 type ReportContent = {
   executive_summary?: { situation?: string; complication?: string; resolution?: string[] }
   business_snapshot?: { type?: string; staff_count?: number; owner_stated_problem?: string; current_stage?: string; one_line_diagnosis?: string }
@@ -42,6 +43,12 @@ type ReportContent = {
   delegation_readiness?: { person?: string; role?: string; tasks_to_absorb?: string; what_they_need_first?: string; risk_note?: string }[]
   vision_90_days?: string[]
   closing_assessment?: string
+  eisenhower_matrix?: {
+    q1_do?: MatrixTask[]
+    q2_schedule?: MatrixTask[]
+    q3_delegate?: MatrixTask[]
+    q4_eliminate?: MatrixTask[]
+  }
 }
 
 type Responses = {
@@ -53,6 +60,135 @@ type Responses = {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <p className="text-[10px] font-bold uppercase tracking-widest text-[#C9952B] mb-3">{children}</p>
+}
+
+const QUADRANTS = [
+  {
+    key: 'q1_do' as const,
+    label: 'DO NOW',
+    sub: 'Urgent + Important',
+    description: 'Handle these personally — today.',
+    border: 'border-red-500/30',
+    tag: 'bg-red-500/10 text-red-400',
+    dot: 'bg-red-400',
+    num: '1',
+    numColor: 'text-red-400',
+  },
+  {
+    key: 'q2_schedule' as const,
+    label: 'SCHEDULE',
+    sub: 'Important, Not Urgent',
+    description: 'Block time for this. This is where growth lives.',
+    border: 'border-[#4DBFB3]/30',
+    tag: 'bg-[#4DBFB3]/10 text-[#4DBFB3]',
+    dot: 'bg-[#4DBFB3]',
+    num: '2',
+    numColor: 'text-[#4DBFB3]',
+  },
+  {
+    key: 'q3_delegate' as const,
+    label: 'DELEGATE',
+    sub: 'Urgent, Not Important',
+    description: 'Someone else or a system should handle this.',
+    border: 'border-[#C9952B]/30',
+    tag: 'bg-[#C9952B]/10 text-[#C9952B]',
+    dot: 'bg-[#C9952B]',
+    num: '3',
+    numColor: 'text-[#C9952B]',
+  },
+  {
+    key: 'q4_eliminate' as const,
+    label: 'ELIMINATE',
+    sub: 'Not Urgent, Not Important',
+    description: 'Stop doing this. It costs time and returns nothing.',
+    border: 'border-white/10',
+    tag: 'bg-white/05 text-muted-foreground/40',
+    dot: 'bg-muted-foreground/30',
+    num: '4',
+    numColor: 'text-muted-foreground/30',
+  },
+]
+
+function EisenhowerMatrix({ matrix, businessName, isSolo }: { matrix: ReportContent['eisenhower_matrix']; businessName: string; isSolo: boolean }) {
+  if (!matrix) return null
+  return (
+    <div className="rounded-2xl border border-[#C9952B]/20 overflow-hidden bg-[#0A1628]">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-white/06 flex items-center justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-[#C9952B]">Eisenhower Priority Matrix</p>
+          <p className="text-[11px] text-muted-foreground/40 mt-0.5">{businessName} · ERA Structure Diagnostic</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] text-muted-foreground/30 uppercase tracking-wider">Urgency →</p>
+        </div>
+      </div>
+
+      {/* Axis labels */}
+      <div className="flex">
+        <div className="w-6 flex items-center justify-center py-4">
+          <p className="text-[9px] text-muted-foreground/30 uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Importance ↑</p>
+        </div>
+        <div className="flex-1 grid grid-cols-2 gap-px bg-white/05 p-px">
+          {QUADRANTS.map(q => {
+            const tasks = matrix[q.key] ?? []
+            return (
+              <div key={q.key} className={`bg-[#0A1628] p-4 min-h-[220px] border ${q.border}`}>
+                {/* Quadrant header */}
+                <div className="flex items-center gap-2 mb-3">
+                  <span className={`text-2xl font-black opacity-20 ${q.numColor}`}>{q.num}</span>
+                  <div>
+                    <p className={`text-[11px] font-black tracking-widest ${q.numColor}`}>{q.label}</p>
+                    <p className="text-[10px] text-muted-foreground/30">{q.sub}</p>
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground/30 mb-3 border-b border-white/04 pb-2 italic">{q.description}</p>
+
+                {/* Tasks */}
+                <div className="space-y-2">
+                  {tasks.length === 0 ? (
+                    <p className="text-[10px] text-muted-foreground/20 italic">No tasks identified here</p>
+                  ) : tasks.map((t, i) => (
+                    <div key={i} className="group">
+                      <div className="flex items-start gap-2">
+                        <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${t.source === 'suggested' ? 'opacity-40' : ''} ${q.dot}`} />
+                        <div className="flex-1">
+                          <p className="text-xs text-foreground/80 leading-snug">{t.task}</p>
+                          {t.source === 'suggested' && <span className="text-[9px] text-muted-foreground/25 uppercase tracking-wider">suggested</span>}
+                          {t.note && <p className="text-[10px] text-muted-foreground/35 mt-0.5 leading-snug hidden group-hover:block">{t.note}</p>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Footer note for solopreneurs */}
+      {isSolo && (
+        <div className="px-6 py-3 border-t border-white/06 bg-[#C9952B]/05">
+          <p className="text-[10px] text-[#C9952B]/70">
+            <span className="font-bold">Solo operator note:</span> Quadrant 3 shows tasks to automate or outsource as the business grows — not tasks to hand off today.
+          </p>
+        </div>
+      )}
+
+      {/* Legend */}
+      <div className="px-6 py-3 border-t border-white/06 flex gap-4">
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-white/40" />
+          <p className="text-[10px] text-muted-foreground/40">From your assessment</p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-white/15" />
+          <p className="text-[10px] text-muted-foreground/30">Suggested (hover for why)</p>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -432,6 +568,18 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                       <Card className="border-[#C9952B]/20">
                         <p className="text-sm text-foreground/80 leading-relaxed">{content.closing_assessment}</p>
                       </Card>
+                    </div>
+                  )}
+
+                  {/* Eisenhower Matrix */}
+                  {content?.eisenhower_matrix && (
+                    <div>
+                      <SectionTitle>Priority Matrix — How to Structure Your Time</SectionTitle>
+                      <EisenhowerMatrix
+                        matrix={content.eisenhower_matrix}
+                        businessName={biz?.name ?? ''}
+                        isSolo={(content.business_snapshot?.staff_count ?? 0) === 0}
+                      />
                     </div>
                   )}
                 </div>
