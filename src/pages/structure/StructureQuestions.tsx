@@ -6,8 +6,8 @@ const INPUT_TYPES = ['short-text', 'number', 'dropdown', 'yes-no', 'multi-select
 
 export function StructureQuestions() {
   const [types, setTypes] = useState<BusinessType[]>([])
-  const [selectedTypeId, setSelectedTypeId] = useState('')
-  const [layer, setLayer] = useState<1 | 2>(1)
+  const [selectedTypeId, setSelectedTypeId] = useState(() => localStorage.getItem('era_q_type') ?? '')
+  const [layer, setLayer] = useState<1 | 2>(() => (localStorage.getItem('era_q_layer') === '2' ? 2 : 1))
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(false)
   const [newTypeName, setNewTypeName] = useState('')
@@ -18,7 +18,7 @@ export function StructureQuestions() {
   useEffect(() => {
     structureApi.listBusinessTypes().then(t => {
       setTypes(t)
-      if (t.length > 0) setSelectedTypeId(t[0].id)
+      if (t.length > 0 && !localStorage.getItem('era_q_type')) setSelectedTypeId(t[0].id)
     }).catch(e => setError(e.message))
   }, [])
 
@@ -124,7 +124,7 @@ export function StructureQuestions() {
       <div className="flex flex-wrap gap-3">
         <select
           value={selectedTypeId}
-          onChange={e => setSelectedTypeId(e.target.value)}
+          onChange={e => { setSelectedTypeId(e.target.value); localStorage.setItem('era_q_type', e.target.value) }}
           className="px-3 py-1.5 rounded-lg text-sm bg-white/[0.05] border border-white/10 text-foreground focus:outline-none focus:border-[#C9952B]/50"
         >
           {types.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -132,7 +132,7 @@ export function StructureQuestions() {
 
         <div className="flex rounded-lg border border-white/10 overflow-hidden">
           {([1, 2] as const).map(l => (
-            <button key={l} onClick={() => setLayer(l)}
+            <button key={l} onClick={() => { setLayer(l); localStorage.setItem('era_q_layer', String(l)) }}
               className={`px-4 py-1.5 text-sm font-medium transition ${layer === l ? 'bg-[#C9952B] text-background' : 'text-muted-foreground/60 hover:text-foreground hover:bg-white/5'}`}>
               Layer {l}
             </button>
