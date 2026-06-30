@@ -141,6 +141,14 @@ function ClientDrawer({ client, plans, onClose, onUpdated }: {
                   {detail?.name ?? client.name}
                 </h2>
                 <p className="text-xs text-muted-foreground font-mono mt-0.5">{detail?.slug ?? client.slug}</p>
+                <button
+                  onClick={() => void copyText(client.id)}
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground/40 hover:text-muted-foreground font-mono mt-0.5 transition group"
+                  title="Copy client ID"
+                >
+                  <span className="truncate max-w-[180px]">{client.id}</span>
+                  <Copy className="w-2.5 h-2.5 shrink-0 opacity-0 group-hover:opacity-100 transition" />
+                </button>
               </div>
             </div>
             <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition shrink-0 mt-0.5 w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/07">
