@@ -34,7 +34,7 @@ export function StructureAccounts() {
 
   // Edit panel
   const [editing, setEditing] = useState<Business | null>(null)
-  const [edit, setEdit] = useState({ name: '', owner_name: '', owner_phone: '', business_type_id: '', stage: '', is_locked: false, new_password: '' })
+  const [edit, setEdit] = useState({ name: '', owner_name: '', owner_phone: '', owner_email: '', business_type_id: '', stage: '', is_locked: false, new_password: '' })
   const [showEditPw, setShowEditPw] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveErr, setSaveErr] = useState('')
@@ -51,12 +51,12 @@ export function StructureAccounts() {
   const filtered = businesses.filter(b =>
     b.name.toLowerCase().includes(search.toLowerCase()) ||
     b.owner_name.toLowerCase().includes(search.toLowerCase()) ||
-    b.owner_email.toLowerCase().includes(search.toLowerCase())
+    (b.owner_email ?? '').toLowerCase().includes(search.toLowerCase())
   )
 
   const openEdit = (b: Business) => {
     setEditing(b)
-    setEdit({ name: b.name, owner_name: b.owner_name, owner_phone: b.owner_phone ?? '', business_type_id: b.business_type_id, stage: b.stage, is_locked: b.is_locked, new_password: '' })
+    setEdit({ name: b.name, owner_name: b.owner_name, owner_phone: b.owner_phone ?? '', owner_email: b.owner_email ?? '', business_type_id: b.business_type_id, stage: b.stage, is_locked: b.is_locked, new_password: '' })
     setSaveErr('')
     setShowEditPw(false)
     setConfirmDelete(false)
@@ -180,7 +180,10 @@ export function StructureAccounts() {
       {editing && (
         <div className="rounded-xl border border-white/12 bg-white/[0.03] p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-foreground">Edit — {editing.name}</p>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Edit — {editing.name}</p>
+              {editing.business_number && <p className="text-xs text-[#C9952B] mt-0.5">Business #{editing.business_number}</p>}
+            </div>
             <button onClick={() => setEditing(null)} className="text-muted-foreground/40 hover:text-muted-foreground transition">
               <X className="w-4 h-4" />
             </button>
@@ -191,6 +194,9 @@ export function StructureAccounts() {
             </Field>
             <Field label="Owner Name">
               <input className={INPUT} value={edit.owner_name} onChange={e => setEdit(f => ({ ...f, owner_name: e.target.value }))} />
+            </Field>
+            <Field label="Email (contact only)">
+              <input className={INPUT} type="email" value={edit.owner_email} onChange={e => setEdit(f => ({ ...f, owner_email: e.target.value }))} />
             </Field>
             <Field label="Phone">
               <input className={INPUT} type="tel" value={edit.owner_phone} onChange={e => setEdit(f => ({ ...f, owner_phone: e.target.value }))} />
@@ -295,7 +301,7 @@ export function StructureAccounts() {
                   <tr key={b.id} className="hover:bg-white/[0.03] transition cursor-pointer" onClick={() => openEdit(b)}>
                     <td className="px-4 py-3">
                       <p className="font-medium text-foreground">{b.name}</p>
-                      <p className="text-[11px] text-muted-foreground/40">{b.owner_email}</p>
+                      <p className="text-[11px] text-[#C9952B]">#{b.business_number ?? '—'}</p>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground/70">{b.owner_name}</td>
                     <td className="px-4 py-3 text-muted-foreground/60 text-[12px]">{typeName}</td>

@@ -43,7 +43,8 @@ export interface Business {
   name: string
   owner_name: string
   owner_phone: string | null
-  owner_email: string
+  owner_email: string | null
+  business_number: string | null
   business_type_id: string
   stage: 'assessment' | 'guide' | 'maintenance'
   is_locked: boolean
@@ -128,7 +129,7 @@ export const structureApi = {
     owner_email: string; business_type_id: string; password: string
   }) => post<{ success: boolean; business: Business }>('/accounts', data),
   updateBusiness: (data: {
-    id: string; name?: string; owner_name?: string; owner_phone?: string
+    id: string; name?: string; owner_name?: string; owner_phone?: string; owner_email?: string
     business_type_id?: string; stage?: string; is_locked?: boolean; new_password?: string
   }) => patch<{ success: boolean; business: Business }>('/accounts', data),
   deleteBusiness: (id: string) => del<{ success: boolean }>('/accounts', { id }),
