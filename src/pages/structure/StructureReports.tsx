@@ -67,6 +67,13 @@ type ReportContent = {
     ideal_owner_involvement?: string
     what_changes?: string
   }[]
+  systems_recommendations?: {
+    system_name?: string
+    what_it_does?: string
+    manual_work_it_replaces?: string
+    build_when?: string
+    era_systems_note?: string
+  }[]
 }
 
 type Responses = {
@@ -1328,6 +1335,70 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                       )}
                     </div>
                   )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Systems Recommendations ── */}
+          {Array.isArray(c.systems_recommendations) && c.systems_recommendations.length > 0 && (
+            <div className="px-4 pb-4">
+              <SectionHeader {...sectionHeaderProps('systems_recommendations', 'Systems That Would Transform This Business')} />
+              {editMode ? (
+                <div className="space-y-3">
+                  {(draft.systems_recommendations ?? []).map((sys, si) => (
+                    <div key={si} className="rounded-xl border border-white/08 p-4 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <EI val={sys.system_name ?? ''} onChange={v => setDraft(p => ({ ...p, systems_recommendations: (p.systems_recommendations ?? []).map((x, idx) => idx === si ? { ...x, system_name: v } : x) }))} placeholder="System name" className="font-semibold" />
+                        <RemoveBtn onClick={() => setDraft(p => ({ ...p, systems_recommendations: (p.systems_recommendations ?? []).filter((_, idx) => idx !== si) }))} />
+                      </div>
+                      <FieldLabel>What it does</FieldLabel>
+                      <EF val={sys.what_it_does ?? ''} onChange={v => setDraft(p => ({ ...p, systems_recommendations: (p.systems_recommendations ?? []).map((x, idx) => idx === si ? { ...x, what_it_does: v } : x) }))} rows={2} />
+                      <FieldLabel>Manual work it replaces</FieldLabel>
+                      <EF val={sys.manual_work_it_replaces ?? ''} onChange={v => setDraft(p => ({ ...p, systems_recommendations: (p.systems_recommendations ?? []).map((x, idx) => idx === si ? { ...x, manual_work_it_replaces: v } : x) }))} rows={1} />
+                      <FieldLabel>Build when</FieldLabel>
+                      <EF val={sys.build_when ?? ''} onChange={v => setDraft(p => ({ ...p, systems_recommendations: (p.systems_recommendations ?? []).map((x, idx) => idx === si ? { ...x, build_when: v } : x) }))} rows={1} />
+                      <FieldLabel>ERA Systems note</FieldLabel>
+                      <EF val={sys.era_systems_note ?? ''} onChange={v => setDraft(p => ({ ...p, systems_recommendations: (p.systems_recommendations ?? []).map((x, idx) => idx === si ? { ...x, era_systems_note: v } : x) }))} rows={1} />
+                    </div>
+                  ))}
+                  <AddBtn onClick={() => setDraft(p => ({ ...p, systems_recommendations: [...(p.systems_recommendations ?? []), { system_name: '', what_it_does: '', manual_work_it_replaces: '', build_when: '', era_systems_note: '' }] }))} label="Add system" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3">
+                  {(c.systems_recommendations ?? []).map((sys, si) => (
+                    <div key={si} className="rounded-xl border border-white/08 overflow-hidden">
+                      <div className="px-4 py-3 bg-[#7C6AF0]/[0.06] border-b border-[#7C6AF0]/10">
+                        <p className="text-sm font-semibold text-foreground">{sys.system_name}</p>
+                      </div>
+                      <div className="px-4 py-3 space-y-3">
+                        {sys.what_it_does && (
+                          <p className="text-xs text-foreground/70 leading-relaxed">{sys.what_it_does}</p>
+                        )}
+                        {sys.manual_work_it_replaces && (
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40 mb-1">Replaces</p>
+                            <p className="text-xs text-muted-foreground/60">{sys.manual_work_it_replaces}</p>
+                          </div>
+                        )}
+                        {sys.build_when && (
+                          <div className="flex gap-2 items-start bg-[#C9952B]/05 rounded-lg px-3 py-2">
+                            <span className="text-[#C9952B] text-xs shrink-0 mt-0.5">⏳</span>
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-[#C9952B] mb-0.5">Build when</p>
+                              <p className="text-xs text-foreground/60">{sys.build_when}</p>
+                            </div>
+                          </div>
+                        )}
+                        {sys.era_systems_note && (
+                          <div className="flex gap-2 items-start bg-[#7C6AF0]/05 rounded-lg px-3 py-2 border border-[#7C6AF0]/10">
+                            <span className="text-[#7C6AF0] text-xs shrink-0 mt-0.5">◆</span>
+                            <p className="text-xs text-[#7C6AF0]/80 italic">{sys.era_systems_note}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
