@@ -225,7 +225,7 @@ export function StructureQuestions() {
                     {(q.input_type === 'dropdown' || q.input_type === 'multi-select') && (
                       <OptionsEditor
                         options={q.options ?? []}
-                        onChange={opts => updateQuestion(q.id, { options: opts })}
+                        onChange={opts => { updateQuestion(q.id, { options: opts }); saveQuestion({ ...q, options: opts }) }}
                       />
                     )}
                     <div className="flex gap-2">
