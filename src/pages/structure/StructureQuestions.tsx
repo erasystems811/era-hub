@@ -52,17 +52,18 @@ export function StructureQuestions() {
     }
   }
 
-  const addQuestion = async () => {
+  const addQuestion = async (block = 'A') => {
     if (!selectedTypeId) return
+    const blockQs = questions.filter(q => q.block === block)
     try {
       const q = await structureApi.createQuestion({
         business_type_id: selectedTypeId,
         layer,
-        block: 'A',
+        block,
         question_text: 'New question',
         input_type: 'short-text',
         options: null,
-        order_index: questions.length + 1,
+        order_index: blockQs.length + 1,
       })
       setQuestions(prev => [...prev, q])
     } catch (e) {
@@ -138,7 +139,7 @@ export function StructureQuestions() {
           ))}
         </div>
 
-        <button onClick={addQuestion}
+        <button onClick={() => addQuestion()}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-background bg-[#C9952B] hover:bg-[#C9952B]/90 transition">
           <Plus className="w-3.5 h-3.5" /> Add Question
         </button>
@@ -176,6 +177,7 @@ export function StructureQuestions() {
               </div>
               <div className="divide-y divide-white/05">
                 {qs.map(q => (
+
                   <div key={q.id} className="p-4 space-y-2.5">
                     <div className="flex gap-2">
                       <input
@@ -215,6 +217,12 @@ export function StructureQuestions() {
                     </div>
                   </div>
                 ))}
+                <div className="px-4 py-2.5">
+                  <button onClick={() => addQuestion(block)}
+                    className="flex items-center gap-1.5 text-xs text-[#C9952B]/70 hover:text-[#C9952B] transition">
+                    <Plus className="w-3.5 h-3.5" /> Add question to this block
+                  </button>
+                </div>
               </div>
             </div>
           ))}
