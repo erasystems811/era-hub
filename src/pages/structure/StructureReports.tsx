@@ -28,7 +28,7 @@ const PRIORITY_STYLE: Record<string, string> = {
 
 type MatrixTask = { task?: string; source?: string; note?: string }
 type OrgPerson = { name?: string; title?: string; actual_roles?: string[]; overload_note?: string }
-type OrgPosition = { title?: string; focus?: string; reports_to?: string | null; status?: string; hire_priority?: number }
+type OrgPosition = { title?: string; department?: string; focus?: string; reports_to?: string | null; status?: string; hire_priority?: number | null }
 type ProcessStep = string
 type ReportContent = {
   executive_summary?: { situation?: string; complication?: string; resolution?: string[] }
@@ -1159,40 +1159,69 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                             </div>
                           </div>
 
-                          {/* Ideal */}
+                          {/* Ideal — tree view grouped by department */}
                           <div className="rounded-xl border border-[#4DBFB3]/20 overflow-hidden">
                             <div className="px-4 py-2.5 bg-[#4DBFB3]/05 border-b border-[#4DBFB3]/10">
-                              <p className="text-xs font-bold text-[#4DBFB3] uppercase tracking-wider">Ideal Structure</p>
+                              <p className="text-xs font-bold text-[#4DBFB3] uppercase tracking-wider">Ideal Structure — Full Vision</p>
+                              <p className="text-[10px] text-muted-foreground/40 mt-0.5">5–10 year org chart · hire_priority = order to hire</p>
                             </div>
-                            <div className="p-4 space-y-3">
-                              {(c.org_structure?.ideal?.positions ?? []).map((pos, i) => (
-                                <div key={i} className="flex gap-3">
-                                  <div className="flex flex-col items-center">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${pos.status === 'exists' ? 'bg-[#4DBFB3]/15 border border-[#4DBFB3]/30 text-[#4DBFB3]' : 'bg-white/05 border border-dashed border-white/15 text-muted-foreground/30'}`}>
-                                      {pos.hire_priority ?? (pos.status === 'exists' ? '✓' : '+')}
-                                    </div>
-                                    {i < (c.org_structure?.ideal?.positions?.length ?? 0) - 1 && <div className="w-px flex-1 bg-white/08 mt-1" />}
+                            <div className="p-4">
+                              {(() => {
+                                const positions = c.org_structure?.ideal?.positions ?? []
+                                // Group by department
+                                const deptMap: Record<string, OrgPosition[]> = {}
+                                positions.forEach(p => {
+                                  const dept = p.department ?? 'Other'
+                                  if (!deptMap[dept]) deptMap[dept] = []
+                                  deptMap[dept].push(p)
+                                })
+                                // Sort: Leadership first, then alphabetical
+                                const deptOrder = Object.keys(deptMap).sort((a, b) =>
+                                  a === 'Leadership' ? -1 : b === 'Leadership' ? 1 : a.localeCompare(b)
+                                )
+                                const DEPT_COLORS: Record<string, string> = {
+                                  Leadership: '#C9952B', Sales: '#4DBFB3', Marketing: '#7C6AF0',
+                                  Operations: '#CC7896', Finance: '#6AB4C9', HR: '#A0C96A',
+                                }
+                                return (
+                                  <div className="space-y-5">
+                                    {deptOrder.map(dept => (
+                                      <div key={dept}>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: DEPT_COLORS[dept] ?? '#8b8a9b' }}>{dept}</p>
+                                        <div className="space-y-2 pl-2 border-l-2" style={{ borderColor: (DEPT_COLORS[dept] ?? '#8b8a9b') + '33' }}>
+                                          {deptMap[dept]
+                                            .sort((a, b) => (a.hire_priority ?? 999) - (b.hire_priority ?? 999))
+                                            .map((pos, i) => (
+                                              <div key={i} className={`rounded-lg border px-3 py-2.5 flex items-start gap-3 ${pos.status === 'exists' ? 'border-[#4DBFB3]/20 bg-[#4DBFB3]/03' : 'border-white/07 bg-white/[0.02]'}`}>
+                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${pos.status === 'exists' ? 'bg-[#4DBFB3]/20 text-[#4DBFB3]' : pos.status === 'can be assigned internally' ? 'bg-[#C9952B]/20 text-[#C9952B]' : 'bg-white/06 border border-dashed border-white/15 text-muted-foreground/40'}`}>
+                                                  {pos.status === 'exists' ? '✓' : pos.hire_priority ?? '+'}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                  <div className="flex items-center gap-2 flex-wrap">
+                                                    <p className="text-sm font-semibold text-foreground/90">{pos.title}</p>
+                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${pos.status === 'exists' ? 'bg-[#4DBFB3]/10 text-[#4DBFB3]' : pos.status === 'can be assigned internally' ? 'bg-[#C9952B]/10 text-[#C9952B]' : 'bg-white/05 text-muted-foreground/40 border border-dashed border-white/10'}`}>
+                                                      {pos.status === 'exists' ? 'Exists' : pos.status === 'can be assigned internally' ? 'Reassign' : `Hire #${pos.hire_priority ?? '?'}`}
+                                                    </span>
+                                                  </div>
+                                                  {pos.focus && <p className="text-xs text-muted-foreground/50 mt-0.5 leading-snug">{pos.focus}</p>}
+                                                  {pos.reports_to && <p className="text-[10px] text-muted-foreground/30 mt-0.5">↑ {pos.reports_to}</p>}
+                                                </div>
+                                              </div>
+                                            ))}
+                                        </div>
+                                      </div>
+                                    ))}
                                   </div>
-                                  <div className="flex-1 pb-3">
-                                    <div className="flex items-center gap-2">
-                                      <p className="text-sm font-semibold text-foreground/90">{pos.title}</p>
-                                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${pos.status === 'exists' ? 'bg-[#4DBFB3]/10 text-[#4DBFB3]' : pos.status === 'can be assigned internally' ? 'bg-[#C9952B]/10 text-[#C9952B]' : 'bg-white/05 text-muted-foreground/40 border border-dashed border-white/10'}`}>
-                                        {pos.status === 'exists' ? 'Exists' : pos.status === 'can be assigned internally' ? 'Reassign internally' : 'Hire'}
-                                      </span>
-                                    </div>
-                                    {pos.focus && <p className="text-xs text-muted-foreground/50 mt-0.5">{pos.focus}</p>}
-                                    {pos.reports_to && <p className="text-[11px] text-muted-foreground/30 mt-0.5">Reports to: {pos.reports_to}</p>}
-                                  </div>
-                                </div>
-                              ))}
+                                )
+                              })()}
 
                               {(c.org_structure?.ideal?.hiring_sequence ?? []).length > 0 && (
-                                <div className="mt-2 pt-3 border-t border-[#4DBFB3]/10">
-                                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#C9952B] mb-2">Hiring Sequence</p>
-                                  <div className="space-y-2">
+                                <div className="mt-5 pt-4 border-t border-[#C9952B]/10">
+                                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#C9952B] mb-3">Hiring Sequence</p>
+                                  <div className="space-y-2.5">
                                     {c.org_structure!.ideal!.hiring_sequence!.map((step, i) => (
-                                      <div key={i} className="flex gap-2">
-                                        <span className="text-[#C9952B] font-bold text-xs shrink-0 mt-0.5">{i + 1}.</span>
+                                      <div key={i} className="flex gap-3 items-start">
+                                        <div className="w-5 h-5 rounded-full bg-[#C9952B]/15 border border-[#C9952B]/30 flex items-center justify-center text-[10px] font-bold text-[#C9952B] shrink-0 mt-0.5">{i + 1}</div>
                                         <p className="text-xs text-muted-foreground/60 leading-relaxed">{step}</p>
                                       </div>
                                     ))}
@@ -1201,7 +1230,7 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                               )}
 
                               {(c.org_structure?.ideal?.immediate_restructure ?? []).length > 0 && (
-                                <div className="mt-2 pt-3 border-t border-[#4DBFB3]/10">
+                                <div className="mt-4 pt-4 border-t border-[#4DBFB3]/10">
                                   <p className="text-[10px] font-bold uppercase tracking-wider text-[#4DBFB3] mb-2">Do Now Without Hiring</p>
                                   <div className="space-y-1.5">
                                     {c.org_structure!.ideal!.immediate_restructure!.map((action, i) => (
