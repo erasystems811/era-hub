@@ -339,13 +339,17 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
           {activeTab === 'analysis' && (
             <div className="p-4 space-y-6">
               {!hasAnalysis ? (
-                <div className="text-center py-6 space-y-3">
-                  <p className="text-sm text-muted-foreground/50">No analysis generated yet.</p>
-                  {genError && <p className="text-xs text-red-400">{genError}</p>}
+                <div className="rounded-xl border border-[#C9952B]/20 bg-[#C9952B]/05 p-6 text-center space-y-4">
+                  <Sparkles className="w-8 h-8 text-[#C9952B] mx-auto opacity-60" />
+                  <div>
+                    <p className="text-sm font-semibold text-white mb-1">No analysis generated yet</p>
+                    <p className="text-xs text-white/40">Click the button below to run the AI diagnostic report for this business.</p>
+                  </div>
+                  {genError && <p className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2">{genError}</p>}
                   <button onClick={handleGenerate} disabled={generating}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-[#C9952B] text-background hover:bg-[#C9952B]/90 disabled:opacity-50 transition">
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold bg-[#C9952B] text-[#0B1220] hover:bg-[#C9952B]/90 disabled:opacity-50 transition">
                     {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    {generating ? 'Generating analysis…' : 'Generate AI Analysis'}
+                    {generating ? 'Generating — this takes 30–60 seconds…' : 'Generate AI Analysis'}
                   </button>
                 </div>
               ) : (
