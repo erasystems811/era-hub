@@ -127,6 +127,10 @@ export const structureApi = {
     name: string; owner_name: string; owner_phone?: string
     owner_email: string; business_type_id: string; password: string
   }) => post<{ success: boolean; business: Business }>('/accounts', data),
+  updateBusiness: (data: {
+    id: string; name?: string; owner_name?: string; owner_phone?: string
+    business_type_id?: string; stage?: string; is_locked?: boolean; new_password?: string
+  }) => patch<{ success: boolean; business: Business }>('/accounts', data),
 
   // Monitoring
   monitoring: () => get<MonitoredBusiness[]>('/monitoring'),
