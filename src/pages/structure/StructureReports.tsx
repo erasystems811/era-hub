@@ -197,7 +197,7 @@ function Card({ children, className = '' }: { children: React.ReactNode; classNa
 
 type ActionItem = { action?: string; owner?: string; success_looks_like?: string; time_estimate?: string }
 function ActionTier({ label, color, items }: { label: string; color: string; items: ActionItem[] | undefined }) {
-  if (!items?.length) return null
+  if (!Array.isArray(items) || !items.length) return null
   return (
     <div>
       <p className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${color}`}>{label}</p>
@@ -415,11 +415,11 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   )}
 
                   {/* Key Findings */}
-                  {content?.key_findings && content.key_findings.length > 0 && (
+                  {Array.isArray(content?.key_findings) && content!.key_findings!.length > 0 && (
                     <div>
                       <SectionTitle>Key Findings</SectionTitle>
                       <div className="space-y-3">
-                        {content.key_findings.map((f, i) => (
+                        {content!.key_findings!.map((f, i) => (
                           <Card key={i}>
                             <div className="flex items-start justify-between gap-2 mb-2">
                               <p className="text-sm font-semibold text-foreground/90 leading-snug">{f.headline}</p>
@@ -435,11 +435,11 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   )}
 
                   {/* Contradiction Analysis */}
-                  {content?.contradiction_analysis && content.contradiction_analysis.length > 0 && (
+                  {Array.isArray(content?.contradiction_analysis) && content!.contradiction_analysis!.length > 0 && (
                     <div>
                       <SectionTitle>Reality vs Perception</SectionTitle>
                       <div className="space-y-2">
-                        {content.contradiction_analysis.map((c, i) => (
+                        {content!.contradiction_analysis!.map((c, i) => (
                           <div key={i} className="rounded-lg border border-white/08 overflow-hidden">
                             <div className="px-3 py-2 bg-white/[0.02]">
                               <p className="text-[10px] text-muted-foreground/30 font-semibold uppercase mb-1">Owner stated</p>
@@ -482,11 +482,11 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   )}
 
                   {/* Structural Gaps */}
-                  {content?.structural_gaps && content.structural_gaps.length > 0 && (
+                  {Array.isArray(content?.structural_gaps) && content!.structural_gaps!.length > 0 && (
                     <div>
                       <SectionTitle>Structural Gaps</SectionTitle>
                       <div className="space-y-2">
-                        {content.structural_gaps.map((g, i) => (
+                        {content!.structural_gaps!.map((g, i) => (
                           <div key={i} className="rounded-lg border border-white/08 px-3 py-2.5 flex gap-3">
                             <div className="shrink-0 mt-0.5">
                               {g.severity === 'Critical' ? <AlertTriangle className="w-4 h-4 text-red-400" /> : g.severity === 'High' ? <AlertCircle className="w-4 h-4 text-orange-400" /> : <Info className="w-4 h-4 text-yellow-400" />}
@@ -517,11 +517,11 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   )}
 
                   {/* SOP List */}
-                  {content?.sop_list && content.sop_list.length > 0 && (
+                  {Array.isArray(content?.sop_list) && content!.sop_list!.length > 0 && (
                     <div>
                       <SectionTitle>SOPs to Create</SectionTitle>
                       <div className="space-y-1.5">
-                        {content.sop_list.map((s, i) => (
+                        {content!.sop_list!.map((s, i) => (
                           <div key={i} className="rounded-lg border border-white/06 px-3 py-2 flex items-center justify-between">
                             <div>
                               <p className="text-sm text-foreground/80">{s.title}</p>
@@ -535,11 +535,11 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   )}
 
                   {/* Delegation Readiness */}
-                  {content?.delegation_readiness && content.delegation_readiness.length > 0 && (
+                  {Array.isArray(content?.delegation_readiness) && content!.delegation_readiness!.length > 0 && (
                     <div>
                       <SectionTitle>Delegation Readiness</SectionTitle>
                       <div className="space-y-2">
-                        {content.delegation_readiness.map((d, i) => (
+                        {content!.delegation_readiness!.map((d, i) => (
                           <Card key={i}>
                             <p className="text-sm font-semibold text-foreground/90 mb-2">{d.person} <span className="text-muted-foreground/40 font-normal">— {d.role}</span></p>
                             {d.tasks_to_absorb && <p className="text-xs text-muted-foreground/60 mb-1"><span className="text-muted-foreground/30 font-semibold">Can absorb: </span>{d.tasks_to_absorb}</p>}
@@ -552,11 +552,11 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   )}
 
                   {/* 90-Day Vision */}
-                  {content?.vision_90_days && content.vision_90_days.length > 0 && (
+                  {Array.isArray(content?.vision_90_days) && content!.vision_90_days!.length > 0 && (
                     <div>
                       <SectionTitle>90-Day Structured Vision</SectionTitle>
                       <Card className="space-y-2">
-                        {content.vision_90_days.map((v, i) => (
+                        {content!.vision_90_days!.map((v, i) => (
                           <div key={i} className="flex gap-2">
                             <span className="text-[#4DBFB3] text-sm shrink-0">✓</span>
                             <p className="text-sm text-foreground/80">{v}</p>
