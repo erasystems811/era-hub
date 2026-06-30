@@ -74,10 +74,11 @@ export function StructureQuestions() {
 
   const handleSeed = async () => {
     if (!selectedTypeId) return
-    if (!confirm('This will replace ALL existing questions for this business type with the default question set. Continue?')) return
+    const layerName = layer === 1 ? 'Assessment' : 'Team Interview'
+    if (!confirm(`This will replace the ${layerName} questions for this business type with the defaults. Your other layer's questions will not be touched. Continue?`)) return
     setSeeding(true)
     try {
-      const result = await structureApi.seedQuestions(selectedTypeId)
+      const result = await structureApi.seedQuestions(selectedTypeId, layer)
       setError('')
       // Reload questions
       const qs = await structureApi.listQuestions(selectedTypeId, layer)

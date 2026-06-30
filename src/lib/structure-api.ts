@@ -142,7 +142,7 @@ export const structureApi = {
   createQuestion: (data: Omit<Question, 'id' | 'is_active'>) => post<Question>('/questions', data),
   updateQuestion: (id: string, data: Partial<Question>) => patch<Question>('/questions', { id, ...data }),
   deleteQuestion: (id: string) => del<{ success: boolean }>('/questions', { id }),
-  seedQuestions: (business_type_id: string) => post<{ success: boolean; inserted: number }>('/questions/seed', { business_type_id }),
+  seedQuestions: (business_type_id: string, layer?: 1 | 2) => post<{ success: boolean; inserted: number }>('/questions/seed', { business_type_id, layer }),
   copyQuestionsToAll: (source_business_type_id: string) => post<{ success: boolean; copied: number }>('/questions/copy', { source_business_type_id }),
 
   // Reports
