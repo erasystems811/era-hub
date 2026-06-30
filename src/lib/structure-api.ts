@@ -131,6 +131,7 @@ export const structureApi = {
     id: string; name?: string; owner_name?: string; owner_phone?: string
     business_type_id?: string; stage?: string; is_locked?: boolean; new_password?: string
   }) => patch<{ success: boolean; business: Business }>('/accounts', data),
+  deleteBusiness: (id: string) => del<{ success: boolean }>('/accounts', { id }),
 
   // Monitoring
   monitoring: () => get<MonitoredBusiness[]>('/monitoring'),

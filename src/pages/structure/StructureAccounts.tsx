@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { structureApi, Business, BusinessType } from '../../lib/structure-api'
-import { Plus, Search, Eye, EyeOff, X, Save, Lock, Unlock } from 'lucide-react'
+import { Plus, Search, Eye, EyeOff, X, Save, Lock, Unlock, Trash2 } from 'lucide-react'
 import { StatusDot } from '../../components/StatusDot'
 
 const STAGES = ['assessment', 'guide', 'maintenance'] as const
@@ -38,6 +38,8 @@ export function StructureAccounts() {
   const [showEditPw, setShowEditPw] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveErr, setSaveErr] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     Promise.all([structureApi.listBusinesses(), structureApi.listBusinessTypes()])
@@ -57,6 +59,22 @@ export function StructureAccounts() {
     setEdit({ name: b.name, owner_name: b.owner_name, owner_phone: b.owner_phone ?? '', business_type_id: b.business_type_id, stage: b.stage, is_locked: b.is_locked, new_password: '' })
     setSaveErr('')
     setShowEditPw(false)
+    setConfirmDelete(false)
+  }
+
+  const handleDelete = async () => {
+    if (!editing) return
+    setDeleting(true)
+    try {
+      await structureApi.deleteBusiness(editing.id)
+      setBusinesses(prev => prev.filter(b => b.id !== editing.id))
+      setEditing(null)
+    } catch (e) {
+      setSaveErr(e instanceof Error ? e.message : 'Delete failed')
+    } finally {
+      setDeleting(false)
+      setConfirmDelete(false)
+    }
   }
 
   const handleCreate = async () => {
@@ -203,19 +221,36 @@ export function StructureAccounts() {
               </div>
             </Field>
           </div>
-          <div className="flex items-center justify-between pt-1">
-            <button
-              onClick={() => setEdit(f => ({ ...f, is_locked: !f.is_locked }))}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
-                edit.is_locked
-                  ? 'text-red-400 border-red-500/30 bg-red-500/5 hover:bg-red-500/10'
-                  : 'text-[#4DBFB3] border-[#4DBFB3]/30 bg-[#4DBFB3]/5 hover:bg-[#4DBFB3]/10'
-              }`}>
-              {edit.is_locked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-              {edit.is_locked ? 'Account locked' : 'Account active'}
-            </button>
-            <div className="flex gap-2">
-              {saveErr && <p className="text-xs text-red-400 self-center">{saveErr}</p>}
+          <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setEdit(f => ({ ...f, is_locked: !f.is_locked }))}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
+                  edit.is_locked
+                    ? 'text-red-400 border-red-500/30 bg-red-500/5 hover:bg-red-500/10'
+                    : 'text-[#4DBFB3] border-[#4DBFB3]/30 bg-[#4DBFB3]/5 hover:bg-[#4DBFB3]/10'
+                }`}>
+                {edit.is_locked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                {edit.is_locked ? 'Locked' : 'Active'}
+              </button>
+              {!confirmDelete ? (
+                <button onClick={() => setConfirmDelete(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-400 border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 transition">
+                  <Trash2 className="w-3.5 h-3.5" /> Delete
+                </button>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-red-400">Sure?</span>
+                  <button onClick={handleDelete} disabled={deleting}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 transition">
+                    {deleting ? 'Deleting…' : 'Yes, delete'}
+                  </button>
+                  <button onClick={() => setConfirmDelete(false)} className="text-xs text-muted-foreground hover:text-foreground transition">No</button>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-2 items-center">
+              {saveErr && <p className="text-xs text-red-400">{saveErr}</p>}
               <button onClick={() => setEditing(null)} className="px-3 py-1.5 rounded-lg text-sm text-muted-foreground border border-white/10 hover:text-foreground transition">
                 Cancel
               </button>
