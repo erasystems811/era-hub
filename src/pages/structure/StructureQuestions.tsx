@@ -73,7 +73,7 @@ export function StructureQuestions() {
 
   const handleSeed = async () => {
     if (!selectedTypeId) return
-    if (!confirm('This will replace ALL existing questions for this business type with the default 78-question set. Continue?')) return
+    if (!confirm('This will replace ALL existing questions for this business type with the default question set. Continue?')) return
     setSeeding(true)
     try {
       const result = await structureApi.seedQuestions(selectedTypeId)
@@ -145,7 +145,7 @@ export function StructureQuestions() {
         </button>
         <button onClick={handleSeed} disabled={seeding || !selectedTypeId}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold border border-[#C9952B]/40 text-[#C9952B] hover:bg-[#C9952B]/10 disabled:opacity-40 transition">
-          <Sparkles className="w-3.5 h-3.5" /> {seeding ? 'Loading…' : 'Seed 78 Questions'}
+          <Sparkles className="w-3.5 h-3.5" /> {seeding ? 'Loading…' : 'Seed Default Questions'}
         </button>
       </div>
 
@@ -183,11 +183,12 @@ export function StructureQuestions() {
                       <input
                         value={q.question_text}
                         onChange={e => updateQuestion(q.id, { question_text: e.target.value })}
+                        onBlur={() => saveQuestion(q)}
                         className="flex-1 px-3 py-1.5 rounded-lg text-sm bg-white/[0.05] border border-white/10 text-foreground focus:outline-none focus:border-[#C9952B]/50"
                       />
                       <select
                         value={q.input_type}
-                        onChange={e => updateQuestion(q.id, { input_type: e.target.value as Question['input_type'] })}
+                        onChange={e => { const v = e.target.value as Question['input_type']; updateQuestion(q.id, { input_type: v }); saveQuestion({ ...q, input_type: v }) }}
                         className="px-2 py-1.5 rounded-lg text-xs bg-white/[0.05] border border-white/10 text-muted-foreground/70 focus:outline-none focus:border-[#C9952B]/40"
                       >
                         {INPUT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -195,6 +196,7 @@ export function StructureQuestions() {
                       <input
                         value={q.block}
                         onChange={e => updateQuestion(q.id, { block: e.target.value.toUpperCase() })}
+                        onBlur={() => saveQuestion(q)}
                         placeholder="Block"
                         className="w-14 px-2 py-1.5 rounded-lg text-xs bg-white/[0.05] border border-white/10 text-muted-foreground/70 text-center focus:outline-none focus:border-[#C9952B]/40"
                       />
