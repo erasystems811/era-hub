@@ -151,6 +151,7 @@ export const structureApi = {
   releaseReport: (report_id: string, admin_notes: string) => post<{ success: boolean }>('/reports', { report_id, admin_notes }),
   getReportResponses: (business_id: string) => get<{ layer1: Record<string, unknown>; layer2: Record<string, unknown>; questions: { id: string; block: string; question_text: string; layer: number }[]; staff: { name: string; role: string }[] }>(`/reports/responses?business_id=${business_id}`),
   generateReportAnalysis: (business_id: string) => post<{ report: Report }>('/reports/generate', { business_id }),
+  updateReportContent: (business_id: string, generated_content: unknown) => patch<{ success: boolean }>('/reports', { business_id, generated_content }),
 
   // Output (documents)
   listOutput: (businessId?: string) =>
