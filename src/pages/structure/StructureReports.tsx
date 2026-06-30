@@ -27,6 +27,9 @@ const PRIORITY_STYLE: Record<string, string> = {
 }
 
 type MatrixTask = { task?: string; source?: string; note?: string }
+type OrgPerson = { name?: string; title?: string; actual_roles?: string[]; overload_note?: string }
+type OrgPosition = { title?: string; focus?: string; reports_to?: string | null; status?: string; hire_priority?: number }
+type ProcessStep = string
 type ReportContent = {
   executive_summary?: { situation?: string; complication?: string; resolution?: string[] }
   business_snapshot?: { type?: string; staff_count?: number; owner_stated_problem?: string; current_stage?: string; one_line_diagnosis?: string }
@@ -35,9 +38,9 @@ type ReportContent = {
   revenue_leakage?: { title?: string; description?: string; frequency?: string; monthly_min?: number; monthly_max?: number; calculation_note?: string }[]
   structural_gaps?: { gap?: string; severity?: string; impact?: string }[]
   priority_actions?: {
-    immediate?: { action?: string; owner?: string; success_looks_like?: string; time_estimate?: string }[]
-    short_term?: { action?: string; owner?: string; success_looks_like?: string; time_estimate?: string }[]
-    medium_term?: { action?: string; owner?: string; success_looks_like?: string; time_estimate?: string }[]
+    immediate?: { action?: string; owner?: string; success_looks_like?: string }[]
+    short_term?: { action?: string; owner?: string; success_looks_like?: string }[]
+    medium_term?: { action?: string; owner?: string; success_looks_like?: string }[]
   }
   sop_list?: { title?: string; responsible?: string; priority?: string; current_state?: string }[]
   delegation_readiness?: { person?: string; role?: string; tasks_to_absorb?: string; what_they_need_first?: string; risk_note?: string }[]
@@ -49,6 +52,19 @@ type ReportContent = {
     q3_delegate?: MatrixTask[]
     q4_eliminate?: MatrixTask[]
   }
+  org_structure?: {
+    current?: { people?: OrgPerson[]; structural_problems?: string[] }
+    ideal?: { positions?: OrgPosition[]; hiring_sequence?: string[]; immediate_restructure?: string[] }
+  }
+  process_map?: {
+    process_name?: string
+    current_flow?: ProcessStep[]
+    current_owner_involvement?: string
+    current_problems?: string[]
+    ideal_flow?: ProcessStep[]
+    ideal_owner_involvement?: string
+    what_changes?: string
+  }[]
 }
 
 type Responses = {
@@ -206,10 +222,7 @@ function ActionTier({ label, color, items }: { label: string; color: string; ite
         {items.map((a: ActionItem, i: number) => (
           <div key={i} className="rounded-lg border border-white/06 bg-white/[0.02] p-3">
             <p className="text-sm font-semibold text-foreground/90 mb-1">{a.action}</p>
-            <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground/50 mt-1.5">
-              {a.owner && <span>Owner: <span className="text-foreground/60">{a.owner}</span></span>}
-              {a.time_estimate && <span>Time: <span className="text-foreground/60">{a.time_estimate}</span></span>}
-            </div>
+            {a.owner && <p className="text-[11px] text-muted-foreground/50 mt-1">Owner: <span className="text-foreground/60">{a.owner}</span></p>}
             {a.success_looks_like && <p className="text-[11px] text-muted-foreground/40 mt-1.5 border-t border-white/05 pt-1.5">Done when: {a.success_looks_like}</p>}
           </div>
         ))}
@@ -745,10 +758,7 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                                     <Card key={i} className="space-y-2">
                                       <div className="flex items-center justify-between"><FieldLabel>Action</FieldLabel><RemoveBtn onClick={() => removeActionItem(tier, i)} /></div>
                                       <EF val={a.action ?? ''} onChange={v => setActionItem(tier, i, 'action', v)} rows={2} placeholder="Verb-led instruction — what exactly to do" />
-                                      <div className="grid grid-cols-2 gap-2">
-                                        <div><FieldLabel>Owner</FieldLabel><EI val={a.owner ?? ''} onChange={v => setActionItem(tier, i, 'owner', v)} placeholder="Name or role" /></div>
-                                        <div><FieldLabel>Time estimate</FieldLabel><EI val={a.time_estimate ?? ''} onChange={v => setActionItem(tier, i, 'time_estimate', v)} placeholder="e.g. 2 hours" /></div>
-                                      </div>
+                                      <div><FieldLabel>Owner</FieldLabel><EI val={a.owner ?? ''} onChange={v => setActionItem(tier, i, 'owner', v)} placeholder="Name or role" /></div>
                                       <div><FieldLabel>Done when</FieldLabel><EI val={a.success_looks_like ?? ''} onChange={v => setActionItem(tier, i, 'success_looks_like', v)} placeholder="How you know this is complete" /></div>
                                     </Card>
                                   ))}
@@ -894,6 +904,297 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                         businessName={biz?.name ?? ''}
                         isSolo={(c.business_snapshot?.staff_count ?? 0) === 0}
                       />
+                    </div>
+                  )}
+
+                  {/* ── Org Structure ── */}
+                  {(c.org_structure || editMode) && (
+                    <div>
+                      <SectionTitle>Organisational Structure</SectionTitle>
+                      {editMode ? (
+                        <div className="space-y-4">
+                          {/* Current */}
+                          <div className="rounded-xl border border-white/08 overflow-hidden">
+                            <div className="px-4 py-2.5 bg-white/[0.03] border-b border-white/06">
+                              <p className="text-xs font-bold text-foreground/60 uppercase tracking-wider">Current Structure</p>
+                            </div>
+                            <div className="p-4 space-y-3">
+                              {(draft.org_structure?.current?.people ?? []).map((person, i) => (
+                                <Card key={i} className="space-y-2">
+                                  <div className="flex items-center justify-between"><FieldLabel>Person</FieldLabel>
+                                    <RemoveBtn onClick={() => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, current: { ...p.org_structure?.current, people: (p.org_structure?.current?.people ?? []).filter((_, idx) => idx !== i) } } }))} />
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div><FieldLabel>Name</FieldLabel><EI val={person.name ?? ''} onChange={v => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, current: { ...p.org_structure?.current, people: (p.org_structure?.current?.people ?? []).map((x, idx) => idx === i ? { ...x, name: v } : x) } } }))} /></div>
+                                    <div><FieldLabel>Title</FieldLabel><EI val={person.title ?? ''} onChange={v => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, current: { ...p.org_structure?.current, people: (p.org_structure?.current?.people ?? []).map((x, idx) => idx === i ? { ...x, title: v } : x) } } }))} /></div>
+                                  </div>
+                                  <div><FieldLabel>Actual roles (comma-separated)</FieldLabel><EF val={(person.actual_roles ?? []).join(', ')} onChange={v => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, current: { ...p.org_structure?.current, people: (p.org_structure?.current?.people ?? []).map((x, idx) => idx === i ? { ...x, actual_roles: v.split(',').map(s => s.trim()) } : x) } } }))} rows={2} /></div>
+                                  <div><FieldLabel>Overload note</FieldLabel><EF val={person.overload_note ?? ''} onChange={v => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, current: { ...p.org_structure?.current, people: (p.org_structure?.current?.people ?? []).map((x, idx) => idx === i ? { ...x, overload_note: v } : x) } } }))} rows={2} /></div>
+                                </Card>
+                              ))}
+                              <AddBtn onClick={() => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, current: { ...p.org_structure?.current, people: [...(p.org_structure?.current?.people ?? []), { name: '', title: '', actual_roles: [], overload_note: '' }] } } }))} label="Add person" />
+                              <div className="mt-2">
+                                <FieldLabel>Structural problems</FieldLabel>
+                                {(draft.org_structure?.current?.structural_problems ?? []).map((prob, i) => (
+                                  <div key={i} className="flex items-start gap-1 mb-1.5">
+                                    <EF val={prob} onChange={v => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, current: { ...p.org_structure?.current, structural_problems: (p.org_structure?.current?.structural_problems ?? []).map((x, idx) => idx === i ? v : x) } } }))} rows={1} />
+                                    <RemoveBtn onClick={() => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, current: { ...p.org_structure?.current, structural_problems: (p.org_structure?.current?.structural_problems ?? []).filter((_, idx) => idx !== i) } } }))} />
+                                  </div>
+                                ))}
+                                <AddBtn onClick={() => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, current: { ...p.org_structure?.current, structural_problems: [...(p.org_structure?.current?.structural_problems ?? []), ''] } } }))} label="Add problem" />
+                              </div>
+                            </div>
+                          </div>
+                          {/* Ideal */}
+                          <div className="rounded-xl border border-[#4DBFB3]/20 overflow-hidden">
+                            <div className="px-4 py-2.5 bg-[#4DBFB3]/05 border-b border-[#4DBFB3]/10">
+                              <p className="text-xs font-bold text-[#4DBFB3] uppercase tracking-wider">Ideal Structure</p>
+                            </div>
+                            <div className="p-4 space-y-3">
+                              {(draft.org_structure?.ideal?.positions ?? []).map((pos, i) => (
+                                <Card key={i} className="space-y-2">
+                                  <div className="flex items-center justify-between"><FieldLabel>Position</FieldLabel>
+                                    <RemoveBtn onClick={() => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, ideal: { ...p.org_structure?.ideal, positions: (p.org_structure?.ideal?.positions ?? []).filter((_, idx) => idx !== i) } } }))} />
+                                  </div>
+                                  <EI val={pos.title ?? ''} onChange={v => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, ideal: { ...p.org_structure?.ideal, positions: (p.org_structure?.ideal?.positions ?? []).map((x, idx) => idx === i ? { ...x, title: v } : x) } } }))} placeholder="Role title" />
+                                  <EF val={pos.focus ?? ''} onChange={v => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, ideal: { ...p.org_structure?.ideal, positions: (p.org_structure?.ideal?.positions ?? []).map((x, idx) => idx === i ? { ...x, focus: v } : x) } } }))} rows={2} placeholder="What this role focuses on" />
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div><FieldLabel>Reports to</FieldLabel><EI val={pos.reports_to ?? ''} onChange={v => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, ideal: { ...p.org_structure?.ideal, positions: (p.org_structure?.ideal?.positions ?? []).map((x, idx) => idx === i ? { ...x, reports_to: v } : x) } } }))} /></div>
+                                    <div><FieldLabel>Status</FieldLabel><ES val={pos.status} onChange={v => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, ideal: { ...p.org_structure?.ideal, positions: (p.org_structure?.ideal?.positions ?? []).map((x, idx) => idx === i ? { ...x, status: v } : x) } } }))} options={['exists', 'needs to be hired', 'can be assigned internally']} /></div>
+                                  </div>
+                                </Card>
+                              ))}
+                              <AddBtn onClick={() => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, ideal: { ...p.org_structure?.ideal, positions: [...(p.org_structure?.ideal?.positions ?? []), { title: '', focus: '', reports_to: '', status: 'needs to be hired' }] } } }))} label="Add position" />
+                              <div className="mt-2 space-y-2">
+                                <FieldLabel>Hiring sequence</FieldLabel>
+                                {(draft.org_structure?.ideal?.hiring_sequence ?? []).map((step, i) => (
+                                  <div key={i} className="flex gap-1">
+                                    <span className="text-[#C9952B] text-xs mt-2 shrink-0 font-bold">{i + 1}.</span>
+                                    <EF val={step} onChange={v => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, ideal: { ...p.org_structure?.ideal, hiring_sequence: (p.org_structure?.ideal?.hiring_sequence ?? []).map((x, idx) => idx === i ? v : x) } } }))} rows={2} />
+                                    <RemoveBtn onClick={() => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, ideal: { ...p.org_structure?.ideal, hiring_sequence: (p.org_structure?.ideal?.hiring_sequence ?? []).filter((_, idx) => idx !== i) } } }))} />
+                                  </div>
+                                ))}
+                                <AddBtn onClick={() => setDraft(p => ({ ...p, org_structure: { ...p.org_structure, ideal: { ...p.org_structure?.ideal, hiring_sequence: [...(p.org_structure?.ideal?.hiring_sequence ?? []), ''] } } }))} label="Add hire" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {/* Current */}
+                          <div className="rounded-xl border border-white/08 overflow-hidden">
+                            <div className="px-4 py-2.5 bg-white/[0.03] border-b border-white/06">
+                              <p className="text-xs font-bold text-foreground/50 uppercase tracking-wider">Current Structure</p>
+                            </div>
+                            <div className="p-4 space-y-3">
+                              {(c.org_structure?.current?.people ?? []).map((person, i) => (
+                                <div key={i} className="flex gap-3">
+                                  <div className="flex flex-col items-center">
+                                    <div className="w-8 h-8 rounded-full bg-white/08 border border-white/12 flex items-center justify-center text-xs font-bold text-foreground/60">
+                                      {(person.name ?? '?')[0]?.toUpperCase()}
+                                    </div>
+                                    {i < (c.org_structure?.current?.people?.length ?? 0) - 1 && <div className="w-px flex-1 bg-white/08 mt-1" />}
+                                  </div>
+                                  <div className="flex-1 pb-3">
+                                    <p className="text-sm font-semibold text-foreground/90">{person.name} <span className="text-muted-foreground/40 font-normal">— {person.title}</span></p>
+                                    {person.actual_roles && person.actual_roles.length > 0 && (
+                                      <div className="flex flex-wrap gap-1 mt-1.5">
+                                        {person.actual_roles.map((role, ri) => (
+                                          <span key={ri} className="text-[10px] px-2 py-0.5 rounded-full bg-white/05 border border-white/08 text-muted-foreground/50">{role}</span>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {person.overload_note && <p className="text-xs text-[#CC7896] mt-1.5">{person.overload_note}</p>}
+                                  </div>
+                                </div>
+                              ))}
+                              {(c.org_structure?.current?.structural_problems ?? []).length > 0 && (
+                                <div className="mt-2 pt-3 border-t border-white/06 space-y-1.5">
+                                  {c.org_structure!.current!.structural_problems!.map((prob, i) => (
+                                    <div key={i} className="flex gap-2">
+                                      <AlertTriangle className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
+                                      <p className="text-xs text-muted-foreground/60">{prob}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Ideal */}
+                          <div className="rounded-xl border border-[#4DBFB3]/20 overflow-hidden">
+                            <div className="px-4 py-2.5 bg-[#4DBFB3]/05 border-b border-[#4DBFB3]/10">
+                              <p className="text-xs font-bold text-[#4DBFB3] uppercase tracking-wider">Ideal Structure</p>
+                            </div>
+                            <div className="p-4 space-y-3">
+                              {(c.org_structure?.ideal?.positions ?? []).map((pos, i) => (
+                                <div key={i} className="flex gap-3">
+                                  <div className="flex flex-col items-center">
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${pos.status === 'exists' ? 'bg-[#4DBFB3]/15 border border-[#4DBFB3]/30 text-[#4DBFB3]' : 'bg-white/05 border border-dashed border-white/15 text-muted-foreground/30'}`}>
+                                      {pos.hire_priority ?? (pos.status === 'exists' ? '✓' : '+')}
+                                    </div>
+                                    {i < (c.org_structure?.ideal?.positions?.length ?? 0) - 1 && <div className="w-px flex-1 bg-white/08 mt-1" />}
+                                  </div>
+                                  <div className="flex-1 pb-3">
+                                    <div className="flex items-center gap-2">
+                                      <p className="text-sm font-semibold text-foreground/90">{pos.title}</p>
+                                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${pos.status === 'exists' ? 'bg-[#4DBFB3]/10 text-[#4DBFB3]' : pos.status === 'can be assigned internally' ? 'bg-[#C9952B]/10 text-[#C9952B]' : 'bg-white/05 text-muted-foreground/40 border border-dashed border-white/10'}`}>
+                                        {pos.status === 'exists' ? 'Exists' : pos.status === 'can be assigned internally' ? 'Reassign internally' : 'Hire'}
+                                      </span>
+                                    </div>
+                                    {pos.focus && <p className="text-xs text-muted-foreground/50 mt-0.5">{pos.focus}</p>}
+                                    {pos.reports_to && <p className="text-[11px] text-muted-foreground/30 mt-0.5">Reports to: {pos.reports_to}</p>}
+                                  </div>
+                                </div>
+                              ))}
+
+                              {(c.org_structure?.ideal?.hiring_sequence ?? []).length > 0 && (
+                                <div className="mt-2 pt-3 border-t border-[#4DBFB3]/10">
+                                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#C9952B] mb-2">Hiring Sequence</p>
+                                  <div className="space-y-2">
+                                    {c.org_structure!.ideal!.hiring_sequence!.map((step, i) => (
+                                      <div key={i} className="flex gap-2">
+                                        <span className="text-[#C9952B] font-bold text-xs shrink-0 mt-0.5">{i + 1}.</span>
+                                        <p className="text-xs text-muted-foreground/60 leading-relaxed">{step}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {(c.org_structure?.ideal?.immediate_restructure ?? []).length > 0 && (
+                                <div className="mt-2 pt-3 border-t border-[#4DBFB3]/10">
+                                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#4DBFB3] mb-2">Do Now Without Hiring</p>
+                                  <div className="space-y-1.5">
+                                    {c.org_structure!.ideal!.immediate_restructure!.map((action, i) => (
+                                      <div key={i} className="flex gap-2">
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-[#4DBFB3] shrink-0 mt-0.5" />
+                                        <p className="text-xs text-foreground/70">{action}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ── Process Map ── */}
+                  {(Array.isArray(c.process_map) && c.process_map.length > 0 || editMode) && (
+                    <div>
+                      <SectionTitle>Process Map</SectionTitle>
+                      {editMode ? (
+                        <div className="space-y-4">
+                          {(draft.process_map ?? []).map((proc, pi) => (
+                            <div key={pi} className="rounded-xl border border-white/08 overflow-hidden">
+                              <div className="px-4 py-2.5 bg-white/[0.03] border-b border-white/06 flex items-center justify-between">
+                                <EI val={proc.process_name ?? ''} onChange={v => setDraft(p => ({ ...p, process_map: (p.process_map ?? []).map((x, idx) => idx === pi ? { ...x, process_name: v } : x) }))} placeholder="Process name" className="font-semibold" />
+                                <RemoveBtn onClick={() => setDraft(p => ({ ...p, process_map: (p.process_map ?? []).filter((_, idx) => idx !== pi) }))} />
+                              </div>
+                              <div className="grid grid-cols-2 divide-x divide-white/05">
+                                {/* Current */}
+                                <div className="p-4 space-y-2">
+                                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40 mb-2">Current</p>
+                                  {(proc.current_flow ?? []).map((step, si) => (
+                                    <div key={si} className="flex items-start gap-1">
+                                      <span className="text-muted-foreground/30 text-xs mt-2 shrink-0">{si + 1}.</span>
+                                      <EF val={step} onChange={v => setDraft(p => ({ ...p, process_map: (p.process_map ?? []).map((x, idx) => idx === pi ? { ...x, current_flow: (x.current_flow ?? []).map((s, si2) => si2 === si ? v : s) } : x) }))} rows={1} />
+                                      <RemoveBtn onClick={() => setDraft(p => ({ ...p, process_map: (p.process_map ?? []).map((x, idx) => idx === pi ? { ...x, current_flow: (x.current_flow ?? []).filter((_, si2) => si2 !== si) } : x) }))} />
+                                    </div>
+                                  ))}
+                                  <AddBtn onClick={() => setDraft(p => ({ ...p, process_map: (p.process_map ?? []).map((x, idx) => idx === pi ? { ...x, current_flow: [...(x.current_flow ?? []), ''] } : x) }))} label="Add step" />
+                                  <div className="mt-1"><FieldLabel>Owner involvement</FieldLabel><EI val={proc.current_owner_involvement ?? ''} onChange={v => setDraft(p => ({ ...p, process_map: (p.process_map ?? []).map((x, idx) => idx === pi ? { ...x, current_owner_involvement: v } : x) }))} /></div>
+                                </div>
+                                {/* Ideal */}
+                                <div className="p-4 space-y-2">
+                                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#4DBFB3] mb-2">Ideal</p>
+                                  {(proc.ideal_flow ?? []).map((step, si) => (
+                                    <div key={si} className="flex items-start gap-1">
+                                      <span className="text-[#4DBFB3] text-xs mt-2 shrink-0">{si + 1}.</span>
+                                      <EF val={step} onChange={v => setDraft(p => ({ ...p, process_map: (p.process_map ?? []).map((x, idx) => idx === pi ? { ...x, ideal_flow: (x.ideal_flow ?? []).map((s, si2) => si2 === si ? v : s) } : x) }))} rows={1} />
+                                      <RemoveBtn onClick={() => setDraft(p => ({ ...p, process_map: (p.process_map ?? []).map((x, idx) => idx === pi ? { ...x, ideal_flow: (x.ideal_flow ?? []).filter((_, si2) => si2 !== si) } : x) }))} />
+                                    </div>
+                                  ))}
+                                  <AddBtn onClick={() => setDraft(p => ({ ...p, process_map: (p.process_map ?? []).map((x, idx) => idx === pi ? { ...x, ideal_flow: [...(x.ideal_flow ?? []), ''] } : x) }))} label="Add step" />
+                                  <div className="mt-1"><FieldLabel>Owner involvement</FieldLabel><EI val={proc.ideal_owner_involvement ?? ''} onChange={v => setDraft(p => ({ ...p, process_map: (p.process_map ?? []).map((x, idx) => idx === pi ? { ...x, ideal_owner_involvement: v } : x) }))} /></div>
+                                </div>
+                              </div>
+                              <div className="px-4 pb-3 pt-2 border-t border-white/06">
+                                <FieldLabel>The single change that unlocks this process</FieldLabel>
+                                <EF val={proc.what_changes ?? ''} onChange={v => setDraft(p => ({ ...p, process_map: (p.process_map ?? []).map((x, idx) => idx === pi ? { ...x, what_changes: v } : x) }))} rows={2} />
+                              </div>
+                            </div>
+                          ))}
+                          <AddBtn onClick={() => setDraft(p => ({ ...p, process_map: [...(p.process_map ?? []), { process_name: '', current_flow: [], current_owner_involvement: '', current_problems: [], ideal_flow: [], ideal_owner_involvement: '', what_changes: '' }] }))} label="Add process" />
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {(c.process_map ?? []).map((proc, pi) => (
+                            <div key={pi} className="rounded-xl border border-white/08 overflow-hidden">
+                              <div className="px-4 py-2.5 bg-white/[0.03] border-b border-white/06">
+                                <p className="text-sm font-bold text-foreground/80">{proc.process_name}</p>
+                              </div>
+                              <div className="grid grid-cols-2 divide-x divide-white/05">
+                                {/* Current flow */}
+                                <div className="p-4">
+                                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40 mb-3">Current</p>
+                                  <div className="space-y-2">
+                                    {(proc.current_flow ?? []).map((step, si) => (
+                                      <div key={si} className="flex gap-2">
+                                        <span className="text-muted-foreground/30 text-xs shrink-0 mt-0.5 font-semibold">{si + 1}.</span>
+                                        <p className="text-xs text-muted-foreground/60 leading-snug">{step}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  {proc.current_owner_involvement && (
+                                    <div className="mt-3 pt-2 border-t border-white/06">
+                                      <p className="text-[10px] text-muted-foreground/30 font-semibold uppercase tracking-wide mb-0.5">Owner involvement</p>
+                                      <p className="text-xs text-[#CC7896]">{proc.current_owner_involvement}</p>
+                                    </div>
+                                  )}
+                                  {(proc.current_problems ?? []).length > 0 && (
+                                    <div className="mt-2 space-y-1">
+                                      {proc.current_problems!.map((prob, i) => (
+                                        <div key={i} className="flex gap-1.5">
+                                          <span className="text-red-400 text-xs shrink-0">×</span>
+                                          <p className="text-[11px] text-muted-foreground/40">{prob}</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                {/* Ideal flow */}
+                                <div className="p-4 bg-[#4DBFB3]/[0.02]">
+                                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#4DBFB3] mb-3">Ideal</p>
+                                  <div className="space-y-2">
+                                    {(proc.ideal_flow ?? []).map((step, si) => (
+                                      <div key={si} className="flex gap-2">
+                                        <span className="text-[#4DBFB3] text-xs shrink-0 mt-0.5 font-semibold">{si + 1}.</span>
+                                        <p className="text-xs text-foreground/70 leading-snug">{step}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  {proc.ideal_owner_involvement && (
+                                    <div className="mt-3 pt-2 border-t border-[#4DBFB3]/10">
+                                      <p className="text-[10px] text-[#4DBFB3] font-semibold uppercase tracking-wide mb-0.5">Owner involvement</p>
+                                      <p className="text-xs text-foreground/60">{proc.ideal_owner_involvement}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              {proc.what_changes && (
+                                <div className="px-4 py-3 border-t border-white/06 bg-[#C9952B]/05">
+                                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#C9952B] mb-1">The unlock</p>
+                                  <p className="text-xs text-foreground/70">{proc.what_changes}</p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
