@@ -255,7 +255,8 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
 
   const layer1Qs = responses?.questions.filter(q => q.layer === 1) ?? []
   const blocks = [...new Set(layer1Qs.map(q => q.block))].sort()
-  const totalLeak = (content?.revenue_leakage ?? []).reduce((sum, l) => sum + (l.monthly_max ?? 0), 0)
+  const leakArray = Array.isArray(content?.revenue_leakage) ? content!.revenue_leakage! : []
+  const totalLeak = leakArray.reduce((sum, l) => sum + (l.monthly_max ?? 0), 0)
 
   return (
     <div className="border-b border-white/05 last:border-0">
@@ -455,11 +456,11 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                   )}
 
                   {/* Revenue Leakage */}
-                  {content?.revenue_leakage && content.revenue_leakage.length > 0 && (
+                  {leakArray.length > 0 && (
                     <div>
                       <SectionTitle>Revenue Leakage</SectionTitle>
                       <div className="space-y-2">
-                        {content.revenue_leakage.map((l, i) => (
+                        {leakArray.map((l, i) => (
                           <Card key={i}>
                             <div className="flex items-start justify-between gap-2 mb-1">
                               <p className="text-sm font-semibold text-foreground/90">{l.title}</p>

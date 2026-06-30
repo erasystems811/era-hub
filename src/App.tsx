@@ -167,7 +167,7 @@ function ProtectedApp() {
         <Route path="/structure/accounts"         element={<StructureAccounts />} />
         <Route path="/structure/monitoring"       element={<StructureMonitoring />} />
         <Route path="/structure/questions"        element={<StructureQuestions />} />
-        <Route path="/structure/reports"          element={<StructureReports />} />
+        <Route path="/structure/reports"          element={<ErrorBoundary><StructureReports /></ErrorBoundary>} />
         <Route path="/structure/output"           element={<StructureOutput />} />
         <Route path="/structure/payments"         element={<StructurePayments />} />
 
