@@ -51,6 +51,8 @@ type ReportContent = {
     q2_schedule?: MatrixTask[]
     q3_delegate?: MatrixTask[]
     q4_eliminate?: MatrixTask[]
+    current?: { q1_do?: MatrixTask[]; q2_schedule?: MatrixTask[]; q3_delegate?: MatrixTask[]; q4_eliminate?: MatrixTask[] }
+    ideal?: { q1_do?: MatrixTask[]; q2_schedule?: MatrixTask[]; q3_delegate?: MatrixTask[]; q4_eliminate?: MatrixTask[] }
   }
   org_structure?: {
     current?: { people?: OrgPerson[]; structural_problems?: string[] }
@@ -193,64 +195,107 @@ const QUADRANTS = [
   { key: 'q4_eliminate' as const, label: 'ELIMINATE', sub: 'Not Urgent, Not Important', description: 'Stop doing this. It costs time and returns nothing.', border: 'border-white/10', tag: 'bg-white/05 text-muted-foreground/40', dot: 'bg-muted-foreground/30', num: '4', numColor: 'text-muted-foreground/30' },
 ]
 
+type MatrixState = { q1_do?: MatrixTask[]; q2_schedule?: MatrixTask[]; q3_delegate?: MatrixTask[]; q4_eliminate?: MatrixTask[] }
+
+function MatrixGrid({ state, isSolo }: { state: MatrixState; isSolo: boolean }) {
+  return (
+    <div className="flex">
+      <div className="w-6 flex items-center justify-center py-4">
+        <p className="text-[9px] text-muted-foreground/30 uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Importance ↑</p>
+      </div>
+      <div className="flex-1 grid grid-cols-2 gap-px bg-white/05 p-px">
+        {QUADRANTS.map(q => {
+          const tasks = state[q.key] ?? []
+          return (
+            <div key={q.key} className={`bg-[#0A1628] p-4 min-h-[200px] border ${q.border}`}>
+              <div className="flex items-center gap-2 mb-3">
+                <span className={`text-2xl font-black opacity-20 ${q.numColor}`}>{q.num}</span>
+                <div>
+                  <p className={`text-[11px] font-black tracking-widest ${q.numColor}`}>{q.label}</p>
+                  <p className="text-[10px] text-muted-foreground/30">{q.sub}</p>
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground/30 mb-3 border-b border-white/04 pb-2 italic">{q.description}</p>
+              <div className="space-y-2">
+                {tasks.length === 0 ? (
+                  <p className="text-[10px] text-muted-foreground/20 italic">No tasks identified here</p>
+                ) : tasks.map((t, i) => (
+                  <div key={i} className="group">
+                    <div className="flex items-start gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${t.source === 'suggested' ? 'opacity-40' : ''} ${q.dot}`} />
+                      <div className="flex-1">
+                        <p className="text-xs text-foreground/80 leading-snug">{t.task}</p>
+                        {t.source === 'suggested' && <span className="text-[9px] text-muted-foreground/25 uppercase tracking-wider">suggested</span>}
+                        {t.note && <p className="text-[10px] text-muted-foreground/35 mt-0.5 leading-snug hidden group-hover:block">{t.note}</p>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function EisenhowerMatrix({ matrix, businessName, isSolo }: { matrix: ReportContent['eisenhower_matrix']; businessName: string; isSolo: boolean }) {
+  const [view, setView] = useState<'current' | 'ideal'>('current')
   if (!matrix) return null
+
+  // Support both old flat format and new current/ideal format
+  const hasDualState = !!(matrix.current || matrix.ideal)
+  const currentState: MatrixState = hasDualState
+    ? (matrix.current ?? {})
+    : { q1_do: matrix.q1_do, q2_schedule: matrix.q2_schedule, q3_delegate: matrix.q3_delegate, q4_eliminate: matrix.q4_eliminate }
+  const idealState: MatrixState = matrix.ideal ?? {}
+
+  const activeState = (hasDualState && view === 'ideal') ? idealState : currentState
+
   return (
     <div className="rounded-2xl border border-[#C9952B]/20 overflow-hidden bg-[#0A1628]">
+      {/* Header */}
       <div className="px-6 py-4 border-b border-white/06 flex items-center justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-[#C9952B]">Eisenhower Priority Matrix</p>
           <p className="text-[11px] text-muted-foreground/40 mt-0.5">{businessName} · ERA Structure Diagnostic</p>
         </div>
-        <div className="text-right">
-          <p className="text-[10px] text-muted-foreground/30 uppercase tracking-wider">Urgency →</p>
-        </div>
+        <p className="text-[10px] text-muted-foreground/30 uppercase tracking-wider">Urgency →</p>
       </div>
-      <div className="flex">
-        <div className="w-6 flex items-center justify-center py-4">
-          <p className="text-[9px] text-muted-foreground/30 uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Importance ↑</p>
+
+      {/* State toggle */}
+      {hasDualState && (
+        <div className="px-6 py-3 border-b border-white/06 flex items-center gap-1 bg-white/[0.02]">
+          <button
+            onClick={() => setView('current')}
+            className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${view === 'current' ? 'bg-white/10 text-foreground' : 'text-muted-foreground/40 hover:text-foreground'}`}
+          >
+            Current state
+          </button>
+          <span className="text-muted-foreground/20 text-xs">→</span>
+          <button
+            onClick={() => setView('ideal')}
+            className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${view === 'ideal' ? 'bg-[#4DBFB3]/15 text-[#4DBFB3]' : 'text-muted-foreground/40 hover:text-foreground'}`}
+          >
+            Ideal state
+          </button>
+          {view === 'ideal' && (
+            <span className="ml-2 text-[10px] text-[#4DBFB3]/60 italic">Once your ideal org structure is in place</span>
+          )}
         </div>
-        <div className="flex-1 grid grid-cols-2 gap-px bg-white/05 p-px">
-          {QUADRANTS.map(q => {
-            const tasks = matrix[q.key] ?? []
-            return (
-              <div key={q.key} className={`bg-[#0A1628] p-4 min-h-[220px] border ${q.border}`}>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className={`text-2xl font-black opacity-20 ${q.numColor}`}>{q.num}</span>
-                  <div>
-                    <p className={`text-[11px] font-black tracking-widest ${q.numColor}`}>{q.label}</p>
-                    <p className="text-[10px] text-muted-foreground/30">{q.sub}</p>
-                  </div>
-                </div>
-                <p className="text-[10px] text-muted-foreground/30 mb-3 border-b border-white/04 pb-2 italic">{q.description}</p>
-                <div className="space-y-2">
-                  {tasks.length === 0 ? (
-                    <p className="text-[10px] text-muted-foreground/20 italic">No tasks identified here</p>
-                  ) : tasks.map((t, i) => (
-                    <div key={i} className="group">
-                      <div className="flex items-start gap-2">
-                        <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${t.source === 'suggested' ? 'opacity-40' : ''} ${q.dot}`} />
-                        <div className="flex-1">
-                          <p className="text-xs text-foreground/80 leading-snug">{t.task}</p>
-                          {t.source === 'suggested' && <span className="text-[9px] text-muted-foreground/25 uppercase tracking-wider">suggested</span>}
-                          {t.note && <p className="text-[10px] text-muted-foreground/35 mt-0.5 leading-snug hidden group-hover:block">{t.note}</p>}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
+      )}
+
+      <MatrixGrid state={activeState} isSolo={isSolo} />
+
       {isSolo && (
         <div className="px-6 py-3 border-t border-white/06 bg-[#C9952B]/05">
           <p className="text-[10px] text-[#C9952B]/70">
-            <span className="font-bold">Solo operator note:</span> Quadrant 3 shows tasks to automate or outsource as the business grows — not tasks to hand off today.
+            <span className="font-bold">Solo operator note:</span> {view === 'ideal' ? 'In the ideal state, Quadrant 3 tasks are handled by a system or outsourced role — not by you.' : 'Quadrant 3 shows tasks to automate or outsource as the business grows.'}
           </p>
         </div>
       )}
+
       <div className="px-6 py-3 border-t border-white/06 flex gap-4">
         <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-white/40" /><p className="text-[10px] text-muted-foreground/40">From your assessment</p></div>
         <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-white/15" /><p className="text-[10px] text-muted-foreground/30">Suggested (hover for why)</p></div>
