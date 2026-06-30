@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { structureApi, Question, BusinessType } from '../../lib/structure-api'
-import { Plus, Save, Trash2, Sparkles, X } from 'lucide-react'
+import { Plus, Save, Trash2, Sparkles, X, Copy } from 'lucide-react'
 
 const INPUT_TYPES = ['short-text', 'number', 'dropdown', 'yes-no', 'multi-select', 'voice-note'] as const
 
@@ -14,6 +14,7 @@ export function StructureQuestions() {
   const [addingType, setAddingType] = useState(false)
   const [error, setError] = useState('')
   const [seeding, setSeeding] = useState(false)
+  const [copying, setCopying] = useState(false)
 
   useEffect(() => {
     structureApi.listBusinessTypes().then(t => {
@@ -89,6 +90,22 @@ export function StructureQuestions() {
     }
   }
 
+  const handleCopyToAll = async () => {
+    if (!selectedTypeId) return
+    const sourceName = types.find(t => t.id === selectedTypeId)?.name ?? 'this type'
+    if (!confirm(`Copy all questions from "${sourceName}" to every other business type? This will replace their existing questions.`)) return
+    setCopying(true)
+    try {
+      const result = await structureApi.copyQuestionsToAll(selectedTypeId)
+      setError('')
+      alert(`Done — ${result.copied} questions copied to all other business types.`)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Copy failed')
+    } finally {
+      setCopying(false)
+    }
+  }
+
   const addType = async () => {
     if (!newTypeName.trim()) return
     setAddingType(true)
@@ -146,6 +163,10 @@ export function StructureQuestions() {
         <button onClick={handleSeed} disabled={seeding || !selectedTypeId}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold border border-[#C9952B]/40 text-[#C9952B] hover:bg-[#C9952B]/10 disabled:opacity-40 transition">
           <Sparkles className="w-3.5 h-3.5" /> {seeding ? 'Loading…' : 'Seed Default Questions'}
+        </button>
+        <button onClick={handleCopyToAll} disabled={copying || !selectedTypeId}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold border border-white/15 text-muted-foreground/70 hover:text-foreground hover:border-white/25 disabled:opacity-40 transition">
+          <Copy className="w-3.5 h-3.5" /> {copying ? 'Copying…' : 'Copy to all types'}
         </button>
       </div>
 

@@ -143,6 +143,7 @@ export const structureApi = {
   updateQuestion: (id: string, data: Partial<Question>) => patch<Question>('/questions', { id, ...data }),
   deleteQuestion: (id: string) => del<{ success: boolean }>('/questions', { id }),
   seedQuestions: (business_type_id: string) => post<{ success: boolean; inserted: number }>('/questions/seed', { business_type_id }),
+  copyQuestionsToAll: (source_business_type_id: string) => post<{ success: boolean; copied: number }>('/questions/copy', { source_business_type_id }),
 
   // Reports
   listReports: (status: 'pending' | 'released' = 'pending') => get<Report[]>(`/reports?status=${status}`),
