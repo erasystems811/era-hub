@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { structureApi, Question, BusinessType } from '../../lib/structure-api'
-import { Plus, Save, Trash2 } from 'lucide-react'
+import { Plus, Save, Trash2, Sparkles } from 'lucide-react'
 
 const INPUT_TYPES = ['short-text', 'number', 'dropdown', 'yes-no', 'multi-select', 'voice-note'] as const
 
@@ -13,6 +13,7 @@ export function StructureQuestions() {
   const [newTypeName, setNewTypeName] = useState('')
   const [addingType, setAddingType] = useState(false)
   const [error, setError] = useState('')
+  const [seeding, setSeeding] = useState(false)
 
   useEffect(() => {
     structureApi.listBusinessTypes().then(t => {
@@ -69,6 +70,24 @@ export function StructureQuestions() {
     }
   }
 
+  const handleSeed = async () => {
+    if (!selectedTypeId) return
+    if (!confirm('This will replace ALL existing questions for this business type with the default 78-question set. Continue?')) return
+    setSeeding(true)
+    try {
+      const result = await structureApi.seedQuestions(selectedTypeId)
+      setError('')
+      // Reload questions
+      const qs = await structureApi.listQuestions(selectedTypeId, layer)
+      setQuestions(qs)
+      alert(`Done — ${result.inserted} questions loaded.`)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Seed failed')
+    } finally {
+      setSeeding(false)
+    }
+  }
+
   const addType = async () => {
     if (!newTypeName.trim()) return
     setAddingType(true)
@@ -122,6 +141,10 @@ export function StructureQuestions() {
         <button onClick={addQuestion}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-background bg-[#C9952B] hover:bg-[#C9952B]/90 transition">
           <Plus className="w-3.5 h-3.5" /> Add Question
+        </button>
+        <button onClick={handleSeed} disabled={seeding || !selectedTypeId}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold border border-[#C9952B]/40 text-[#C9952B] hover:bg-[#C9952B]/10 disabled:opacity-40 transition">
+          <Sparkles className="w-3.5 h-3.5" /> {seeding ? 'Loading…' : 'Seed 78 Questions'}
         </button>
       </div>
 
