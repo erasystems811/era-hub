@@ -340,6 +340,7 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
   const [expanded, setExpanded] = useState(false)
   const [notes, setNotes] = useState(r.admin_notes ?? '')
   const [releasing, setReleasing] = useState(false)
+  const [releaseError, setReleaseError] = useState('')
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState('')
   const [responses, setResponses] = useState<Responses | null>(null)
@@ -379,7 +380,14 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
 
   const handleRelease = async () => {
     setReleasing(true)
-    try { await onRelease(r.id, notes) } finally { setReleasing(false) }
+    setReleaseError('')
+    try {
+      await onRelease(r.id, notes)
+    } catch (e) {
+      setReleaseError(e instanceof Error ? e.message : 'Release failed')
+    } finally {
+      setReleasing(false)
+    }
   }
 
   const openSectionRegen = (key: string) => {
@@ -1445,6 +1453,7 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
                 <CheckCircle2 className="w-4 h-4" />
                 {releasing ? 'Releasing…' : 'Release to Client'}
               </button>
+              {releaseError && <p className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2">{releaseError}</p>}
             </div>
           )}
           {r.status === 'released' && r.admin_notes && (
