@@ -382,6 +382,12 @@ function ReportRow({ r, onRelease, onUpdate }: { r: Report; onRelease: (id: stri
     setReleasing(true)
     setReleaseError('')
     try {
+      // Auto-save any unsaved edits before releasing
+      if (editMode) {
+        await structureApi.updateReportContent(r.business_id, draft)
+        onUpdate({ ...r, generated_content: draft })
+        setEditMode(false)
+      }
       await onRelease(r.id, notes)
     } catch (e) {
       setReleaseError(e instanceof Error ? e.message : 'Release failed')
